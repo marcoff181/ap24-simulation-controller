@@ -40,7 +40,7 @@ enum Screen {
     Start,
     Main,
     Move,
-    // AddNode,
+    AddNode,
     AddConnection{origin:u32},
 }
 
@@ -140,7 +140,7 @@ impl App {
     /// [`event::poll`] function to check if there are any events available with a timeout.
     fn handle_crossterm_events(&mut self) -> Result<(), std::io::Error> {
         match event::read()? {
-            // it's important to check KeyEventKind::Press to avoid handling key release events
+            // check KeyEventKind::Press to avoid handling key release events
             Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
             Event::Mouse(_) => {}
             Event::Resize(_, _) => {}
@@ -156,6 +156,7 @@ impl App {
             Screen::Main => self.handle_keypress_main(key),
             Screen::Move => self.handle_keypress_move(key),
             Screen::AddConnection { origin:from } => self.handle_keypress_add_connection(key,from),
+            Screen::AddNode => self.handle_keypress_add_node(key),
         }
     }
 
@@ -174,6 +175,7 @@ impl App {
             (_, KeyCode::Char('q')) => self.quit(),
             (_, KeyCode::Char('m')) => self.screen = Screen::Move,
             (_, KeyCode::Char('c')) => self.screen = Screen::AddConnection { origin: self.node_list_state.selected().unwrap() as u32},
+            (_, KeyCode::Char('+')) => {self.nodes.push(Node::default()); self.node_list_state.select_last();self.screen = Screen::AddNode},
             (_, KeyCode::Up) => self.node_list_state.scroll_up_by(1),
             (_, KeyCode::Down) => self.node_list_state.scroll_down_by(1),
             // | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C'))
@@ -224,6 +226,33 @@ impl App {
         }
     }
 
+    fn handle_keypress_add_node(&mut self, key: KeyEvent) {
+        // when you enter add_node screen, the new node gets selected
+        let n = match self.node_list_state.selected() {
+            None => {
+                self.screen = Screen::Main;
+                return;
+            }
+            Some(x) => &mut self.nodes[x],
+        };
+
+        match (key.modifiers, key.code) {
+            (_, KeyCode::Up) => n.shiftu(1),
+            (_, KeyCode::Down) => n.shiftd(1),
+            (_, KeyCode::Left) => n.shiftl(1),
+            (_, KeyCode::Right) => n.shiftr(1),
+            (_, KeyCode::Char('c')) => n.kind=NodeKind::Client,
+            (_, KeyCode::Char('s')) => n.kind=NodeKind::Server,
+            (_, KeyCode::Char('d')) => n.kind=NodeKind::Drone,
+            (_, KeyCode::Enter) => {self.screen=Screen::Main},
+            (_, KeyCode::Char('q')) => self.quit(),
+
+            // | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C'))
+            // (_,KeyCode::Char('c')) => self.quit(),
+            _ => {}
+        }
+    }
+
     /// Set running to false to quit the application.
     fn quit(&mut self) {
         self.running = false;
@@ -263,6 +292,8 @@ impl App {
 
         let [top, bottom] =
             Layout::vertical([Constraint::Max(6), Constraint::Fill(1)]).areas(inner_area);
+
+        
 
         // Render the BigText inside the inner area
         big_text.render(top, buf);
@@ -365,7 +396,8 @@ impl App {
                     Screen::Start => {
                         todo!()
                     },
-                    Screen::Main | Screen::Move => {
+                    // Highlight edges that connect selected node
+                    Screen::Main | Screen::Move | Screen::AddNode=> {
                         if let Some(id1) = self.node_list_state.selected() {
                             let n1 = &self.nodes[id1];
                             for (p2,n2) in self.nodes.iter().enumerate() {
@@ -438,6 +470,7 @@ impl App {
                     if let Some(selected_index) = self.node_list_state.selected() {
                         match self.screen{
                             Screen::Start => todo!(),
+                            // highlight selected node
                             Screen::Main | Screen::Move => {
                                 if (selected_index == pos) {
                                     s = s.bg(HIGHLIGHT_COLOR);
@@ -445,18 +478,28 @@ impl App {
                                     s = s.bold();
                                 }
                             },
+                            // highlight node from which connection starts
+                            // and highlight green selected ndoe for destination
                             Screen::AddConnection { origin: o } => {
-                                if(selected_index == o as usize){
-                                    s = s.bg(HIGHLIGHT_COLOR);
-                                    s = s.fg(BG_COLOR);
-                                    s = s.bold();
-                                }
                                 if (selected_index == pos) {
                                     s = s.bg(Color::Green);
                                     //s = s.fg(BG_COLOR);
                                     s = s.bold();
                                 }
+                                if(pos == o as usize){
+                                    s = s.bg(HIGHLIGHT_COLOR);
+                                    s = s.fg(BG_COLOR);
+                                    s = s.bold();
+                                }
+                                
                             },
+                            // highlight green the new node
+                            Screen::AddNode =>{
+                                if (selected_index == pos) {
+                                    s = s.bg(Color::Green);
+                                    s = s.bold();
+                                }
+                            }
                         }
                         
                     }
@@ -525,6 +568,13 @@ impl App {
             ("q", "Quit"),
         ];
 
+        let main_keys_add_node = [
+            ("↑/↓/→/←", "Move"),
+            ("s/c/d", "Set drone type"),
+            ("Enter", "Add node"),
+            ("q", "Quit"),
+        ];
+
         let move_keys = [
             ("↑/↓/→/←", "Move"),
             ("Enter", "Ok"), 
@@ -550,7 +600,8 @@ impl App {
             },
             Screen::Start => &start_keys,
             Screen::Move => &move_keys,
-            Screen::AddConnection { origin: _ } => &main_keys_add_connection
+            Screen::AddConnection { origin: _ } => &main_keys_add_connection,
+            Screen::AddNode => &main_keys_add_node,
         };
 
         let spans: Vec<Span> = keys
@@ -586,13 +637,7 @@ impl Widget for &mut App {
             Screen::Start => {
                 self.render_start(main, buf);
             }
-            Screen::Main => {
-                self.render_main(main, buf);
-            }
-            Screen::Move => {
-                self.render_main(main, buf);
-            }
-            Screen::AddConnection { origin:_ } =>{
+            Screen::Main|Screen::Move| Screen::AddConnection { origin:_ }|Screen::AddNode => {
                 self.render_main(main, buf);
             }
         }
