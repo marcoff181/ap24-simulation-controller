@@ -31,7 +31,7 @@ const TEXT_COLOR: Color = Color::White;
 const INVERTED_TEXT_COLOR: Color = Color::Black;
 const HIGHLIGHT_COLOR: Color = Color::LightYellow;
 const DRONE_COLOR: Color = Color::LightBlue;
-const CLIENT_COLOR: Color = Color::LightGreen;
+const CLIENT_COLOR: Color = Color::Cyan;
 const SERVER_COLOR: Color = Color::LightMagenta;
 
 #[derive(Debug, Default)]
@@ -40,6 +40,8 @@ enum Screen {
     Start,
     Main,
     Move,
+    // AddNode,
+    AddConnection{origin:u32},
 }
 
 #[derive(Debug, Default, Eq, PartialEq, Hash)]
@@ -57,10 +59,11 @@ struct Node {
     y: u32,
     kind: NodeKind,
     repr: String,
+    adj:Vec<u32>
 }
 
 impl Node {
-    fn new(id: u32, x: u32, y: u32, kind: NodeKind) -> Self {
+    fn new(id: u32, x: u32, y: u32, kind: NodeKind,adj : Vec<u32>) -> Self {
         let s = format!("{:?} #{}", kind, id);
         Node {
             id,
@@ -68,6 +71,7 @@ impl Node {
             y,
             kind,
             repr: s,
+            adj,
         }
     }
 
@@ -110,18 +114,18 @@ impl App {
         self.running = true;
         self.node_list_state.select(Some(0));
         self.nodes = vec![
-            Node::new(1234, 0, 6, NodeKind::Drone),
-            Node::new(3252, 4, 9, NodeKind::Drone),
-            Node::new(6234, 7, 10, NodeKind::Drone),
-            Node::new(5463, 9, 11, NodeKind::Drone),
-            Node::new(5234, 2, 2, NodeKind::Drone),
-            Node::new(4252, 8, 3, NodeKind::Drone),
-            Node::new(8234, 1, 1, NodeKind::Drone),
-            Node::new(9456, 15, 4, NodeKind::Drone),
-            Node::new(3452, 3, 3, NodeKind::Client),
-            Node::new(5323, 5, 4, NodeKind::Client),
-            Node::new(7345, 10, 0, NodeKind::Server),
-            Node::new(8945, 7, 3, NodeKind::Server),
+            Node::new(1234, 0, 6, NodeKind::Drone, vec![2, 5, 6, 8]),
+            Node::new(3252, 4, 9, NodeKind::Drone, vec![6, 7, 4, 10]),
+            Node::new(6234, 7, 10, NodeKind::Drone, vec![0, 4, 3, 9]),
+            Node::new(5463, 9, 11, NodeKind::Drone, vec![2, 5, 11]),
+            Node::new(5234, 2, 2, NodeKind::Drone, vec![2, 6, 1, 3]),
+            Node::new(4252, 8, 3, NodeKind::Drone, vec![0, 3, 6, 7]),
+            Node::new(8234, 1, 1, NodeKind::Drone, vec![0, 1, 4, 5]),
+            Node::new(9456, 15, 4, NodeKind::Drone, vec![1, 5, 10]),
+            Node::new(3452, 3, 3, NodeKind::Client, vec![0, 6, 2]),
+            Node::new(5323, 5, 4, NodeKind::Client, vec![2, 3, 7]),
+            Node::new(7345, 10, 0, NodeKind::Server, vec![1, 6, 7]),
+            Node::new(8945, 7, 3, NodeKind::Server, vec![3, 5, 1]),            
         ];
         while self.running {
             terminal.draw(|frame| frame.render_widget(&mut self, frame.area()))?;
@@ -151,6 +155,7 @@ impl App {
             Screen::Start => self.handle_keypress_start(key),
             Screen::Main => self.handle_keypress_main(key),
             Screen::Move => self.handle_keypress_move(key),
+            Screen::AddConnection { origin:from } => self.handle_keypress_add_connection(key,from),
         }
     }
 
@@ -168,6 +173,7 @@ impl App {
         match (key.modifiers, key.code) {
             (_, KeyCode::Char('q')) => self.quit(),
             (_, KeyCode::Char('m')) => self.screen = Screen::Move,
+            (_, KeyCode::Char('c')) => self.screen = Screen::AddConnection { origin: self.node_list_state.selected().unwrap() as u32},
             (_, KeyCode::Up) => self.node_list_state.scroll_up_by(1),
             (_, KeyCode::Down) => self.node_list_state.scroll_down_by(1),
             // | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C'))
@@ -198,6 +204,26 @@ impl App {
         }
     }
 
+    fn handle_keypress_add_connection(&mut self, key: KeyEvent,from:u32) {
+        let x = match self.node_list_state.selected() {
+            None => {
+                self.screen = Screen::Main;
+                return;
+            }
+            Some(x) => x,
+        };
+
+        match (key.modifiers, key.code) {
+            (_, KeyCode::Char('q')) => self.quit(),
+            (_, KeyCode::Enter) => {self.add_connection(from as usize,x); self.screen=Screen::Main},
+            (_, KeyCode::Up) => self.node_list_state.scroll_up_by(1),
+            (_, KeyCode::Down) => self.node_list_state.scroll_down_by(1),
+            // | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C'))
+            // (_,KeyCode::Char('c')) => self.quit(),
+            _ => {}
+        }
+    }
+
     /// Set running to false to quit the application.
     fn quit(&mut self) {
         self.running = false;
@@ -205,6 +231,13 @@ impl App {
 
     fn open_initialization_file(&mut self) {
         todo!()
+    }
+
+    fn add_connection(&mut self, from:usize, to:usize){
+        if from < self.nodes.len() && to < self.nodes.len(){
+            self.nodes[from].adj.push(to as u32);
+            self.nodes[to].adj.push(from as u32);
+        }
     }
 
     fn render_start(&self, area: Rect, buf: &mut Buffer) {
@@ -244,12 +277,12 @@ impl App {
         let [top_right, bottom_right] =
             Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(right);
 
-        self.render_nodes(left, buf);
+        self.render_list(left, buf);
         self.render_simulation(top_right, buf);
         self.render_stats(bottom_right, buf);
     }
 
-    fn render_nodes(&mut self, area: Rect, buf: &mut Buffer) {
+    fn render_list(&mut self, area: Rect, buf: &mut Buffer) {
         let left_block = Block::new()
             .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
             .title("Nodes")
@@ -306,14 +339,13 @@ impl App {
                 for (p1, n1) in self.nodes.iter().enumerate() {
                     checked.insert(&n1);
                     for (p2, n2) in self.nodes.iter().enumerate() {
-                        if !checked.contains(&n2) {
-                            // && rand::random::<bool>()
+                        if !checked.contains(&n2) && n1.adj.contains(&(p2 as u32)) {
                             let mut c: Color = Color::DarkGray;
-                            if let Some(selected_index) = self.node_list_state.selected() {
-                                if (selected_index == p1 || selected_index == p2) {
-                                    c = HIGHLIGHT_COLOR;
-                                }
-                            }
+                            // if let Some(selected_index) = self.node_list_state.selected() {
+                            //     if (selected_index == p1 || selected_index == p2) {
+                            //         c = HIGHLIGHT_COLOR;
+                            //     }
+                            // }
 
                             let line = ratatui::widgets::canvas::Line {
                                 x1: (n1.x as f64) * scale_x + canvas_border_offset,
@@ -329,19 +361,50 @@ impl App {
 
                 ctx.layer();
 
-                if let Some(id1) = self.node_list_state.selected() {
-                    let n1 = &self.nodes[id1];
-                    for n2 in self.nodes.iter() {
-                        let line = ratatui::widgets::canvas::Line {
-                            x1: (n1.x as f64) * scale_x + canvas_border_offset,
-                            y1: (n1.y as f64) * scale_y + canvas_border_offset,
-                            x2: (n2.x as f64) * scale_x + canvas_border_offset,
-                            y2: (n2.y as f64) * scale_y + canvas_border_offset,
-                            color: HIGHLIGHT_COLOR,
-                        };
-                        ctx.draw(&line);
+                match self.screen{
+                    Screen::Start => {
+                        todo!()
+                    },
+                    Screen::Main | Screen::Move => {
+                        if let Some(id1) = self.node_list_state.selected() {
+                            let n1 = &self.nodes[id1];
+                            for (p2,n2) in self.nodes.iter().enumerate() {
+                                if n1.adj.contains(&(p2 as u32)){
+                                    let line = ratatui::widgets::canvas::Line {
+                                        x1: (n1.x as f64) * scale_x + canvas_border_offset,
+                                        y1: (n1.y as f64) * scale_y + canvas_border_offset,
+                                        x2: (n2.x as f64) * scale_x + canvas_border_offset,
+                                        y2: (n2.y as f64) * scale_y + canvas_border_offset,
+                                        color: HIGHLIGHT_COLOR,
+                                    };
+                                    ctx.draw(&line);
+                                }  
+                            }
+                        }
+                    },
+                    Screen::AddConnection { origin: o } =>{
+                        if let Some(id1) = self.node_list_state.selected() {
+                            if (o as usize) < self.nodes.len(){
+                                let n1 = &self.nodes[id1];
+                                let n2 = &self.nodes[o as usize];
+                            
+                                let line = ratatui::widgets::canvas::Line {
+                                    x1: (n1.x as f64) * scale_x + canvas_border_offset,
+                                    y1: (n1.y as f64) * scale_y + canvas_border_offset,
+                                    x2: (n2.x as f64) * scale_x + canvas_border_offset,
+                                    y2: (n2.y as f64) * scale_y + canvas_border_offset,
+                                    color: Color::Green,
+                                };
+                                ctx.draw(&line);
+
+                            }
+                            
+                        }
                     }
+                    ,
                 }
+
+                
 
                 for (pos, n) in self.nodes.iter().enumerate() {
                     let tx = (n.x as f64) * scale_x + canvas_border_offset;
@@ -373,13 +436,29 @@ impl App {
                     }
 
                     if let Some(selected_index) = self.node_list_state.selected() {
-                        if (selected_index == pos) {
-                            // bl = '»';
-                            // br = '«';
-                            s = s.bg(HIGHLIGHT_COLOR);
-                            s = s.fg(BG_COLOR);
-                            s = s.bold();
+                        match self.screen{
+                            Screen::Start => todo!(),
+                            Screen::Main | Screen::Move => {
+                                if (selected_index == pos) {
+                                    s = s.bg(HIGHLIGHT_COLOR);
+                                    s = s.fg(BG_COLOR);
+                                    s = s.bold();
+                                }
+                            },
+                            Screen::AddConnection { origin: o } => {
+                                if(selected_index == o as usize){
+                                    s = s.bg(HIGHLIGHT_COLOR);
+                                    s = s.fg(BG_COLOR);
+                                    s = s.bold();
+                                }
+                                if (selected_index == pos) {
+                                    s = s.bg(Color::Green);
+                                    //s = s.fg(BG_COLOR);
+                                    s = s.bold();
+                                }
+                            },
                         }
+                        
                     }
 
                     ctx.print(
@@ -416,18 +495,33 @@ impl App {
 
     fn render_footer(&self, area: Rect, buf: &mut Buffer) {
         let start_keys = [
-            ("↑", "Up"),
-            ("↓", "Down"),
+            // ("↑", "Up"),
+            // ("↓", "Down"),
             ("+", "Open initialization file"),
             ("q", "Quit"),
         ];
 
         let main_keys = [
-            ("↑", "Up"),
-            ("↓", "Down"),
-            ("e", "Edit node"),
+            ("↑/↓", "Scroll list"),
             ("m", "Move node"),
+            ("c", "Add connection"),
             ("+", "Add node"),
+            ("q", "Quit"),
+        ];
+
+        let main_keys_over_drone = [
+            ("↑/↓", "Scroll list"),
+            ("m", "Move node"),
+            ("c", "Add connection"),
+            ("+", "Add node"),
+            ("p", "Edit PDR"),
+            ("k", "Crash"),
+            ("q", "Quit"),
+        ];
+
+        let main_keys_add_connection = [
+            ("↑/↓", "Scroll list"),
+            ("Enter", "Connect to selected node"),
             ("q", "Quit"),
         ];
 
@@ -436,11 +530,27 @@ impl App {
             ("Enter", "Ok"), 
             ("q", "Quit")
         ];
+        
 
         let keys: &[(&str, &str)] = match self.screen {
-            Screen::Main => &main_keys,
+            Screen::Main => {
+                match self.node_list_state.selected(){
+                    None => {
+                        &main_keys
+                    }
+                    Some(x)=>{
+                        if(x < self.nodes.len() && self.nodes[x].kind==NodeKind::Drone){
+                            &main_keys_over_drone
+                        }
+                        else{
+                            &main_keys
+                        }
+                    }
+                }
+            },
             Screen::Start => &start_keys,
             Screen::Move => &move_keys,
+            Screen::AddConnection { origin: _ } => &main_keys_add_connection
         };
 
         let spans: Vec<Span> = keys
@@ -480,6 +590,9 @@ impl Widget for &mut App {
                 self.render_main(main, buf);
             }
             Screen::Move => {
+                self.render_main(main, buf);
+            }
+            Screen::AddConnection { origin:_ } =>{
                 self.render_main(main, buf);
             }
         }
