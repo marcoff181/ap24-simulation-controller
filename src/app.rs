@@ -6,7 +6,7 @@ use ratatui::prelude::*;
 use ratatui::symbols::Marker;
 use ratatui::widgets::canvas::{Canvas, Circle, Context, Painter, Shape};
 use ratatui::widgets::{
-    Block, Borders, HighlightSpacing, List, ListDirection, ListState, Padding, Paragraph
+    Block, Borders, HighlightSpacing, List, ListDirection, ListState, Padding, Paragraph,
 };
 use ratatui::DefaultTerminal;
 use std::collections::HashSet;
@@ -43,10 +43,12 @@ enum Screen {
     Main,
     Move,
     AddNode,
-    AddConnection{origin:u32},
+    AddConnection {
+        origin: u32,
+    },
 }
 
-#[derive(Debug, Default, Eq, PartialEq, Hash,Clone, Copy)]
+#[derive(Debug, Default, Eq, PartialEq, Hash, Clone, Copy)]
 enum NodeKind {
     #[default]
     Drone,
@@ -63,24 +65,30 @@ struct NodeWrapper {
     kind: NodeKind,
     crashed: bool,
     repr: String,
-    adj:Vec<u32>
+    adj: Vec<u32>,
 }
 
-impl Default for NodeWrapper{
+impl Default for NodeWrapper {
     fn default() -> Self {
-        NodeWrapper::new(rand::thread_rng().gen_range(1000..=9999),0,0,NodeKind::Drone,vec![])
+        NodeWrapper::new(
+            rand::thread_rng().gen_range(1000..=9999),
+            0,
+            0,
+            NodeKind::Drone,
+            vec![],
+        )
     }
 }
 
 impl NodeWrapper {
-    fn new(id: u32, x: u32, y: u32, kind: NodeKind,adj : Vec<u32>) -> Self {
+    fn new(id: u32, x: u32, y: u32, kind: NodeKind, adj: Vec<u32>) -> Self {
         let s = format!("{:?} #{}", kind, id);
         NodeWrapper {
             id,
             x,
             y,
             kind,
-            crashed:false,
+            crashed: false,
             repr: s,
             adj,
         }
@@ -125,18 +133,18 @@ impl App {
         self.running = true;
         self.node_list_state.select(Some(0));
         self.nodes = vec![
-            NodeWrapper::new(1234, 8, 6, NodeKind::Drone, vec![2, 5, 6, 8]),  // Node 0
+            NodeWrapper::new(1234, 8, 6, NodeKind::Drone, vec![2, 5, 6, 8]), // Node 0
             NodeWrapper::new(3252, 4, 9, NodeKind::Drone, vec![6, 7, 4, 10]), // Node 1
             NodeWrapper::new(6234, 7, 10, NodeKind::Drone, vec![0, 4, 3, 9]), // Node 2
-            NodeWrapper::new(5463, 9, 11, NodeKind::Drone, vec![2, 5, 11]),   // Node 3
-            NodeWrapper::new(5234, 2, 2, NodeKind::Drone, vec![2, 6, 1, 3]),  // Node 4
-            NodeWrapper::new(4252, 8, 3, NodeKind::Drone, vec![0, 3, 6, 7]),  // Node 5
-            NodeWrapper::new(8234, 1, 1, NodeKind::Drone, vec![0, 1, 4, 5]),  // Node 6
-            NodeWrapper::new(9456, 15, 4, NodeKind::Drone, vec![1, 5, 10]),   // Node 7
-            NodeWrapper::new(3452, 3, 3, NodeKind::Client, vec![0, 6, 2]),    // Node 8
-            NodeWrapper::new(5323, 5, 4, NodeKind::Client, vec![2, 3, 7]),    // Node 9
-            NodeWrapper::new(7345, 10, 0, NodeKind::Server, vec![1, 6, 7]),   // Node 10
-            NodeWrapper::new(8945, 7, 3, NodeKind::Server, vec![3, 5, 1]),    // Node 11                           
+            NodeWrapper::new(5463, 9, 11, NodeKind::Drone, vec![2, 5, 11]),  // Node 3
+            NodeWrapper::new(5234, 2, 2, NodeKind::Drone, vec![2, 6, 1, 3]), // Node 4
+            NodeWrapper::new(4252, 8, 3, NodeKind::Drone, vec![0, 3, 6, 7]), // Node 5
+            NodeWrapper::new(8234, 1, 1, NodeKind::Drone, vec![0, 1, 4, 5]), // Node 6
+            NodeWrapper::new(9456, 15, 4, NodeKind::Drone, vec![1, 5, 10]),  // Node 7
+            NodeWrapper::new(3452, 3, 3, NodeKind::Client, vec![0, 6, 2]),   // Node 8
+            NodeWrapper::new(5323, 5, 4, NodeKind::Client, vec![2, 3, 7]),   // Node 9
+            NodeWrapper::new(7345, 10, 0, NodeKind::Server, vec![1, 6, 7]),  // Node 10
+            NodeWrapper::new(8945, 7, 3, NodeKind::Server, vec![3, 5, 1]),   // Node 11
         ];
         while self.running {
             terminal.draw(|frame| frame.render_widget(&mut self, frame.area()))?;
@@ -166,7 +174,9 @@ impl App {
             Screen::Start => self.handle_keypress_start(key),
             Screen::Main => self.handle_keypress_main(key),
             Screen::Move => self.handle_keypress_move(key),
-            Screen::AddConnection { origin:from } => self.handle_keypress_add_connection(key,from),
+            Screen::AddConnection { origin: from } => {
+                self.handle_keypress_add_connection(key, from)
+            }
             Screen::AddNode => self.handle_keypress_add_node(key),
         }
     }
@@ -185,24 +195,28 @@ impl App {
         match (key.modifiers, key.code) {
             (_, KeyCode::Char('q')) => self.quit(),
             (_, KeyCode::Char('m')) => self.screen = Screen::Move,
-            (_, KeyCode::Char('c')) => self.screen = Screen::AddConnection { origin: self.node_list_state.selected().unwrap() as u32},
-            (_, KeyCode::Char('+')) => {self.nodes.push(NodeWrapper::default()); self.node_list_state.select_last();self.screen = Screen::AddNode},
+            (_, KeyCode::Char('c')) => {
+                self.screen = Screen::AddConnection {
+                    origin: self.node_list_state.selected().unwrap() as u32,
+                }
+            }
+            (_, KeyCode::Char('+')) => {
+                self.nodes.push(NodeWrapper::default());
+                self.node_list_state.select_last();
+                self.screen = Screen::AddNode
+            }
             (_, KeyCode::Up) => self.node_list_state.scroll_up_by(1),
             (_, KeyCode::Down) => self.node_list_state.scroll_down_by(1),
             // | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C'))
             // (_,KeyCode::Char('c')) => self.quit(),
-            other => {
-                match self.get_selected_kind(){
-                    Some(NodeKind::Drone)=>{
-                        match other{
-                            (_, KeyCode::Char('p')) =>  todo!(),
-                            (_, KeyCode::Char('k')) => todo!(),
-                            _ =>{}
-                        }
-                    }
-                    _ =>{}
-                }
-            }
+            other => match self.get_selected_kind() {
+                Some(NodeKind::Drone) => match other {
+                    (_, KeyCode::Char('p')) => todo!(),
+                    (_, KeyCode::Char('k')) => todo!(),
+                    _ => {}
+                },
+                _ => {}
+            },
         }
     }
 
@@ -228,7 +242,7 @@ impl App {
         }
     }
 
-    fn handle_keypress_add_connection(&mut self, key: KeyEvent,from:u32) {
+    fn handle_keypress_add_connection(&mut self, key: KeyEvent, from: u32) {
         let x = match self.node_list_state.selected() {
             None => {
                 self.screen = Screen::Main;
@@ -239,7 +253,11 @@ impl App {
 
         match (key.modifiers, key.code) {
             (_, KeyCode::Char('q')) => self.quit(),
-            (_, KeyCode::Enter) => {self.add_connection(from as usize,x); self.node_list_state.select(Some(from as usize)); self.screen=Screen::Main},
+            (_, KeyCode::Enter) => {
+                self.add_connection(from as usize, x);
+                self.node_list_state.select(Some(from as usize));
+                self.screen = Screen::Main
+            }
             (_, KeyCode::Up) => self.node_list_state.scroll_up_by(1),
             (_, KeyCode::Down) => self.node_list_state.scroll_down_by(1),
             // | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C'))
@@ -263,10 +281,10 @@ impl App {
             (_, KeyCode::Down) => n.shiftd(1),
             (_, KeyCode::Left) => n.shiftl(1),
             (_, KeyCode::Right) => n.shiftr(1),
-            (_, KeyCode::Char('c')) => n.kind=NodeKind::Client,
-            (_, KeyCode::Char('s')) => n.kind=NodeKind::Server,
-            (_, KeyCode::Char('d')) => n.kind=NodeKind::Drone,
-            (_, KeyCode::Enter) => {self.screen=Screen::Main},
+            (_, KeyCode::Char('c')) => n.kind = NodeKind::Client,
+            (_, KeyCode::Char('s')) => n.kind = NodeKind::Server,
+            (_, KeyCode::Char('d')) => n.kind = NodeKind::Drone,
+            (_, KeyCode::Enter) => self.screen = Screen::Main,
             (_, KeyCode::Char('q')) => self.quit(),
 
             // | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C'))
@@ -284,22 +302,21 @@ impl App {
         todo!()
     }
 
-    fn add_connection(&mut self, from:usize, to:usize){
-        if from < self.nodes.len() && to < self.nodes.len(){
+    fn add_connection(&mut self, from: usize, to: usize) {
+        if from < self.nodes.len() && to < self.nodes.len() {
             self.nodes[from].adj.push(to as u32);
             self.nodes[to].adj.push(from as u32);
         }
     }
 
-    fn get_selected_kind(&self) -> Option<NodeKind>{
-        let idx =self.node_list_state.selected()?;
-        
-        if idx < self.nodes.len(){
+    fn get_selected_kind(&self) -> Option<NodeKind> {
+        let idx = self.node_list_state.selected()?;
+
+        if idx < self.nodes.len() {
             Some(self.nodes[idx].kind)
-        }
-        else{
+        } else {
             None
-        }        
+        }
     }
 
     fn render_start(&self, area: Rect, buf: &mut Buffer) {
@@ -325,20 +342,18 @@ impl App {
 
         let [top, bottom] =
             Layout::vertical([Constraint::Max(6), Constraint::Fill(1)]).areas(inner_area);
-        
-        
 
         // horiz crop
         // let [h,_] = Layout::horizontal([Constraint::Length(width), Constraint::Min(0)]).areas(bottom);
         //vert crop
         // let [hv,_] = Layout::horizontal([Constraint::Length(height), Constraint::Min(0)]).areas(h);
-        
+
         // let mut text:String = String::new();
 
         big_text.render(top, buf);
         block.render(area, buf);
 
-        render_image(bottom,buf,"./media/pixil-frame-0.png");
+        render_image(bottom, buf, "./media/pixil-frame-0.png");
     }
 
     fn render_main(&mut self, area: Rect, buf: &mut Buffer) {
@@ -407,7 +422,6 @@ impl App {
         let canvas_border_offset: f64 = 1.0;
 
         let canvas = Canvas::default()
-            
             .marker(Marker::Braille)
             .paint(|ctx| {
                 let mut checked: HashSet<&NodeWrapper> = HashSet::new();
@@ -424,10 +438,10 @@ impl App {
                             // }
 
                             let line = ratatui::widgets::canvas::Line {
-                                x1: (n1.x as f64) ,
-                                y1: (n1.y as f64) ,
-                                x2: (n2.x as f64) ,
-                                y2: (n2.y as f64) ,
+                                x1: (n1.x as f64),
+                                y1: (n1.y as f64),
+                                x2: (n2.x as f64),
+                                y2: (n2.y as f64),
                                 color: c,
                             };
                             ctx.draw(&line);
@@ -437,54 +451,50 @@ impl App {
 
                 ctx.layer();
 
-                match self.screen{
+                match self.screen {
                     Screen::Start => {
                         todo!()
-                    },
+                    }
                     // Highlight edges that connect selected node
-                    Screen::Main | Screen::Move | Screen::AddNode=> {
+                    Screen::Main | Screen::Move | Screen::AddNode => {
                         if let Some(id1) = self.node_list_state.selected() {
                             let n1 = &self.nodes[id1];
-                            for (p2,n2) in self.nodes.iter().enumerate() {
-                                if n1.adj.contains(&(p2 as u32)){
+                            for (p2, n2) in self.nodes.iter().enumerate() {
+                                if n1.adj.contains(&(p2 as u32)) {
                                     let line = ratatui::widgets::canvas::Line {
-                                        x1: (n1.x as f64) ,
-                                        y1: (n1.y as f64) ,
-                                        x2: (n2.x as f64) ,
-                                        y2: (n2.y as f64) ,
+                                        x1: (n1.x as f64),
+                                        y1: (n1.y as f64),
+                                        x2: (n2.x as f64),
+                                        y2: (n2.y as f64),
                                         color: HIGHLIGHT_COLOR,
                                     };
                                     ctx.draw(&line);
-                                }  
+                                }
                             }
                         }
-                    },
-                    Screen::AddConnection { origin: o } =>{
+                    }
+                    Screen::AddConnection { origin: o } => {
                         if let Some(id1) = self.node_list_state.selected() {
-                            if (o as usize) < self.nodes.len(){
+                            if (o as usize) < self.nodes.len() {
                                 let n1 = &self.nodes[id1];
                                 let n2 = &self.nodes[o as usize];
-                            
+
                                 let line = ratatui::widgets::canvas::Line {
-                                    x1: (n1.x as f64) ,
-                                    y1: (n1.y as f64) ,
-                                    x2: (n2.x as f64) ,
-                                    y2: (n2.y as f64) ,
+                                    x1: (n1.x as f64),
+                                    y1: (n1.y as f64),
+                                    x2: (n2.x as f64),
+                                    y2: (n2.y as f64),
                                     color: Color::Green,
                                 };
                                 ctx.draw(&line);
-
                             }
-                            
                         }
                     }
                 }
 
-                
-
                 for (pos, n) in self.nodes.iter().enumerate() {
-                    let tx = (n.x as f64) ;
-                    let ty = (n.y as f64) ;
+                    let tx = (n.x as f64);
+                    let ty = (n.y as f64);
 
                     let mut s = Style::new().fg(TEXT_COLOR);
                     let mut c: char;
@@ -512,7 +522,7 @@ impl App {
                     }
 
                     if let Some(selected_index) = self.node_list_state.selected() {
-                        match self.screen{
+                        match self.screen {
                             Screen::Start => todo!(),
                             // highlight selected node
                             Screen::Main | Screen::Move => {
@@ -521,7 +531,7 @@ impl App {
                                     s = s.fg(BG_COLOR);
                                     s = s.bold();
                                 }
-                            },
+                            }
                             // highlight node from which connection starts
                             // and highlight green selected ndoe for destination
                             Screen::AddConnection { origin: o } => {
@@ -530,35 +540,29 @@ impl App {
                                     //s = s.fg(BG_COLOR);
                                     s = s.bold();
                                 }
-                                if(pos == o as usize){
+                                if (pos == o as usize) {
                                     s = s.bg(HIGHLIGHT_COLOR);
                                     s = s.fg(BG_COLOR);
                                     s = s.bold();
                                 }
-                                
-                            },
+                            }
                             // highlight green the new node
-                            Screen::AddNode =>{
+                            Screen::AddNode => {
                                 if (selected_index == pos) {
                                     s = s.bg(Color::Green);
                                     s = s.bold();
                                 }
                             }
                         }
-                        
                     }
-                    
-                    ctx.print(
-                        tx ,
-                        ty ,
-                        Line::styled(format!("{}{}{}", bl, c, br), s),
-                    );
+
+                    ctx.print(tx, ty, Line::styled(format!("{}{}{}", bl, c, br), s));
                 }
             })
             .background_color(BG_COLOR)
-            .x_bounds([min_x as f64, max_x as f64+ (3.0)/(max_x as f64)])
-            .y_bounds([min_y as f64, max_y as f64 ]);
-        
+            .x_bounds([min_x as f64, max_x as f64 + (3.0) / (max_x as f64)])
+            .y_bounds([min_y as f64, max_y as f64]);
+
         block.render(area, buf);
         canvas.render(inner_area, buf);
     }
@@ -620,23 +624,13 @@ impl App {
             ("q", "Quit"),
         ];
 
-        let move_keys = [
-            ("↑/↓/→/←", "Move"),
-            ("Enter", "Ok"), 
-            ("q", "Quit")
-        ];
-        
+        let move_keys = [("↑/↓/→/←", "Move"), ("Enter", "Ok"), ("q", "Quit")];
 
         let keys: &[(&str, &str)] = match self.screen {
-            Screen::Main => {
-                match self.get_selected_kind(){
-                    Some(NodeKind::Drone)=>{
-                        &main_keys_over_drone
-                    }
-                    _ =>{
-                        &main_keys
-                    }
-                }},
+            Screen::Main => match self.get_selected_kind() {
+                Some(NodeKind::Drone) => &main_keys_over_drone,
+                _ => &main_keys,
+            },
             Screen::Start => &start_keys,
             Screen::Move => &move_keys,
             Screen::AddConnection { origin: _ } => &main_keys_add_connection,
@@ -676,15 +670,14 @@ impl Widget for &mut App {
             Screen::Start => {
                 self.render_start(main, buf);
             }
-            Screen::Main|Screen::Move| Screen::AddConnection { origin:_ }|Screen::AddNode => {
+            Screen::Main | Screen::Move | Screen::AddConnection { origin: _ } | Screen::AddNode => {
                 self.render_main(main, buf);
             }
         }
     }
 }
 
-
-fn render_image(area:Rect, buf : &mut Buffer, path: &str){
+fn render_image(area: Rect, buf: &mut Buffer, path: &str) {
     let img = image::open(path).expect("Failed to open image");
 
     let (w, h) = img.dimensions();
@@ -693,30 +686,28 @@ fn render_image(area:Rect, buf : &mut Buffer, path: &str){
     let width = w as u16;
     let height = h as u16;
 
-    let origin_x =area.left()+(area.width/2)-(width/2);
-    let origin_y= area.top()+(area.height/2)-(height/4);
+    let origin_x = area.left() + (area.width / 2) - (width / 2);
+    let origin_y = area.top() + (area.height / 2) - (height / 4);
 
-    let mut cell= &mut buf[(0+origin_x, 0+origin_y)];
+    let mut cell = &mut buf[(0 + origin_x, 0 + origin_y)];
 
-    for x in 0..width{
-        for y in 0..height{
+    for x in 0..width {
+        for y in 0..height {
             let rgba = img.get_pixel(x as u32, y as u32).0;
 
-            let c ; 
-            if rgba[3]==0{
-                c= BG_COLOR;
-            }
-            else{
+            let c;
+            if rgba[3] == 0 {
+                c = BG_COLOR;
+            } else {
                 c = Color::Rgb(rgba[0], rgba[1], rgba[2]);
             }
 
-            if y%2==0 {
-                cell = &mut buf[(x+origin_x, y/2+origin_y)];
-                cell.set_char('▀');  
+            if y % 2 == 0 {
+                cell = &mut buf[(x + origin_x, y / 2 + origin_y)];
+                cell.set_char('▀');
 
-                cell.fg = c; 
-            }
-            else{
+                cell.fg = c;
+            } else {
                 cell.bg = c;
             }
         }
