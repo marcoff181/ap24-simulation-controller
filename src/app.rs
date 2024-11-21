@@ -14,6 +14,8 @@ use std::fmt::format;
 use std::io::Lines;
 use tui_big_text::{BigText, PixelSize};
 
+use image::{DynamicImage, GenericImageView, Rgba};
+
 fn random_color() -> Color {
     let mut rng = rand::thread_rng();
     let r = rng.gen_range(0..=255);
@@ -323,13 +325,20 @@ impl App {
 
         let [top, bottom] =
             Layout::vertical([Constraint::Max(6), Constraint::Fill(1)]).areas(inner_area);
-
+        
         
 
-        // Render the BigText inside the inner area
+        // horiz crop
+        // let [h,_] = Layout::horizontal([Constraint::Length(width), Constraint::Min(0)]).areas(bottom);
+        //vert crop
+        // let [hv,_] = Layout::horizontal([Constraint::Length(height), Constraint::Min(0)]).areas(h);
+        
+        // let mut text:String = String::new();
+
         big_text.render(top, buf);
         block.render(area, buf);
-        //p.render(bottom,buf);
+
+        render_image(bottom,buf,"./media/pixil-frame-0.png");
     }
 
     fn render_main(&mut self, area: Rect, buf: &mut Buffer) {
@@ -671,5 +680,46 @@ impl Widget for &mut App {
                 self.render_main(main, buf);
             }
         }
+    }
+}
+
+
+fn render_image(area:Rect, buf : &mut Buffer, path: &str){
+    let img = image::open(path).expect("Failed to open image");
+
+    let (w, h) = img.dimensions();
+
+    // 32 x 24 canvas needed
+    let width = w as u16;
+    let height = h as u16;
+
+    let origin_x =area.left()+(area.width/2)-(width/2);
+    let origin_y= area.top()+(area.height/2)-(height/4);
+
+    let mut cell= &mut buf[(0+origin_x, 0+origin_y)];
+
+    for x in 0..width{
+        for y in 0..height{
+            let rgba = img.get_pixel(x as u32, y as u32).0;
+
+            let c ; 
+            if rgba[3]==0{
+                c= BG_COLOR;
+            }
+            else{
+                c = Color::Rgb(rgba[0], rgba[1], rgba[2]);
+            }
+
+            if y%2==0 {
+                cell = &mut buf[(x+origin_x, y/2+origin_y)];
+                cell.set_char('▀');  
+
+                cell.fg = c; 
+            }
+            else{
+                cell.bg = c;
+            }
+        }
+        // text.push('\n');
     }
 }
