@@ -1,5 +1,5 @@
 [package]
-name = "ap24-simulation_controller"
+name = "ap24-simulation-controller"
 version = "0.1.0"
 edition = "2021"
 
