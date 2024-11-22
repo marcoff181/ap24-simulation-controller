@@ -1,17 +1,23 @@
-use crate::utilities::theme::*;
 use super::keys::*;
-
+use crate::utilities::theme::*;
 
 use ratatui::{
-    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::{self, Marker}, text::{Line, Span}, widgets::{canvas::Canvas, Block, Borders, HighlightSpacing, List, ListDirection, Padding, StatefulWidget, Widget}
+    buffer::Buffer,
+    layout::Rect,
+    style::{Color, Style, Stylize},
+    text::{Line, Span},
+    widgets::{StatefulWidget, Widget},
 };
 
-use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen}, utilities::theme::*, Model};
+use crate::{
+    model::{node_kind::NodeKind, screen::Screen},
+    Model,
+};
 
-pub fn render_footer(model:&Model, area: Rect, buf: &mut Buffer) {
+pub fn render_footer(model: &Model, area: Rect, buf: &mut Buffer) {
     let keys: &[(&str, &str)] = match model.screen {
         Screen::Main => match model.get_selected_kind() {
-            Some(NodeKind::Drone { pdr:_, crashed:_ }) => &MAIN_KEYS_OVER_DRONE,
+            Some(NodeKind::Drone { pdr: _, crashed: _ }) => &MAIN_KEYS_OVER_DRONE,
             _ => &MAIN_KEYS,
         },
         Screen::Start => &START_KEYS,

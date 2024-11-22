@@ -1,13 +1,15 @@
 use crate::utilities::theme::*;
-use std::collections::HashSet;
 
 use ratatui::{
-    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::{self, Marker}, text::Line, widgets::{canvas::Canvas, Block, Borders, HighlightSpacing, List, ListDirection, Padding, StatefulWidget, Widget}
+    buffer::Buffer,
+    layout::Rect,
+    style::{Style, Stylize},
+    widgets::{Block, Borders, HighlightSpacing, List, ListDirection, StatefulWidget},
 };
 
-use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen}, utilities::theme::*, Model};
+use crate::Model;
 
-pub fn render_list(model : &mut Model, area: Rect, buf: &mut Buffer) {
+pub fn render_list(model: &mut Model, area: Rect, buf: &mut Buffer) {
     let left_block = Block::new()
         .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
         .title("Nodes")
@@ -29,7 +31,6 @@ pub fn render_list(model : &mut Model, area: Rect, buf: &mut Buffer) {
         .direction(ListDirection::TopToBottom)
         .block(left_block)
         .highlight_spacing(HighlightSpacing::Always);
-    
 
     StatefulWidget::render(list, area, buf, &mut model.node_list_state);
 }

@@ -1,12 +1,21 @@
 use std::collections::HashSet;
 
 use ratatui::{
-    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::{self, Marker}, text::Line, widgets::{canvas::Canvas, Block, Borders, Padding, Widget}
+    buffer::Buffer,
+    layout::Rect,
+    style::{Color, Style, Stylize},
+    symbols::{self, Marker},
+    text::Line,
+    widgets::{canvas::Canvas, Block, Borders, Padding, Widget},
 };
 
-use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen}, utilities::theme::*, Model};
+use crate::{
+    model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen},
+    utilities::theme::*,
+    Model,
+};
 
-pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
+pub fn render_simulation(model: &Model, area: Rect, buf: &mut Buffer) {
     let top_right_border_set = symbols::border::Set {
         top_left: symbols::line::NORMAL.horizontal_down,
         ..symbols::border::PLAIN
@@ -42,7 +51,7 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                 checked.insert(&n1);
                 for (p2, n2) in model.nodes.iter().enumerate() {
                     if !checked.contains(&n2) && n1.adj.contains(&(p2 as u8)) {
-                        let mut c: Color = Color::DarkGray;
+                        let c: Color = Color::DarkGray;
                         // if let Some(selected_index) = node_list_state.selected() {
                         //     if (selected_index == p1 || selected_index == p2) {
                         //         c = HIGHLIGHT_COLOR;
@@ -105,19 +114,18 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
             }
 
             for (pos, n) in model.nodes.iter().enumerate() {
-                let tx = (n.x as f64);
-                let ty = (n.y as f64);
+                let tx = n.x as f64;
+                let ty = n.y as f64;
 
                 let mut s = Style::new().fg(TEXT_COLOR);
-                let mut c: char;
-                let mut bl: char;
-                let mut br: char;
+                let c: char;
+                let bl: char;
+                let br: char;
                 match n.kind {
-                    NodeKind::Drone { pdr:_, crashed:crashed } => {
-                        if crashed{
+                    NodeKind::Drone { pdr: _, crashed } => {
+                        if crashed {
                             s = s.bg(CRASH_COLOR);
-                        }
-                        else{
+                        } else {
                             s = s.bg(DRONE_COLOR);
                         }
                         c = 'D';
@@ -143,7 +151,7 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                         Screen::Start => todo!(),
                         // highlight selected node
                         Screen::Main | Screen::Move => {
-                            if (selected_index == pos) {
+                            if selected_index == pos {
                                 s = s.bg(HIGHLIGHT_COLOR);
                                 s = s.fg(BG_COLOR);
                                 s = s.bold();
@@ -152,12 +160,12 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                         // highlight node from which connection starts
                         // and highlight green selected ndoe for destination
                         Screen::AddConnection { origin: o } => {
-                            if (selected_index == pos) {
+                            if selected_index == pos {
                                 s = s.bg(Color::Green);
                                 //s = s.fg(BG_COLOR);
                                 s = s.bold();
                             }
-                            if (pos == o as usize) {
+                            if pos == o as usize {
                                 s = s.bg(HIGHLIGHT_COLOR);
                                 s = s.fg(BG_COLOR);
                                 s = s.bold();
@@ -165,7 +173,7 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                         }
                         // highlight green the new node
                         Screen::AddNode => {
-                            if (selected_index == pos) {
+                            if selected_index == pos {
                                 s = s.bg(Color::Green);
                                 s = s.bold();
                             }
