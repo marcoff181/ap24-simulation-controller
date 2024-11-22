@@ -574,9 +574,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "1.0.11"
+version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
+checksum = "540654e97a3f4470a492cd30ff187bc95d89557a903a2bbf112e2fae98104ef2"
 
 [[package]]
 name = "jobserver"
@@ -701,17 +701,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "network-initializer"
-version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/network-initializer.git?branch=wip-initialization#64fdf84c907037229fcf3294944c34504b8c8f9f"
-dependencies = [
- "crossbeam-channel",
- "null-pointer-drone",
- "toml",
- "wg_2024",
-]
-
-[[package]]
 name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -732,15 +721,6 @@ name = "noop_proc_macro"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
-
-[[package]]
-name = "null-pointer-drone"
-version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/null-pointer-drone#d94db34f9c99cd4e2252a73b27571ebbb5d5bcd9"
-dependencies = [
- "crossbeam-channel",
- "wg_2024",
-]
 
 [[package]]
 name = "num-bigint"
@@ -867,9 +847,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.89"
+version = "1.0.92"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f139b0662de085916d1fb67d2b4169d1addddda1919e696f3252b740b629986e"
+checksum = "37d3544b3f2748c54e147655edb5025752e2303145b5aefb3c3ea2c78b973bb0"
 dependencies = [
  "unicode-ident",
 ]
@@ -1202,7 +1182,6 @@ dependencies = [
  "crossbeam-channel",
  "crossterm",
  "image",
- "network-initializer",
  "rand 0.9.0-alpha.2",
  "ratatui",
  "tui-big-text",
@@ -1251,9 +1230,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.87"
+version = "2.0.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25aa4ce346d03a6dcd68dd8b4010bcb74e54e62c90c573f394c46eae99aba32d"
+checksum = "44d46482f1c1c87acd84dea20c1bf5ebff4c757009ed6bf19cfd36fb10e92c4e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1358,9 +1337,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe"
+checksum = "adb9e6ca4f869e1180728b7950e35922a7fc6397f7b641499e8f3ef06e50dc83"
 
 [[package]]
 name = "unicode-segmentation"
@@ -1478,7 +1457,7 @@ checksum = "53a85b86a771b1c87058196170769dd264f66c0782acf1ae6cc51bfd64b39082"
 [[package]]
 name = "wg_2024"
 version = "0.1.0"
-source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
 dependencies = [
  "wg_internal",
 ]
@@ -1486,7 +1465,7 @@ dependencies = [
 [[package]]
 name = "wg_config"
 version = "0.1.0"
-source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
 dependencies = [
  "serde",
  "wg_network",
@@ -1495,9 +1474,10 @@ dependencies = [
 [[package]]
 name = "wg_controller"
 version = "0.1.0"
-source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
 dependencies = [
  "crossbeam-channel",
+ "wg_config",
  "wg_network",
  "wg_packet",
 ]
@@ -1505,7 +1485,7 @@ dependencies = [
 [[package]]
 name = "wg_drone"
 version = "0.1.0"
-source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
 dependencies = [
  "crossbeam-channel",
  "wg_controller",
@@ -1516,7 +1496,7 @@ dependencies = [
 [[package]]
 name = "wg_internal"
 version = "0.1.0"
-source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
 dependencies = [
  "wg_config",
  "wg_controller",
@@ -1528,12 +1508,12 @@ dependencies = [
 [[package]]
 name = "wg_network"
 version = "0.1.0"
-source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
 
 [[package]]
 name = "wg_packet"
 version = "0.1.0"
-source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
 dependencies = [
  "wg_network",
 ]

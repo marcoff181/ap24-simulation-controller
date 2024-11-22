@@ -5,11 +5,7 @@ use app::App;
 mod app;
 
 use crossbeam_channel::{Receiver, Sender};
-use wg_2024::{config::Config, controller::Command, network::NodeId};
-
-use network_initializer::unofficial_wg_implementations::{
-    SimControllerOptions, SimulationController,
-};
+use wg_2024::{config::Config, controller::{Command, SimControllerOptions, SimulationController}, network::NodeId};
 
 pub struct MySimulationController {
     command_send: HashMap<NodeId, Sender<Command>>,
