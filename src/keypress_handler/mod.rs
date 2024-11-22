@@ -5,8 +5,6 @@ use crate::{
     MySimulationController,
 };
 
-use super::get_selected_kind;
-
 pub fn handle_crossterm_events(cntrl: &mut MySimulationController) -> Result<(), std::io::Error> {
     match event::read()? {
         // check KeyEventKind::Press to avoid handling key release events
@@ -55,7 +53,7 @@ fn handle_keypress_main(cntrl: &mut MySimulationController, key: KeyEvent) {
             cntrl.model.node_list_state.select_last();
             cntrl.model.screen = Screen::AddNode
         }
-        other => match get_selected_kind(&cntrl.model) {
+        other => match cntrl.model.get_selected_kind() {
             Some(NodeKind::Drone { pdr: _, crashed: _ }) => match other {
                 (_, KeyCode::Char('p')) => todo!(),
                 (_, KeyCode::Char('k')) => todo!(),

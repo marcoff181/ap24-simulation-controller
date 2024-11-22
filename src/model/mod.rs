@@ -1,3 +1,4 @@
+use node_kind::NodeKind;
 use node_representation::NodeRepresentation;
 use ratatui::widgets::ListState;
 use screen::Screen;
@@ -32,6 +33,17 @@ impl Model{
             running: false,
             screen: Screen::default(),
             nodes,
+        }
+    }
+
+    // maybe should be in model?
+    pub fn get_selected_kind(&self) -> Option<NodeKind> {
+        let idx = self.node_list_state.selected()?;
+
+        if idx < self.nodes.len() {
+            Some(self.nodes[idx].kind)
+        } else {
+            None
         }
     }
     

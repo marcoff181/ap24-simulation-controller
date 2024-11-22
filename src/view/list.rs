@@ -7,14 +7,14 @@ use ratatui::{
 
 use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen}, utilities::theme::*, Model};
 
-pub fn render_list(&mut self, area: Rect, buf: &mut Buffer) {
+pub fn render_list(model : &mut Model, area: Rect, buf: &mut Buffer) {
     let left_block = Block::new()
         .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
         .title("Nodes")
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
 
-    let items = self
+    let items = model
         .nodes
         .iter()
         .map(|x| x.repr.as_str())
@@ -29,6 +29,7 @@ pub fn render_list(&mut self, area: Rect, buf: &mut Buffer) {
         .direction(ListDirection::TopToBottom)
         .block(left_block)
         .highlight_spacing(HighlightSpacing::Always);
+    
 
-    StatefulWidget::render(list, area, buf, &mut self.node_list_state);
+    StatefulWidget::render(list, area, buf, &mut model.node_list_state);
 }

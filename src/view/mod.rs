@@ -4,6 +4,8 @@ mod list;
 mod simulation;
 mod stats;
 
+use footer::render_footer;
+use list::render_list;
 use ratatui::buffer::Buffer;
 use ratatui::prelude::Stylize;
 use ratatui::prelude::*;
@@ -12,26 +14,29 @@ use ratatui::widgets::canvas::{Canvas, Circle, Context, Painter, Shape};
 use ratatui::widgets::{
     Block, Borders, HighlightSpacing, List, ListDirection, ListState, Padding, Paragraph,
 };
+use simulation::render_simulation;
+use stats::render_stats;
 use std::collections::HashSet;
 use tui_big_text::{BigText, PixelSize};
 
+use crate::model::screen::Screen;
 use crate::model::Model;
 
-pub fn render(model: &Model, area: Rect, buf: &mut Buffer) {
+pub fn render(model: &mut Model, area: Rect, buf: &mut Buffer) {
     let [main, footer] = Layout::vertical([Constraint::Min(0), Constraint::Length(1)]).areas(area);
-    render_footer(footer, buf);
+    render_footer(model,footer, buf);
 
     match model.screen {
         Screen::Start => {
-            render_start(main, buf);
+            //render_start(main, buf);
         }
         Screen::Main | Screen::Move | Screen::AddConnection { origin: _ } | Screen::AddNode => {
-            render_default(main, buf);
+            render_default(model,main, buf);
         }
     }
 }
 
-fn render_default(model: &Model, area: Rect, buf: &mut Buffer) {
+fn render_default(model: &mut Model, area: Rect, buf: &mut Buffer) {
     let [left, right] = Layout::horizontal([Constraint::Max(18), Constraint::Fill(1)]).areas(area);
 
     let [top_right, bottom_right] =

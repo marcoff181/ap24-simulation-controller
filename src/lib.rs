@@ -49,7 +49,8 @@ impl MySimulationController {
     
         while self.model.running {
             // the view renders based on an immutable reference to the model
-            terminal.draw(|frame| crate::view::render(&self.model, frame.area(), frame.buffer_mut()))?;
+            // apart from that list that needed it
+            terminal.draw(|frame| crate::view::render(&mut self.model, frame.area(), frame.buffer_mut()))?;
             // should keypress return something when an action is asked?
             keypress_handler::handle_crossterm_events(self)?;
         }
@@ -75,13 +76,4 @@ impl MySimulationController {
 
 
 
-// maybe should be in model?
-fn get_selected_kind(model: &Model) -> Option<NodeKind> {
-    let idx = model.node_list_state.selected()?;
 
-    if idx < model.nodes.len() {
-        Some(model.nodes[idx].kind)
-    } else {
-        None
-    }
-}

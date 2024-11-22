@@ -1,14 +1,12 @@
 use std::collections::HashSet;
 
 use ratatui::{
-    buffer::Buffer, layout::Rect, style::{Color, Stylize}, symbols::{self, Marker}, text::Line, widgets::{canvas::Canvas, Block, Borders, Padding, Widget}
+    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::{self, Marker}, text::Line, widgets::{canvas::Canvas, Block, Borders, Padding, Widget}
 };
 
 use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen}, utilities::theme::*, Model};
 
 pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
-    let nodes = model.nodes;
-
     let top_right_border_set = symbols::border::Set {
         top_left: symbols::line::NORMAL.horizontal_down,
         ..symbols::border::PLAIN
@@ -25,10 +23,10 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
     let inner_area = block.inner(area);
 
     // redo to avoid panic
-    let max_x = nodes.iter().map(|n| n.x).max().unwrap();
-    let max_y = nodes.iter().map(|n| n.y).max().unwrap();
-    let min_x = nodes.iter().map(|n| n.x).min().unwrap();
-    let min_y = nodes.iter().map(|n| n.y).min().unwrap();
+    let max_x = model.nodes.iter().map(|n| n.x).max().unwrap();
+    let max_y = model.nodes.iter().map(|n| n.y).max().unwrap();
+    let min_x = model.nodes.iter().map(|n| n.x).min().unwrap();
+    let min_y = model.nodes.iter().map(|n| n.y).min().unwrap();
 
     let scale_x = inner_area.width as f64 / max_x as f64;
     let scale_y = inner_area.height as f64 / max_y as f64;
@@ -42,8 +40,8 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
 
             for (p1, n1) in model.nodes.iter().enumerate() {
                 checked.insert(&n1);
-                for (p2, n2) in nodes.iter().enumerate() {
-                    if !checked.contains(&n2) && n1.adj.contains(&(p2 as u32)) {
+                for (p2, n2) in model.nodes.iter().enumerate() {
+                    if !checked.contains(&n2) && n1.adj.contains(&(p2 as u8)) {
                         let mut c: Color = Color::DarkGray;
                         // if let Some(selected_index) = node_list_state.selected() {
                         //     if (selected_index == p1 || selected_index == p2) {
@@ -65,16 +63,16 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
 
             ctx.layer();
 
-            match screen {
+            match model.screen {
                 Screen::Start => {
                     todo!()
                 }
                 // Highlight edges that connect selected node
                 Screen::Main | Screen::Move | Screen::AddNode => {
-                    if let Some(id1) = node_list_state.selected() {
-                        let n1 = &nodes[id1];
-                        for (p2, n2) in nodes.iter().enumerate() {
-                            if n1.adj.contains(&(p2 as u32)) {
+                    if let Some(id1) = model.node_list_state.selected() {
+                        let n1 = &model.nodes[id1];
+                        for (p2, n2) in model.nodes.iter().enumerate() {
+                            if n1.adj.contains(&(p2 as u8)) {
                                 let line = ratatui::widgets::canvas::Line {
                                     x1: (n1.x as f64),
                                     y1: (n1.y as f64),
@@ -88,10 +86,10 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                     }
                 }
                 Screen::AddConnection { origin: o } => {
-                    if let Some(id1) = node_list_state.selected() {
-                        if (o as usize) < nodes.len() {
-                            let n1 = &nodes[id1];
-                            let n2 = &nodes[o as usize];
+                    if let Some(id1) = model.node_list_state.selected() {
+                        if (o as usize) < model.nodes.len() {
+                            let n1 = &model.nodes[id1];
+                            let n2 = &model.nodes[o as usize];
 
                             let line = ratatui::widgets::canvas::Line {
                                 x1: (n1.x as f64),
@@ -106,7 +104,7 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                 }
             }
 
-            for (pos, n) in nodes.iter().enumerate() {
+            for (pos, n) in model.nodes.iter().enumerate() {
                 let tx = (n.x as f64);
                 let ty = (n.y as f64);
 
@@ -115,8 +113,13 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                 let mut bl: char;
                 let mut br: char;
                 match n.kind {
-                    NodeKind::Drone => {
-                        s = s.bg(DRONE_COLOR);
+                    NodeKind::Drone { pdr:_, crashed:crashed } => {
+                        if crashed{
+                            s = s.bg(CRASH_COLOR);
+                        }
+                        else{
+                            s = s.bg(DRONE_COLOR);
+                        }
                         c = 'D';
                         bl = '(';
                         br = ')';
@@ -135,8 +138,8 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
                     }
                 }
 
-                if let Some(selected_index) = node_list_state.selected() {
-                    match screen {
+                if let Some(selected_index) = model.node_list_state.selected() {
+                    match model.screen {
                         Screen::Start => todo!(),
                         // highlight selected node
                         Screen::Main | Screen::Move => {

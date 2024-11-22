@@ -5,7 +5,7 @@ use wg_2024::{config::{Client, Drone, Server}, network::NodeId};
 
 use super::node_kind::NodeKind;
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub struct NodeRepresentation {
     // will have a field with the actual drone
     //todo: do they all need to be pub?
@@ -18,15 +18,16 @@ pub struct NodeRepresentation {
 }
 
 
-// impl Eq for NodeRepresentation{
+impl Eq for NodeRepresentation{
 
-// }
+}
 
-// impl Hash for NodeRepresentation{
-//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-//         self.id.hash(state);
-//     }
-// }
+// there are no nodes with the same id
+impl std::hash::Hash for NodeRepresentation{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
 
 impl Default for NodeRepresentation {
     fn default() -> Self {
