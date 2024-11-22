@@ -361,7 +361,7 @@ impl App {
         big_text.render(top, buf);
         block.render(area, buf);
 
-        render_image(bottom, buf, "./media/pixil-frame-0.png");
+        //render_image(bottom, buf, "./media/pixil-frame-0.png");
     }
 
     fn render_main(&mut self, area: Rect, buf: &mut Buffer) {
