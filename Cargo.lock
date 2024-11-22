@@ -204,6 +204,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-channel"
+version = "0.5.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33480d6946193aa8033910124896ca395333cae7e2d1113d1fef6c3272217df2"
+dependencies = [
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "crossbeam-deque"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -692,6 +701,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "network-initializer"
+version = "0.1.0"
+source = "git+https://github.com/The-Null-Pointer-Patrol/network-initializer.git?branch=wip-initialization#64fdf84c907037229fcf3294944c34504b8c8f9f"
+dependencies = [
+ "crossbeam-channel",
+ "null-pointer-drone",
+ "toml",
+ "wg_2024",
+]
+
+[[package]]
 name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -712,6 +732,15 @@ name = "noop_proc_macro"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
+
+[[package]]
+name = "null-pointer-drone"
+version = "0.1.0"
+source = "git+https://github.com/The-Null-Pointer-Patrol/null-pointer-drone#d94db34f9c99cd4e2252a73b27571ebbb5d5bcd9"
+dependencies = [
+ "crossbeam-channel",
+ "wg_2024",
+]
 
 [[package]]
 name = "num-bigint"
@@ -1170,11 +1199,14 @@ dependencies = [
 name = "simulation_controller"
 version = "0.1.0"
 dependencies = [
+ "crossbeam-channel",
  "crossterm",
  "image",
+ "network-initializer",
  "rand 0.9.0-alpha.2",
  "ratatui",
  "tui-big-text",
+ "wg_2024",
 ]
 
 [[package]]
@@ -1442,6 +1474,69 @@ name = "weezl"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53a85b86a771b1c87058196170769dd264f66c0782acf1ae6cc51bfd64b39082"
+
+[[package]]
+name = "wg_2024"
+version = "0.1.0"
+source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+dependencies = [
+ "wg_internal",
+]
+
+[[package]]
+name = "wg_config"
+version = "0.1.0"
+source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+dependencies = [
+ "serde",
+ "wg_network",
+]
+
+[[package]]
+name = "wg_controller"
+version = "0.1.0"
+source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+dependencies = [
+ "crossbeam-channel",
+ "wg_network",
+ "wg_packet",
+]
+
+[[package]]
+name = "wg_drone"
+version = "0.1.0"
+source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+dependencies = [
+ "crossbeam-channel",
+ "wg_controller",
+ "wg_network",
+ "wg_packet",
+]
+
+[[package]]
+name = "wg_internal"
+version = "0.1.0"
+source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+dependencies = [
+ "wg_config",
+ "wg_controller",
+ "wg_drone",
+ "wg_network",
+ "wg_packet",
+]
+
+[[package]]
+name = "wg_network"
+version = "0.1.0"
+source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+
+[[package]]
+name = "wg_packet"
+version = "0.1.0"
+source = "git+https://github.com/WGL-2024/WGL_repo_2024.git#06bfd8daa95b4a818fd5d5e36e87f316c9223b73"
+dependencies = [
+ "wg_network",
+]
 
 [[package]]
 name = "winapi"

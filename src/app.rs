@@ -9,12 +9,17 @@ use ratatui::widgets::{
     Block, Borders, HighlightSpacing, List, ListDirection, ListState, Padding, Paragraph,
 };
 use ratatui::DefaultTerminal;
+use wg_2024::network::NodeId;
 use std::collections::HashSet;
 use std::fmt::format;
 use std::io::Lines;
 use tui_big_text::{BigText, PixelSize};
 
 use image::{DynamicImage, GenericImageView, Rgba};
+
+use crate::MySimulationController;
+
+
 
 fn random_color() -> Color {
     let mut rng = rand::thread_rng();
@@ -52,14 +57,16 @@ enum Screen {
 enum NodeKind {
     #[default]
     Drone,
+    // could be used on WG
+    //Drone{pdr:NodeId},
     Client,
     Server,
 }
 
 #[derive(Debug, Eq, PartialEq, Hash)]
-struct NodeWrapper {
+struct NodeRepresentation {
     // will have a field with the actual drone
-    id: u32,
+    id: NodeId,
     x: u32,
     y: u32,
     kind: NodeKind,
@@ -68,10 +75,11 @@ struct NodeWrapper {
     adj: Vec<u32>,
 }
 
-impl Default for NodeWrapper {
+impl Default for NodeRepresentation {
     fn default() -> Self {
-        NodeWrapper::new(
-            rand::thread_rng().gen_range(1000..=9999),
+        NodeRepresentation::new(
+            // todo: check if there is a node with same id
+            rand::thread_rng().gen_range(0..=255),
             0,
             0,
             NodeKind::Drone,
@@ -80,10 +88,10 @@ impl Default for NodeWrapper {
     }
 }
 
-impl NodeWrapper {
-    fn new(id: u32, x: u32, y: u32, kind: NodeKind, adj: Vec<u32>) -> Self {
+impl NodeRepresentation {
+    fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: Vec<u32>) -> Self {
         let s = format!("{:?} #{}", kind, id);
-        NodeWrapper {
+        NodeRepresentation {
             id,
             x,
             y,
@@ -115,14 +123,14 @@ impl NodeWrapper {
 pub struct App {
     running: bool,
     screen: Screen,
-    nodes: Vec<NodeWrapper>,
+    nodes: Vec<NodeRepresentation>,
     //edges: Vec<Edge>,
     node_list_state: ListState,
 }
 
 impl App {
     /// Construct a new instance of [`App`].
-    pub fn new() -> Self {
+    pub fn new(m : &mut MySimulationController) -> Self {
         Self {
             node_list_state: ListState::default(),
             ..Self::default()
@@ -133,18 +141,18 @@ impl App {
         self.running = true;
         self.node_list_state.select(Some(0));
         self.nodes = vec![
-            NodeWrapper::new(1234, 8, 6, NodeKind::Drone, vec![2, 5, 6, 8]), // Node 0
-            NodeWrapper::new(3252, 4, 9, NodeKind::Drone, vec![6, 7, 4, 10]), // Node 1
-            NodeWrapper::new(6234, 7, 10, NodeKind::Drone, vec![0, 4, 3, 9]), // Node 2
-            NodeWrapper::new(5463, 9, 11, NodeKind::Drone, vec![2, 5, 11]),  // Node 3
-            NodeWrapper::new(5234, 2, 2, NodeKind::Drone, vec![2, 6, 1, 3]), // Node 4
-            NodeWrapper::new(4252, 8, 3, NodeKind::Drone, vec![0, 3, 6, 7]), // Node 5
-            NodeWrapper::new(8234, 1, 1, NodeKind::Drone, vec![0, 1, 4, 5]), // Node 6
-            NodeWrapper::new(9456, 15, 4, NodeKind::Drone, vec![1, 5, 10]),  // Node 7
-            NodeWrapper::new(3452, 3, 3, NodeKind::Client, vec![0, 6, 2]),   // Node 8
-            NodeWrapper::new(5323, 5, 4, NodeKind::Client, vec![2, 3, 7]),   // Node 9
-            NodeWrapper::new(7345, 10, 0, NodeKind::Server, vec![1, 6, 7]),  // Node 10
-            NodeWrapper::new(8945, 7, 3, NodeKind::Server, vec![3, 5, 1]),   // Node 11
+            NodeRepresentation::new(34, 8, 6, NodeKind::Drone, vec![2, 5, 6, 8]), // Node 0
+            NodeRepresentation::new(52, 4, 9, NodeKind::Drone, vec![6, 7, 4, 10]), // Node 1
+            NodeRepresentation::new(34, 7, 10, NodeKind::Drone, vec![0, 4, 3, 9]), // Node 2
+            NodeRepresentation::new(63, 9, 11, NodeKind::Drone, vec![2, 5, 11]),  // Node 3
+            NodeRepresentation::new(34, 2, 2, NodeKind::Drone, vec![2, 6, 1, 3]), // Node 4
+            NodeRepresentation::new(52, 8, 3, NodeKind::Drone, vec![0, 3, 6, 7]), // Node 5
+            NodeRepresentation::new(34, 1, 1, NodeKind::Drone, vec![0, 1, 4, 5]), // Node 6
+            NodeRepresentation::new(56, 15, 4, NodeKind::Drone, vec![1, 5, 10]),  // Node 7
+            NodeRepresentation::new(52, 3, 3, NodeKind::Client, vec![0, 6, 2]),   // Node 8
+            NodeRepresentation::new(23, 5, 4, NodeKind::Client, vec![2, 3, 7]),   // Node 9
+            NodeRepresentation::new(45, 10, 0, NodeKind::Server, vec![1, 6, 7]),  // Node 10
+            NodeRepresentation::new(45, 7, 3, NodeKind::Server, vec![3, 5, 1]),   // Node 11
         ];
         while self.running {
             terminal.draw(|frame| frame.render_widget(&mut self, frame.area()))?;
@@ -201,7 +209,7 @@ impl App {
                 }
             }
             (_, KeyCode::Char('+')) => {
-                self.nodes.push(NodeWrapper::default());
+                self.nodes.push(NodeRepresentation::default());
                 self.node_list_state.select_last();
                 self.screen = Screen::AddNode
             }
@@ -424,7 +432,7 @@ impl App {
         let canvas = Canvas::default()
             .marker(Marker::Braille)
             .paint(|ctx| {
-                let mut checked: HashSet<&NodeWrapper> = HashSet::new();
+                let mut checked: HashSet<&NodeRepresentation> = HashSet::new();
 
                 for (p1, n1) in self.nodes.iter().enumerate() {
                     checked.insert(&n1);
