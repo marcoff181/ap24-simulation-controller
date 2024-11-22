@@ -1,5 +1,5 @@
 [package]
-name = "simulation_controller"
+name = "ap24-simulation_controller"
 version = "0.1.0"
 authors = ["{{authors}}"]
 license = "MIT"
