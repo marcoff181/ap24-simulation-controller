@@ -1,4 +1,14 @@
+use std::collections::HashSet;
+
+use ratatui::{
+    buffer::Buffer, layout::Rect, style::{Color, Stylize}, symbols::{self, Marker}, text::Line, widgets::{canvas::Canvas, Block, Borders, Padding, Widget}
+};
+
+use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen}, utilities::theme::*, Model};
+
 pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
+    let nodes = model.nodes;
+
     let top_right_border_set = symbols::border::Set {
         top_left: symbols::line::NORMAL.horizontal_down,
         ..symbols::border::PLAIN
@@ -30,7 +40,7 @@ pub fn render_simulation(model:&Model, area: Rect, buf: &mut Buffer) {
         .paint(|ctx| {
             let mut checked: HashSet<&NodeRepresentation> = HashSet::new();
 
-            for (p1, n1) in nodes.iter().enumerate() {
+            for (p1, n1) in model.nodes.iter().enumerate() {
                 checked.insert(&n1);
                 for (p2, n2) in nodes.iter().enumerate() {
                     if !checked.contains(&n2) && n1.adj.contains(&(p2 as u32)) {

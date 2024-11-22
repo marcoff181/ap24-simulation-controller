@@ -1,4 +1,11 @@
 use crate::utilities::theme::*;
+use std::collections::HashSet;
+
+use ratatui::{
+    buffer::Buffer, layout::Rect, style::{Color, Style, Stylize}, symbols::{self, Marker}, text::Line, widgets::{canvas::Canvas, Block, Borders, HighlightSpacing, List, ListDirection, Padding, StatefulWidget, Widget}
+};
+
+use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen}, utilities::theme::*, Model};
 
 pub fn render_list(&mut self, area: Rect, buf: &mut Buffer) {
     let left_block = Block::new()

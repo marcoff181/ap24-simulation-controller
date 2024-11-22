@@ -1,4 +1,10 @@
-pub fn render_stats(model:&Model, area: Rect, buf: &mut Buffer) {
+use ratatui::{
+    buffer::Buffer, layout::Rect, style::Stylize, symbols, widgets::{Block, Borders, Widget}
+};
+
+use crate::{utilities::theme::*, Model};
+
+pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
     let collapsed_top_and_left_border_set = symbols::border::Set {
         top_left: symbols::line::NORMAL.vertical_right,
         top_right: symbols::line::NORMAL.vertical_left,
