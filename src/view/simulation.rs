@@ -5,11 +5,10 @@ use ratatui::{
     layout::Rect,
     style::{Color, Style, Stylize},
     symbols::{self, Marker},
-    text::Line,
     widgets::{
-        canvas::{Canvas, Context},
+        canvas::{Canvas, Context, Line},
         Block, Borders, Padding, Widget,
-    },
+    }, Terminal,
 };
 use wg_2024::network::NodeId;
 
@@ -50,7 +49,7 @@ pub fn render_simulation(model: &Model, area: Rect, buf: &mut Buffer) {
         .marker(Marker::Braille)
         .paint(|ctx| simulation_painter(ctx, model))
         .background_color(BG_COLOR)
-        .x_bounds([min_x as f64, max_x as f64 + (3.0) / (max_x as f64)])
+        .x_bounds([min_x as f64, max_x as f64 + (0.01)*(max_x as f64)])
         .y_bounds([min_y as f64, max_y as f64]);
 
     block.render(area, buf);
@@ -67,37 +66,61 @@ fn paint_edges(ctx: &mut Context, model: &Model) {
 
     let selected = model.selected_node_id();
 
+    // keep them in a buffer so that we can draw the highlights on top of the others
+    let mut lines_back: Vec<Line> = Vec::new();
+    let mut lines_front: Vec<Line> = Vec::new();
+
     for (from, to) in model.edges.iter() {
-        let c: Color = {
-            if (selected.is_some() && (*from == selected.unwrap() || *to == selected.unwrap())) {
-                match model.screen {
-                    Screen::Start => todo!(),
-                    Screen::Main | Screen::Move | Screen::AddNode => HIGHLIGHT_COLOR,
-                    Screen::AddConnection { origin: origin } => {
-                        if (origin == selected.unwrap() || origin == selected.unwrap()) {
-                            ADD_EDGE_COLOR
-                        } else {
-                            BG_COLOR
-                        }
-                    }
+        let mut c: Color = TEXT_COLOR;
+
+        let mut is_line_front = false;
+
+        
+         
+        if (selected.is_some() && (*from == selected.unwrap() || *to == selected.unwrap())) {
+            match model.screen {
+                Screen::Start => todo!(),
+                Screen::Main | Screen::Move | Screen::AddNode => {c =HIGHLIGHT_COLOR;is_line_front=true},
+                Screen::AddConnection { origin: origin } => {
+                    if (origin == selected.unwrap() || origin == selected.unwrap()) {
+                        c = ADD_EDGE_COLOR;
+                        is_line_front = true;
+                    } 
                 }
-            } else {
-                BG_COLOR
             }
         };
+        
 
-        let line = ratatui::widgets::canvas::Line {
-            x1: (model.nodes[*from as usize].x as f64),
-            y1: (model.nodes[*from as usize].y as f64),
-            x2: (model.nodes[*to as usize].x as f64),
-            y2: (model.nodes[*to as usize].y as f64),
-            color: c,
-        };
+        let opt1 = model.get_node_from_id(*from);
+        let opt2 = model.get_node_from_id(*to);
+
+        if let (Some(n1),Some(n2))= (opt1,opt2){
+            let line = ratatui::widgets::canvas::Line {
+                x1: n1.x as f64,
+                y1: n1.y as f64,
+                x2: n2.x as f64,
+                y2: n2.y as f64,
+                color: c,
+            };
+
+            if is_line_front{
+                lines_front.push(line);
+            }
+            else{
+                lines_back.push(line);
+            }
+        }     
+    }
+
+    for line in lines_back{
         ctx.draw(&line);
     }
 
-
     ctx.layer();
+
+    for line in lines_front{
+        ctx.draw(&line);
+    }
 }
 
 fn print_labels(ctx: &mut Context, model: &Model) {
@@ -169,6 +192,6 @@ fn print_labels(ctx: &mut Context, model: &Model) {
             }
         }
 
-        ctx.print(tx, ty, Line::styled(format!("{}{}{}", bl, c, br), s));
+        ctx.print(tx, ty, ratatui::text::Line::styled(format!("{}{}{}", bl, c, br), s));
     }
 }
