@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent};
+use wg_2024::network::NodeId;
 use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen, Model}, utilities::app_message::AppMessage};
 
 
@@ -11,7 +12,7 @@ pub fn handle_keypress_main(model: &mut Model, key: KeyEvent) -> Option<AppMessa
         (_, KeyCode::Char('m')) => model.screen = Screen::Move,
         (_, KeyCode::Char('c')) => {
             model.screen = Screen::AddConnection {
-                origin: model.node_list_state.selected().unwrap() as u32,
+                origin: model.node_list_state.selected().unwrap() as NodeId,
             }
         }
         (_, KeyCode::Char('+')) => {

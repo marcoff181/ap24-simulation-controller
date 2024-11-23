@@ -58,83 +58,46 @@ pub fn render_simulation(model: &Model, area: Rect, buf: &mut Buffer) {
 }
 
 fn simulation_painter(ctx: &mut Context, model: &Model) {
-    paint_all_edges(ctx, model);
-    paint_edge_highlights(ctx, model);
+    paint_edges(ctx, model);
     print_labels(ctx, model);
 }
 
-fn paint_all_edges(ctx: &mut Context, model: &Model) {
+fn paint_edges(ctx: &mut Context, model: &Model) {
     let mut checked: HashSet<&NodeRepresentation> = HashSet::new();
 
-    for (p1, n1) in (0u8..).zip(model.nodes.iter()) {
-        //checked.insert(&n1);
-        for (p2, n2) in (0u8..).zip(model.nodes.iter()) {
-            if !checked.contains(&n2) && n1.adj.contains(&(p2)) {
-                let c: Color = Color::DarkGray;
-                // if let Some(selected_index) = node_list_state.selected() {
-                //     if (selected_index == p1 || selected_index == p2) {
-                //         c = HIGHLIGHT_COLOR;
-                //     }
-                // }
+    let selected = model.selected_node_id();
 
-                let line = ratatui::widgets::canvas::Line {
-                    x1: (n1.x as f64),
-                    y1: (n1.y as f64),
-                    x2: (n2.x as f64),
-                    y2: (n2.y as f64),
-                    color: c,
-                };
-                ctx.draw(&line);
-            }
-        }
-    }
-
-    ctx.layer();
-}
-
-fn paint_edge_highlights(ctx: &mut Context, model: &Model) {
-    match model.screen {
-        Screen::Start => {
-            todo!()
-        }
-        // Highlight edges that connect selected node
-        Screen::Main | Screen::Move | Screen::AddNode => {
-            match model.selected_node(){
-                Some(n1)=>{
-                    for (p2, n2) in (0u8..).zip(model.nodes.iter()) {
-                        if n1.adj.contains(&(p2 as u8)) {
-                            let line = ratatui::widgets::canvas::Line {
-                                x1: (n1.x as f64),
-                                y1: (n1.y as f64),
-                                x2: (n2.x as f64),
-                                y2: (n2.y as f64),
-                                color: HIGHLIGHT_COLOR,
-                            };
-                            ctx.draw(&line);
+    for (from, to) in model.edges.iter() {
+        let c: Color = {
+            if (selected.is_some() && (*from == selected.unwrap() || *to == selected.unwrap())) {
+                match model.screen {
+                    Screen::Start => todo!(),
+                    Screen::Main | Screen::Move | Screen::AddNode => HIGHLIGHT_COLOR,
+                    Screen::AddConnection { origin: origin } => {
+                        if (origin == selected.unwrap() || origin == selected.unwrap()) {
+                            ADD_EDGE_COLOR
+                        } else {
+                            BG_COLOR
                         }
                     }
-                },
-                None=>{}
-            }
-        }
-        Screen::AddConnection { origin: o } => {
-            if let Some(id1) = model.node_list_state.selected() {
-                if (o as usize) < model.nodes.len() {
-                    let n1 = &model.nodes[id1];
-                    let n2 = &model.nodes[o as usize];
-
-                    let line = ratatui::widgets::canvas::Line {
-                        x1: (n1.x as f64),
-                        y1: (n1.y as f64),
-                        x2: (n2.x as f64),
-                        y2: (n2.y as f64),
-                        color: Color::Green,
-                    };
-                    ctx.draw(&line);
                 }
+            } else {
+                BG_COLOR
             }
-        }
+        };
+
+        let line = ratatui::widgets::canvas::Line {
+            x1: (model.nodes[*from as usize].x as f64),
+            y1: (model.nodes[*from as usize].y as f64),
+            x2: (model.nodes[*to as usize].x as f64),
+            y2: (model.nodes[*to as usize].y as f64),
+            color: c,
+        };
+        ctx.draw(&line);
     }
+
+
+    ctx.layer();
 }
 
 fn print_labels(ctx: &mut Context, model: &Model) {
@@ -190,7 +153,7 @@ fn print_labels(ctx: &mut Context, model: &Model) {
                         //s = s.fg(BG_COLOR);
                         s = s.bold();
                     }
-                    if pos as u32 == o {
+                    if pos  == o {
                         s = s.bg(HIGHLIGHT_COLOR);
                         s = s.fg(BG_COLOR);
                         s = s.bold();

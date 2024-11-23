@@ -4,7 +4,10 @@ use node_kind::NodeKind;
 use node_representation::NodeRepresentation;
 use ratatui::widgets::ListState;
 use screen::Screen;
-use wg_2024::{config::Config, network::NodeId};
+use wg_2024::{
+    config::Config,
+    network::{topology::Node, NodeId},
+};
 
 pub mod node_kind;
 pub mod node_representation;
@@ -22,7 +25,7 @@ impl Model {
         let mut nodes: Vec<NodeRepresentation> = Vec::new();
         let mut edges: HashSet<(NodeId, NodeId)> = HashSet::new();
 
-        let mut model =  Self {
+        let mut model = Self {
             node_list_state: ListState::default(),
             screen: Screen::default(),
             nodes,
@@ -31,19 +34,19 @@ impl Model {
 
         for d in cfg.drone.iter() {
             model.nodes.push(NodeRepresentation::new_from_cfgdrone(d));
-            for to in d.connected_node_ids.iter(){
+            for to in d.connected_node_ids.iter() {
                 model.add_edge(d.id, *to);
             }
         }
         for s in cfg.server.iter() {
             model.nodes.push(NodeRepresentation::new_from_cfgserver(s));
-            for to in s.connected_drone_ids.iter(){
+            for to in s.connected_drone_ids.iter() {
                 model.add_edge(s.id, *to);
             }
         }
         for c in cfg.client.iter() {
             model.nodes.push(NodeRepresentation::new_from_cfgclient(c));
-            for to in c.connected_drone_ids.iter(){
+            for to in c.connected_drone_ids.iter() {
                 model.add_edge(c.id, *to);
             }
         }
@@ -63,6 +66,16 @@ impl Model {
 
         if idx < self.nodes.len() {
             Some(self.nodes[idx].kind)
+        } else {
+            None
+        }
+    }
+
+    pub fn selected_node_id(&self) -> Option<NodeId> {
+        let idx = self.node_list_state.selected()?;
+
+        if idx < self.nodes.len() {
+            Some(self.nodes[idx].id)
         } else {
             None
         }

@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use wg_2024::network::NodeId;
 use crate::{model::{screen::Screen, Model}, utilities::app_message::AppMessage};
 
-pub fn handle_keypress_add_connection(model: &mut Model, key: KeyEvent, from: u32) -> Option<AppMessage> {
+pub fn handle_keypress_add_connection(model: &mut Model, key: KeyEvent, from: NodeId) -> Option<AppMessage> {
     let x = match model.node_list_state.selected() {
         None => {
             model.screen = Screen::Main;
