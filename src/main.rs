@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use ap24_simulation_controller::MySimulationController;
-use wg_2024::{config::Config, controller::{Command, SimControllerOptions, SimulationController}, network::NodeId};
+use wg_2024::{config::Config, controller::{Command, SimControllerOptions, SimulationController}, network::NodeId, packet::Packet};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
 
 // used while developing to check how the GUI is functioning
@@ -35,6 +35,8 @@ fn main(){
     let opt = SimControllerOptions{
         command_send: simcontroller_senders,
         command_recv: command_from_node,
+        // todo: simulate this too
+        packet_send:HashMap::<NodeId,Sender<Packet>>::new(),
         config: config,
     };
 

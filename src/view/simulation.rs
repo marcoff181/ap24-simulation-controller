@@ -70,20 +70,17 @@ fn paint_edges(ctx: &mut Context, model: &Model) {
         let mut is_line_front = false;
 
         
-         
-        if selected.is_some() && (*from == selected.unwrap() || *to == selected.unwrap()) {
+        if let Some(id) = selected { 
+        if  *from == id || *to == id {
             match model.screen {
                 Screen::Start => todo!(),
                 Screen::Main | Screen::Move | Screen::AddNode => {c =HIGHLIGHT_COLOR;is_line_front=true},
                 Screen::AddConnection { origin } => {
-                    if origin == selected.unwrap() || origin == selected.unwrap() {
-                        c = ADD_EDGE_COLOR;
-                        is_line_front = true;
-                    } 
+                    c = TEXT_COLOR; is_line_front = false;
                 }
             }
         };
-        
+        }
 
         let opt1 = model.get_node_from_id(*from);
         let opt2 = model.get_node_from_id(*to);
@@ -103,7 +100,7 @@ fn paint_edges(ctx: &mut Context, model: &Model) {
             else{
                 lines_back.push(line);
             }
-        }     
+        }             
     }
 
     for line in lines_back{
@@ -115,10 +112,27 @@ fn paint_edges(ctx: &mut Context, model: &Model) {
     for line in lines_front{
         ctx.draw(&line);
     }
+
+    if let Screen::AddConnection{origin} = model.screen {
+        if let Some(id) = selected{
+            if  origin != id {
+                let line = ratatui::widgets::canvas::Line {
+                    x1: model.get_node_from_id(id).unwrap().x as f64,
+                    y1: model.get_node_from_id(id).unwrap().y as f64,
+                    x2: model.get_node_from_id(origin).unwrap().x as f64,
+                    y2: model.get_node_from_id(origin).unwrap().y as f64,
+                    color: ADD_EDGE_COLOR,
+                };
+                ctx.layer();
+                ctx.draw(&line);
+            } 
+        }
+        
+    }
 }
 
 fn print_labels(ctx: &mut Context, model: &Model) {
-    for (pos, n) in (0u8..).zip(model.nodes.iter()) {
+    for n in model.nodes.iter() {
         let tx = n.x as f64;
         let ty = n.y as f64;
 
@@ -130,10 +144,12 @@ fn print_labels(ctx: &mut Context, model: &Model) {
             NodeKind::Drone { pdr: _, crashed } => {
                 if crashed {
                     s = s.bg(CRASH_COLOR);
+                    c = 'X';
                 } else {
                     s = s.bg(DRONE_COLOR);
+                    c = 'D';
                 }
-                c = 'D';
+                
                 bl = '(';
                 br = ')';
             }
@@ -151,34 +167,35 @@ fn print_labels(ctx: &mut Context, model: &Model) {
             }
         }
 
-        if let Some(selected_index) = model.node_list_state.selected() {
+        // special coloring
+        if let Some(selected_index) = model.selected_node_id() {
             match model.screen {
                 Screen::Start => todo!(),
                 // highlight selected node
                 Screen::Main | Screen::Move => {
-                    if selected_index == pos as usize {
+                    if selected_index == n.id {
                         s = s.bg(HIGHLIGHT_COLOR);
                         s = s.fg(BG_COLOR);
                         s = s.bold();
                     }
                 }
                 // highlight node from which connection starts
-                // and highlight green selected ndoe for destination
-                Screen::AddConnection { origin: o } => {
-                    if selected_index == pos as usize {
-                        s = s.bg(Color::Green);
-                        //s = s.fg(BG_COLOR);
-                        s = s.bold();
-                    }
-                    if pos  == o {
+                // and highlight green selected node for destination
+                Screen::AddConnection { origin } => {
+                    if n.id  == origin {
                         s = s.bg(HIGHLIGHT_COLOR);
                         s = s.fg(BG_COLOR);
+                        s = s.bold();
+                    }
+                    else if selected_index == n.id {
+                        s = s.bg(Color::Green);
+                        //s = s.fg(BG_COLOR);
                         s = s.bold();
                     }
                 }
                 // highlight green the new node
                 Screen::AddNode => {
-                    if selected_index == pos as usize {
+                    if selected_index == n.id {
                         s = s.bg(Color::Green);
                         s = s.bold();
                     }

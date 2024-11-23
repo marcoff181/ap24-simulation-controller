@@ -1458,7 +1458,7 @@ checksum = "53a85b86a771b1c87058196170769dd264f66c0782acf1ae6cc51bfd64b39082"
 [[package]]
 name = "wg_2024"
 version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#336db19e4967ad4618067e9ff38852195db915c7"
 dependencies = [
  "wg_internal",
 ]
@@ -1466,7 +1466,7 @@ dependencies = [
 [[package]]
 name = "wg_config"
 version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#336db19e4967ad4618067e9ff38852195db915c7"
 dependencies = [
  "serde",
  "wg_network",
@@ -1475,7 +1475,7 @@ dependencies = [
 [[package]]
 name = "wg_controller"
 version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#336db19e4967ad4618067e9ff38852195db915c7"
 dependencies = [
  "crossbeam-channel",
  "wg_config",
@@ -1486,7 +1486,7 @@ dependencies = [
 [[package]]
 name = "wg_drone"
 version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#336db19e4967ad4618067e9ff38852195db915c7"
 dependencies = [
  "crossbeam-channel",
  "wg_controller",
@@ -1497,7 +1497,7 @@ dependencies = [
 [[package]]
 name = "wg_internal"
 version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#336db19e4967ad4618067e9ff38852195db915c7"
 dependencies = [
  "wg_config",
  "wg_controller",
@@ -1509,12 +1509,12 @@ dependencies = [
 [[package]]
 name = "wg_network"
 version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#336db19e4967ad4618067e9ff38852195db915c7"
 
 [[package]]
 name = "wg_packet"
 version = "0.1.0"
-source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#234e085d8ad57537dc6a2ea8e97c1e7c54597693"
+source = "git+https://github.com/The-Null-Pointer-Patrol/WGL_repo_2024.git?branch=makes-netinitializer-work#336db19e4967ad4618067e9ff38852195db915c7"
 dependencies = [
  "wg_network",
 ]
