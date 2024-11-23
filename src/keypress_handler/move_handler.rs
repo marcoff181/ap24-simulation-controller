@@ -1,8 +1,8 @@
 use crate::{
-    model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen, Model},
+    model::{screen::Screen, Model},
     utilities::app_message::AppMessage,
 };
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{KeyCode, KeyEvent};
 
 pub fn handle_keypress_move(model: &mut Model, key: KeyEvent) -> Option<AppMessage> {
     let n = match model.node_list_state.selected() {
@@ -14,7 +14,7 @@ pub fn handle_keypress_move(model: &mut Model, key: KeyEvent) -> Option<AppMessa
     };
 
     match (key.modifiers, key.code) {
-        (_, KeyCode::Char('q')) => model.running = false,
+        (_, KeyCode::Char('q')) => return Some(AppMessage::Quit),
         (_, KeyCode::Up) => n.shiftu(1),
         (_, KeyCode::Down) => n.shiftd(1),
         (_, KeyCode::Left) => n.shiftl(1),

@@ -41,10 +41,10 @@ impl SimulationController for MySimulationController {
 
 impl MySimulationController {
     fn start(&mut self, mut terminal: DefaultTerminal) -> Result<(), std::io::Error> {
-        self.model.running = true;
+        let mut running = true;
         self.model.node_list_state.select(Some(0));
 
-        while self.model.running {
+        while running {
             // the view renders based on an immutable reference to the model
             // apart from that list that needed it
             terminal.draw(|frame| {
@@ -55,7 +55,11 @@ impl MySimulationController {
             // but when there are modifications that involve SimulationController and Communication between Nodes
             // there is an AppMessage struct that comes back
             match keypress_handler::handle_crossterm_events(&mut self.model)? {
-                Some(_) => todo!(),
+                Some(message) => match message{
+                    utilities::app_message::AppMessage::AddConnection { from, to } => todo!(),
+                    utilities::app_message::AppMessage::Crash { drone } => todo!(),
+                    utilities::app_message::AppMessage::Quit => running=false,
+                },
                 None => {}
             };
         }

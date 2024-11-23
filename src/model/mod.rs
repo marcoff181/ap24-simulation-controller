@@ -10,7 +10,6 @@ pub mod screen;
 
 #[derive(Debug, Default)]
 pub struct Model {
-    pub running: bool,
     pub screen: Screen,
     pub nodes: Vec<NodeRepresentation>,
     pub node_list_state: ListState,
@@ -30,13 +29,11 @@ impl Model{
         }
         Self {
             node_list_state: ListState::default(),
-            running: false,
             screen: Screen::default(),
             nodes,
         }
     }
 
-    // maybe should be in model?
     pub fn get_selected_kind(&self) -> Option<NodeKind> {
         let idx = self.node_list_state.selected()?;
 

@@ -1,9 +1,9 @@
 use add_connection_handler::handle_keypress_add_connection;
 use add_node_handler::handle_keypress_add_node;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 use main_handler::handle_keypress_main;
 use move_handler::handle_keypress_move;
-use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen, Model}, utilities::app_message::AppMessage};
+use crate::{model::{screen::Screen, Model}, utilities::app_message::AppMessage};
 
 mod move_handler;
 mod main_handler;

@@ -1,4 +1,4 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{KeyCode, KeyEvent};
 use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen, Model}, utilities::app_message::AppMessage};
 
 
@@ -7,7 +7,7 @@ pub fn handle_keypress_main(model: &mut Model, key: KeyEvent) -> Option<AppMessa
     match (key.modifiers, key.code) {
         (_, KeyCode::Up) => model.node_list_state.scroll_up_by(1),
         (_, KeyCode::Down) => model.node_list_state.scroll_down_by(1),
-        (_, KeyCode::Char('q')) => model.running = false,
+        (_, KeyCode::Char('q')) => return Some(AppMessage::Quit),
         (_, KeyCode::Char('m')) => model.screen = Screen::Move,
         (_, KeyCode::Char('c')) => {
             model.screen = Screen::AddConnection {

@@ -29,7 +29,7 @@ pub fn render(model: &mut Model, area: Rect, buf: &mut Buffer) {
 }
 
 fn render_default(model: &mut Model, area: Rect, buf: &mut Buffer) {
-    let [left, right] = Layout::horizontal([Constraint::Max(18), Constraint::Fill(1)]).areas(area);
+    let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(area);
 
     let [top_right, bottom_right] =
         Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(right);

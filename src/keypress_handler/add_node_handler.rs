@@ -1,5 +1,5 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use crate::{model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen, Model}, utilities::app_message::AppMessage};
+use crossterm::event::{KeyCode, KeyEvent};
+use crate::{model::{node_kind::NodeKind, screen::Screen, Model}, utilities::app_message::AppMessage};
 
 
 
@@ -27,7 +27,7 @@ pub fn handle_keypress_add_node(model: &mut Model, key: KeyEvent) -> Option<AppM
             }
         } //todo: add way to edit
         (_, KeyCode::Enter) => model.screen = Screen::Main,
-        (_, KeyCode::Char('q')) => model.running = false,
+        (_, KeyCode::Char('q')) => return Some(AppMessage::Quit),
         _ => {}
     };
     None
