@@ -44,6 +44,16 @@ impl Model{
         }
     }
 
+    pub fn selected_node(&self) -> Option<&NodeRepresentation> {
+        let idx = self.node_list_state.selected()?;
+
+        if idx < self.nodes.len() {
+            Some(&self.nodes[idx])
+        } else {
+            None
+        }
+    }
+
     
     
 }
