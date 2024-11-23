@@ -8,9 +8,8 @@ use ratatui::{
     widgets::{
         canvas::{Canvas, Context, Line},
         Block, Borders, Padding, Widget,
-    }, Terminal,
+    },
 };
-use wg_2024::network::NodeId;
 
 use crate::{
     model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen},
@@ -40,11 +39,6 @@ pub fn render_simulation(model: &Model, area: Rect, buf: &mut Buffer) {
     let min_x = model.nodes.iter().map(|n| n.x).min().unwrap();
     let min_y = model.nodes.iter().map(|n| n.y).min().unwrap();
 
-    let scale_x = inner_area.width as f64 / max_x as f64;
-    let scale_y = inner_area.height as f64 / max_y as f64;
-
-    let canvas_border_offset: f64 = 1.0;
-
     let canvas = Canvas::default()
         .marker(Marker::Braille)
         .paint(|ctx| simulation_painter(ctx, model))
@@ -62,7 +56,7 @@ fn simulation_painter(ctx: &mut Context, model: &Model) {
 }
 
 fn paint_edges(ctx: &mut Context, model: &Model) {
-    let mut checked: HashSet<&NodeRepresentation> = HashSet::new();
+    let checked: HashSet<&NodeRepresentation> = HashSet::new();
 
     let selected = model.selected_node_id();
 
@@ -77,12 +71,12 @@ fn paint_edges(ctx: &mut Context, model: &Model) {
 
         
          
-        if (selected.is_some() && (*from == selected.unwrap() || *to == selected.unwrap())) {
+        if selected.is_some() && (*from == selected.unwrap() || *to == selected.unwrap()) {
             match model.screen {
                 Screen::Start => todo!(),
                 Screen::Main | Screen::Move | Screen::AddNode => {c =HIGHLIGHT_COLOR;is_line_front=true},
-                Screen::AddConnection { origin: origin } => {
-                    if (origin == selected.unwrap() || origin == selected.unwrap()) {
+                Screen::AddConnection { origin } => {
+                    if origin == selected.unwrap() || origin == selected.unwrap() {
                         c = ADD_EDGE_COLOR;
                         is_line_front = true;
                     } 

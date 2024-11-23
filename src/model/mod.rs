@@ -6,7 +6,7 @@ use ratatui::widgets::ListState;
 use screen::Screen;
 use wg_2024::{
     config::Config,
-    network::{topology::Node, NodeId},
+    network::NodeId,
 };
 
 pub mod node_kind;
@@ -22,8 +22,8 @@ pub struct Model {
 }
 impl Model {
     pub fn new(cfg: &Config) -> Self {
-        let mut nodes: Vec<NodeRepresentation> = Vec::new();
-        let mut edges: HashSet<(NodeId, NodeId)> = HashSet::new();
+        let nodes: Vec<NodeRepresentation> = Vec::new();
+        let edges: HashSet<(NodeId, NodeId)> = HashSet::new();
 
         let mut model = Self {
             node_list_state: ListState::default(),
