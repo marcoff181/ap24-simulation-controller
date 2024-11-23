@@ -27,7 +27,7 @@ pub fn handle_keypress_main(model: &mut Model, key: KeyEvent) -> Option<AppMessa
                     (_, KeyCode::Char('p')) => todo!(),
                     (_, KeyCode::Char('k')) => {
                         if let Some(node) = model.get_selected_node() {
-                            return Some(AppMessage::Crash{drone:node.id});
+                            return Some(AppMessage::Crash { drone: node.id });
                         }
                     }
                     _ => {}

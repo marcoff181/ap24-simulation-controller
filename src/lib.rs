@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use crate::model::Model;
 use crossbeam_channel::{Receiver, Sender};
-use model::screen::Screen;
+use model::{node_kind::NodeKind, screen::Screen};
 use ratatui::DefaultTerminal;
 use wg_2024::{
     config::Config,
@@ -72,7 +72,15 @@ impl MySimulationController {
     // handle commands from drone
 
     fn add_connection(&mut self, from: NodeId, to: NodeId) {
-        
+        //check connection is not between two clients/servers
+        if let(Some(nfrom),Some(nto)) = (self.model.get_node_from_id(from),self.model.get_node_from_id(to)){
+            if !matches!(nfrom.kind , NodeKind::Drone{..}) && !matches!(nto.kind , NodeKind::Drone{..}){
+                panic!("Cannot connect {} and {}, at least one should be a drone",nfrom.kind,nto.kind)
+            }
+        }
+        else{
+            panic!("nodes not found");
+        }
 
         // tell the real nodes via command channels to add edge
         if let (Some(command_sender_from), Some(command_sender_to), Some(packet_sender_to),Some(packet_sender_from)) = (
@@ -88,6 +96,9 @@ impl MySimulationController {
             self.model.add_edge(from, to);
             self.model.select_node(from);
             self.model.screen = Screen::Main;
+        }
+        else{
+            panic!("could not create connection")
         }
     }
 
