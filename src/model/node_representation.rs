@@ -1,5 +1,7 @@
 // use std::hash::Hash;
 
+use std::{fmt::Display};
+
 use rand::Rng;
 use wg_2024::{config::{Client, Drone, Server}, network::NodeId};
 
@@ -42,6 +44,16 @@ impl Default for NodeRepresentation {
             },
             vec![],
         )
+    }
+}
+
+impl Display for NodeRepresentation{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.kind{
+            NodeKind::Drone { pdr:_, crashed:_ } =>  write!(f, "{}  #{}", self.kind, self.id),
+            NodeKind::Server | NodeKind::Client =>  write!(f, "{} #{}", self.kind, self.id),
+        }
+       
     }
 }
 

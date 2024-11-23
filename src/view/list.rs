@@ -19,8 +19,8 @@ pub fn render_list(model: &mut Model, area: Rect, buf: &mut Buffer) {
     let items = model
         .nodes
         .iter()
-        .map(|x| x.repr.as_str())
-        .collect::<Vec<&str>>();
+        .map(|x| format!("{}",x))
+        .collect::<Vec<String>>();
     //let items = ["Drone  #12321","Drone  #12321","Drone  #12321","Drone  #12321", "Client #22343", "Server #32342"];
     let list = List::new(items)
         .block(Block::bordered().title("List"))
