@@ -35,6 +35,7 @@ dependencies = [
  "image",
  "rand 0.9.0-alpha.2",
  "ratatui",
+ "toml",
  "tui-big-text",
  "wg_2024",
 ]

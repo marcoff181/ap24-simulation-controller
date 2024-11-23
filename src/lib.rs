@@ -1,4 +1,4 @@
-pub mod keypress_handler;
+mod keypress_handler;
 mod model;
 mod utilities;
 mod view;
