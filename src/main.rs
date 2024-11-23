@@ -9,7 +9,7 @@ fn main(){
     let config_data = std::fs::read_to_string("./src/tests/config_files/input.toml").expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
     
-    let (dummy_command_to_simcontr,command_from_node) = unbounded::<Command>();
+    let (_dummy_command_to_simcontr,command_from_node) = unbounded::<Command>();
     
     let mut dummy_drone_receivers :HashMap<NodeId,Receiver<Command>> = HashMap::new();
     let mut simcontroller_senders : HashMap<NodeId,Sender<Command>> = HashMap::new();

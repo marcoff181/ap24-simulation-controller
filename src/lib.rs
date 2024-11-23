@@ -50,8 +50,14 @@ impl MySimulationController {
             terminal.draw(|frame| {
                 crate::view::render(&mut self.model, frame.area(), frame.buffer_mut())
             })?;
-            // should keypress return something when an action is asked?
-            keypress_handler::handle_crossterm_events(self)?;
+            // keypress handler returns a Action enum or something and based on that we decide what to do
+            // when the event handling requires just modifying the model it is done inside the function
+            // but when there are modifications that involve SimulationController and Communication between Nodes
+            // there is an AppMessage struct that comes back
+            match keypress_handler::handle_crossterm_events(&mut self.model)? {
+                Some(_) => todo!(),
+                None => {}
+            };
         }
         Ok(())
     }
@@ -62,6 +68,10 @@ impl MySimulationController {
             self.model.nodes[from].adj.push(to as NodeId);
             self.model.nodes[to].adj.push(from as NodeId);
         }
+
+        // model.add_connection(from as usize, x);
+        //     model.node_list_state.select(Some(from as usize));
+        //     model.screen = Screen::Main
 
         // tell the real nodes via command channels to add edge
     }

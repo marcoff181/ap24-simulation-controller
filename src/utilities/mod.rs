@@ -1,4 +1,5 @@
 pub mod theme;
+pub mod app_message;
 
 use image::GenericImageView;
 use rand::Rng;
