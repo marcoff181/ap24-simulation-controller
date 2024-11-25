@@ -11,9 +11,17 @@ use model::{node_kind::NodeKind, screen::Screen};
 use ratatui::DefaultTerminal;
 use wg_2024::{
     config::Config,
-    controller::{Command, SimControllerOptions, SimulationController},
-    network::NodeId, packet::Packet,
+    controller::{Command, SimulationController},
+    network::NodeId,
+    packet::Packet,
 };
+
+pub struct SimControllerOptions {
+    pub command_send: HashMap<NodeId, Sender<Command>>,
+    pub packet_send: HashMap<NodeId, Sender<Packet>>,
+    pub command_recv: Receiver<Command>,
+    pub config: Config,
+}
 
 pub struct MySimulationController {
     command_send: HashMap<NodeId, Sender<Command>>,
@@ -23,8 +31,8 @@ pub struct MySimulationController {
     model: Model,
 }
 
-impl SimulationController for MySimulationController {
-    fn new(opt: SimControllerOptions) -> Self {
+impl MySimulationController {
+    pub fn new(opt: SimControllerOptions) -> Self {
         MySimulationController {
             command_send: opt.command_send,
             command_recv: opt.command_recv,
@@ -35,7 +43,7 @@ impl SimulationController for MySimulationController {
     }
 
     // could return Result and then thread handler in network intializer handles the Error
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         let terminal = ratatui::init();
         let _result = self.start(terminal);
         ratatui::restore();
@@ -64,6 +72,7 @@ impl MySimulationController {
                     }
                     utilities::app_message::AppMessage::Crash { drone: id } => self.crash(id),
                     utilities::app_message::AppMessage::Quit => running = false,
+                    utilities::app_message::AppMessage::AddNode { node } => todo!(),
                 }
             };
         }
@@ -73,31 +82,42 @@ impl MySimulationController {
 
     fn add_connection(&mut self, from: NodeId, to: NodeId) {
         //check connection is not between two clients/servers
-        if let(Some(nfrom),Some(nto)) = (self.model.get_node_from_id(from),self.model.get_node_from_id(to)){
-            if !matches!(nfrom.kind , NodeKind::Drone{..}) && !matches!(nto.kind , NodeKind::Drone{..}){
-                panic!("Cannot connect {} and {}, at least one should be a drone",nfrom.kind,nto.kind)
+        if let (Some(nfrom), Some(nto)) = (
+            self.model.get_node_from_id(from),
+            self.model.get_node_from_id(to),
+        ) {
+            if !matches!(nfrom.kind, NodeKind::Drone { .. })
+                && !matches!(nto.kind, NodeKind::Drone { .. })
+            {
+                panic!(
+                    "Cannot connect {} and {}, at least one should be a drone",
+                    nfrom.kind, nto.kind
+                )
             }
-        }
-        else{
+        } else {
             panic!("nodes not found");
         }
 
         // tell the real nodes via command channels to add edge
-        if let (Some(command_sender_from), Some(command_sender_to), Some(packet_sender_to),Some(packet_sender_from)) = (
+        if let (
+            Some(command_sender_from),
+            Some(command_sender_to),
+            Some(packet_sender_to),
+            Some(packet_sender_from),
+        ) = (
             self.command_send.get(&from),
             self.command_send.get(&to),
             self.packet_send.get(&from),
             self.packet_send.get(&to),
         ) {
             command_sender_from.send(Command::AddChannel(to, packet_sender_to.clone()));
-            command_sender_to.send(Command::AddChannel(from,packet_sender_from.clone()));
+            command_sender_to.send(Command::AddChannel(from, packet_sender_from.clone()));
 
             // for now we assume they succesfully added channel, and show it in the model
             self.model.add_edge(from, to);
             self.model.select_node(from);
             self.model.screen = Screen::Main;
-        }
-        else{
+        } else {
             panic!("could not create connection")
         }
     }
@@ -109,7 +129,24 @@ impl MySimulationController {
             let _ = drone_command_sender.send(Command::Crash);
         }
 
+        // todo: do we need to tell the other drones to remove edges that point to crashed drone?
+        // wg will decide but I think drones should be the ones to handle the crash
+
         // set in the model the corresponding node to crashed true
         self.model.crash_drone(id);
+    }
+
+    /// adds `to the proper simulation` a node that has already been added to the model
+    fn add_node(&mut self, id: NodeId) {
+        if let Some(n) = self.model.get_node_from_id(id) {
+            match n.kind {
+                NodeKind::Drone { pdr, crashed } => todo!(),
+                NodeKind::Client => todo!(),
+                NodeKind::Server => todo!(),
+            }
+        } else {
+            //todo:improve
+            panic!("added drone not found");
+        }
     }
 }

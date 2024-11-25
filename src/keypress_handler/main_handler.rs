@@ -17,8 +17,7 @@ pub fn handle_keypress_main(model: &mut Model, key: KeyEvent) -> Option<AppMessa
             }
         }
         (_, KeyCode::Char('+')) => {
-            model.nodes.push(NodeRepresentation::default());
-            model.node_list_state.select_last();
+            model.spawn_default_node();
             model.screen = Screen::AddNode
         }
         other => {

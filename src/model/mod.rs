@@ -51,6 +51,13 @@ impl Model {
         model
     }
 
+    /// adds a default node to the model and selects it
+    pub fn spawn_default_node(&mut self) {
+        // todo find a way to not risk it being a duplicate id
+        self.nodes.push(NodeRepresentation::default());
+        self.node_list_state.select_last();
+    }
+
     pub fn add_edge(&mut self, from: NodeId, to: NodeId) {
         match from.cmp(&to) {
             std::cmp::Ordering::Less => {
@@ -67,7 +74,7 @@ impl Model {
         if let Some(nodefrom_id) = self.get_mut_node_from_id(from) {
             nodefrom_id.adj.push(to as NodeId);
         }
-        
+
         if let Some(nodeto_id) = self.get_mut_node_from_id(to) {
             nodeto_id.adj.push(from as NodeId);
         }
@@ -131,7 +138,7 @@ impl Model {
     pub fn crash_drone(&mut self, id: NodeId) {
         if let Some(drone) = self.get_mut_node_from_id(id) {
             drone.kind = match drone.kind {
-                NodeKind::Drone { pdr, crashed:_ } => NodeKind::Drone { pdr, crashed: true },
+                NodeKind::Drone { pdr, crashed: _ } => NodeKind::Drone { pdr, crashed: true },
                 other => other,
             }
         }
@@ -140,10 +147,9 @@ impl Model {
     }
 
     /// selects the node with the given 'id' (if there is one)
-    pub fn select_node(&mut self, id:NodeId){
-        if let Some(pos) = self.nodes.iter().position(|n|n.id==id){
+    pub fn select_node(&mut self, id: NodeId) {
+        if let Some(pos) = self.nodes.iter().position(|n| n.id == id) {
             self.node_list_state.select(Some(pos));
         }
-
     }
 }

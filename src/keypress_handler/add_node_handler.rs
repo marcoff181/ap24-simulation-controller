@@ -5,13 +5,15 @@ use crate::{model::{node_kind::NodeKind, screen::Screen, Model}, utilities::app_
 
 pub fn handle_keypress_add_node(model: &mut Model, key: KeyEvent) -> Option<AppMessage>  {
     // when you enter add_node screen, the new node gets selected
-    let n = match model.node_list_state.selected() {
+    let n = match model.get_mut_selected_node() {
+        Some(x) => x,
         None => {
             model.screen = Screen::Main;
             return None;
         }
-        Some(x) => &mut model.nodes[x],
     };
+    // saves keycode enter from the borrow checker
+    let id = n.id;
 
     match (key.modifiers, key.code) {
         (_, KeyCode::Up) => n.shiftu(1),
@@ -22,11 +24,12 @@ pub fn handle_keypress_add_node(model: &mut Model, key: KeyEvent) -> Option<AppM
         (_, KeyCode::Char('s')) => n.kind = NodeKind::Server,
         (_, KeyCode::Char('d')) => {
             n.kind = NodeKind::Drone {
-                pdr: 0.5,
+                pdr: 0.05,
                 crashed: false,
             }
-        } //todo: add way to edit
-        (_, KeyCode::Enter) => model.screen = Screen::Main,
+        } //todo: add way to edit or 
+        // for now leave it as operation to do after creation
+        (_, KeyCode::Enter) => {model.screen=Screen::Main;return Some(AppMessage::AddNode { node: id })},
         (_, KeyCode::Char('q')) => return Some(AppMessage::Quit),
         _ => {}
     };

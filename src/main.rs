@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use ap24_simulation_controller::MySimulationController;
-use wg_2024::{config::Config, controller::{Command, SimControllerOptions, SimulationController}, network::NodeId, packet::Packet};
+use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
+use wg_2024::{config::Config, controller::{Command, SimulationController}, network::NodeId, packet::Packet};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
 
 // used while developing to check how the GUI is functioning
