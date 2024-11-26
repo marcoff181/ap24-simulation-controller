@@ -11,22 +11,22 @@ use model::{node_kind::NodeKind, screen::Screen};
 use ratatui::DefaultTerminal;
 use wg_2024::{
     config::Config,
-    controller::{Command, SimulationController},
+    controller::{DroneCommand,NodeEvent},
     network::NodeId,
     packet::Packet,
 };
 
 pub struct SimControllerOptions {
-    pub command_send: HashMap<NodeId, Sender<Command>>,
+    pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
-    pub command_recv: Receiver<Command>,
+    pub command_recv: Receiver<NodeEvent>,
     pub config: Config,
     pub node_handles : Vec<JoinHandle<()>>,
 }
 
 pub struct MySimulationController {
-    command_send: HashMap<NodeId, Sender<Command>>,
-    command_recv: Receiver<Command>,
+    command_send: HashMap<NodeId, Sender<DroneCommand>>,
+    command_recv: Receiver<NodeEvent>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
     config: Config,
     model: Model,
@@ -113,8 +113,8 @@ impl MySimulationController {
             self.packet_send.get(&from),
             self.packet_send.get(&to),
         ) {
-            command_sender_from.send(Command::AddChannel(to, packet_sender_to.clone()));
-            command_sender_to.send(Command::AddChannel(from, packet_sender_from.clone()));
+            command_sender_from.send(DroneCommand::AddChannel(to, packet_sender_to.clone()));
+            command_sender_to.send(DroneCommand::AddChannel(from, packet_sender_from.clone()));
 
             // for now we assume they succesfully added channel, and show it in the model
             self.model.add_edge(from, to);
@@ -129,7 +129,7 @@ impl MySimulationController {
         // send command to corresponding drone to crash
         if let Some(drone_command_sender) = self.command_send.get(&id) {
             // todo: handle error
-            let _ = drone_command_sender.send(Command::Crash);
+            let _ = drone_command_sender.send(DroneCommand::Crash);
         }
 
         // todo: do we need to tell the other drones to remove edges that point to crashed drone?

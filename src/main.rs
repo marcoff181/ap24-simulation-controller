@@ -38,6 +38,7 @@ fn main(){
         // todo: simulate this too
         packet_send:HashMap::<NodeId,Sender<Packet>>::new(),
         config: config,
+        node_handles: Vec::new(),
     };
 
     let mut simcontr = MySimulationController::new(opt);
