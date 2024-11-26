@@ -3,7 +3,7 @@ mod model;
 mod utilities;
 mod view;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, thread::JoinHandle};
 
 use crate::model::Model;
 use crossbeam_channel::{Receiver, Sender};
@@ -21,6 +21,7 @@ pub struct SimControllerOptions {
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
     pub command_recv: Receiver<Command>,
     pub config: Config,
+    pub node_handles : Vec<JoinHandle<()>>,
 }
 
 pub struct MySimulationController {
