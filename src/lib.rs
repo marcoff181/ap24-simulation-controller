@@ -113,8 +113,8 @@ impl MySimulationController {
             self.packet_send.get(&from),
             self.packet_send.get(&to),
         ) {
-            command_sender_from.send(DroneCommand::AddChannel(to, packet_sender_to.clone()));
-            command_sender_to.send(DroneCommand::AddChannel(from, packet_sender_from.clone()));
+            command_sender_from.send(DroneCommand::AddSender(to, packet_sender_to.clone()));
+            command_sender_to.send(DroneCommand::AddSender(from, packet_sender_from.clone()));
 
             // for now we assume they succesfully added channel, and show it in the model
             self.model.add_edge(from, to);
