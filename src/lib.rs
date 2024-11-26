@@ -30,6 +30,7 @@ pub struct MySimulationController {
     packet_send: HashMap<NodeId, Sender<Packet>>,
     config: Config,
     model: Model,
+    pub node_handles : Vec<JoinHandle<()>>,
 }
 
 impl MySimulationController {
@@ -40,6 +41,7 @@ impl MySimulationController {
             packet_send: opt.packet_send,
             config: opt.config.clone(),
             model: Model::new(&opt.config),
+            node_handles : opt.node_handles,
         }
     }
 
