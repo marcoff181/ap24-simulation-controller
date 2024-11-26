@@ -11,7 +11,7 @@ use model::{node_kind::NodeKind, screen::Screen};
 use ratatui::DefaultTerminal;
 use wg_2024::{
     config::Config,
-    controller::{DroneCommand,NodeEvent},
+    controller::{DroneCommand, NodeEvent},
     network::NodeId,
     packet::Packet,
 };
@@ -21,7 +21,7 @@ pub struct SimControllerOptions {
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
     pub command_recv: Receiver<NodeEvent>,
     pub config: Config,
-    pub node_handles : Vec<JoinHandle<()>>,
+    pub node_handles: Vec<JoinHandle<()>>,
 }
 
 pub struct MySimulationController {
@@ -30,7 +30,7 @@ pub struct MySimulationController {
     packet_send: HashMap<NodeId, Sender<Packet>>,
     config: Config,
     model: Model,
-    pub node_handles : Vec<JoinHandle<()>>,
+    pub node_handles: Vec<JoinHandle<()>>,
 }
 
 impl MySimulationController {
@@ -41,7 +41,7 @@ impl MySimulationController {
             packet_send: opt.packet_send,
             config: opt.config.clone(),
             model: Model::new(&opt.config),
-            node_handles : opt.node_handles,
+            node_handles: opt.node_handles,
         }
     }
 
