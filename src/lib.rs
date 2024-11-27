@@ -3,7 +3,7 @@ mod model;
 mod utilities;
 mod view;
 
-use std::{collections::HashMap, task::Wake, thread::JoinHandle};
+use std::{collections::HashMap, thread::JoinHandle};
 
 use crate::model::Model;
 use crossbeam_channel::{Receiver, Sender};

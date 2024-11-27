@@ -7,7 +7,6 @@ mod stats;
 
 use footer::render_footer;
 use list::render_list;
-use ratatui::buffer::Buffer;
 use ratatui::prelude::*;
 use simulation::render_simulation;
 use stats::render_stats;

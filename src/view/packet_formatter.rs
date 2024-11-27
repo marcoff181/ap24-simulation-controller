@@ -1,11 +1,7 @@
-use std::fmt::format;
-use std::task::Wake;
 
 use rand::seq::IndexedRandom;
 use ratatui::style::Style;
-use ratatui::text::Line;
 use ratatui::text::Span;
-use ratatui::widgets::Cell;
 use ratatui::widgets::Row;
 use wg_2024::packet::Nack;
 use wg_2024::packet::Packet;
@@ -23,8 +19,8 @@ pub fn format_packet(packet: &Packet) -> Row {
         src = Span::styled(format!("{}", from), Style::new());
         dest = Span::styled(format!("{}", to), Style::new());
     } else {
-        src = Span::styled(format!("Err"), Style::new());
-        dest = Span::styled(format!("Err"), Style::new());
+        src = Span::styled("Err".to_string(), Style::new());
+        dest = Span::styled("Err".to_string(), Style::new());
     }
 
     let ptype: Span;
@@ -44,7 +40,7 @@ pub fn format_packet(packet: &Packet) -> Row {
             ptype = Span::styled("NCK", ptype_style.bg(PACKET_NACK_COLOR));
             depends_on_type = Span::from(match nack {
                 Nack::ErrorInRouting(id) => format!("ErrorInRouting({})", id),
-                Nack::DestinationIsDrone => format!("DestinationIsDrone"),
+                Nack::DestinationIsDrone => "DestinationIsDrone".to_string(),
                 Nack::Dropped(frag) => format!("Dropped({})", frag),
                 Nack::UnexpectedRecipient(id) => format!("UnexpectedRecipient({})", id),
             });

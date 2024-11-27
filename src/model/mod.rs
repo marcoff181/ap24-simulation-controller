@@ -121,12 +121,7 @@ impl Model {
     }
 
     pub fn get_node_from_id(&self, id: NodeId) -> Option<&NodeRepresentation> {
-        for node in self.nodes.iter() {
-            if node.id == id {
-                return Some(&node);
-            }
-        }
-        None
+        self.nodes.iter().find(|&node| node.id == id)
     }
 
     pub fn get_mut_node_from_id(&mut self, id: NodeId) -> Option<&mut NodeRepresentation> {

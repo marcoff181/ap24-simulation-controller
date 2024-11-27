@@ -2,7 +2,6 @@ use std::{collections::HashMap, thread, time::Duration};
 
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
-use rand::Rng;
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, NodeEvent},

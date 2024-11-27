@@ -17,7 +17,7 @@ pub fn render_image(area: Rect, buf: &mut Buffer, path: &str, transparent_color:
     let origin_x = area.left() + (area.width / 2) - (width / 2);
     let origin_y = area.top() + (area.height / 2) - (height / 4);
 
-    let mut cell = &mut buf[(0 + origin_x, 0 + origin_y)];
+    let mut cell = &mut buf[(origin_x, origin_y)];
 
     for x in 0..width {
         for y in 0..height {

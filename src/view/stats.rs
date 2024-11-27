@@ -1,11 +1,10 @@
 use ratatui::{
-    buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Style, Stylize},
-    symbols::{self, line::NORMAL},
-    text::{Line, Span, Text},
+    symbols::{self},
+    text::{Line, Text},
     widgets::{
-        Block, Borders, Clear, HighlightSpacing, List, ListDirection, Paragraph, Row,
+        Block, Borders, Paragraph, Row,
         StatefulWidget, Table, Widget,
     },
     Frame,
