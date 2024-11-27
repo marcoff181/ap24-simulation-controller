@@ -1,4 +1,3 @@
-use std::task::Wake;
 
 use ratatui::{
     buffer::Buffer,
@@ -11,7 +10,6 @@ use ratatui::{
 
 use crate::{utilities::theme::*, Model};
 
-use super::render;
 
 pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
     let [r1, r2, r3] = Layout::horizontal([

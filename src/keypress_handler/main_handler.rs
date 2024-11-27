@@ -1,9 +1,8 @@
 use crate::{
-    model::{node_kind::NodeKind, node_representation::NodeRepresentation, screen::Screen, Model},
+    model::{node_kind::NodeKind, screen::Screen, Model},
     utilities::app_message::AppMessage,
 };
 use crossterm::event::{KeyCode, KeyEvent};
-use wg_2024::network::NodeId;
 
 pub fn handle_keypress_main(model: &mut Model, key: KeyEvent) -> Option<AppMessage> {
     match (key.modifiers, key.code) {
