@@ -16,7 +16,6 @@ use super::node_kind::NodeKind;
 
 #[derive(Debug)]
 pub struct NodeRepresentation {
-    // will have a field with the actual drone
     //todo: do they all need to be pub?
     pub id: NodeId,
     pub x: u32,

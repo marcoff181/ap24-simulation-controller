@@ -2,7 +2,7 @@ use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Style, Stylize},
-    symbols,
+    symbols::{self, line::NORMAL},
     text::{Line, Span, Text},
     widgets::{
         Block, Borders, Clear, HighlightSpacing, List, ListDirection, Paragraph, Row,
@@ -77,7 +77,7 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
                 spans.push(Line::from(format!("Crashed:{}", crashed)));
             }
         }
-        spans.push(Line::from(format!("adj: {:?}", n.adj)));
+        spans.push(Line::from(format!("adj:{:?}", n.adj)));
         Paragraph::new(Text::from(spans))
             .block(b1)
             .render(r1, frame.buffer_mut());

@@ -31,14 +31,14 @@ pub fn render(model: &mut Model, frame: &mut Frame) {
 }
 
 fn render_default(model: &mut Model, area: Rect, frame: &mut Frame) {
-    let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(area);
+    let [top, bottom] =
+        Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(area);
 
-    let [top_right, bottom_right] =
-        Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(right);
+    let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(top);
 
+    render_simulation(model, right, frame.buffer_mut());
+    render_stats(model, bottom, frame);
     render_list(model, left, frame.buffer_mut());
-    render_simulation(model, top_right, frame.buffer_mut());
-    render_stats(model, bottom_right, frame);
 }
 
 // fn render_start(model:&Model, area: Rect, buf: &mut Buffer) {
