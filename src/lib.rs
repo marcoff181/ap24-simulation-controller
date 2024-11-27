@@ -19,7 +19,7 @@ use wg_2024::{
 pub struct SimControllerOptions {
     pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
-    pub command_recv: Receiver<NodeEvent>,
+    pub event_recv: Receiver<NodeEvent>,
     pub config: Config,
     pub node_handles: Vec<JoinHandle<()>>,
 }
@@ -37,7 +37,7 @@ impl MySimulationController {
     pub fn new(opt: SimControllerOptions) -> Self {
         MySimulationController {
             command_send: opt.command_send,
-            command_recv: opt.command_recv,
+            command_recv: opt.event_recv,
             packet_send: opt.packet_send,
             config: opt.config.clone(),
             model: Model::new(&opt.config),
@@ -61,13 +61,12 @@ impl MySimulationController {
         while running {
             // gets all messages in receive before going on, todo: check this doesn't slow
             // interface
-            match self.command_recv.try_recv() {
-                Ok(event) => match event {
+            while let Ok(event) = self.command_recv.try_recv() {
+                match event {
                     NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),
                     NodeEvent::PacketDropped(packet) => self.save_packet_recv(packet),
-                },
-                Err(_) => continue,
-            };
+                }
+            }
             // the view renders based on an immutable reference to the model
             // apart from that list that needed it
             terminal.draw(|frame| {

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, thread, time::Duration};
 
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
@@ -15,7 +15,7 @@ fn main() {
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
-    let (dummy_command_to_simcontr, command_from_node) = unbounded::<NodeEvent>();
+    let (dummy_command_to_simcontr, event_from_node) = unbounded::<NodeEvent>();
 
     let mut dummy_drone_receivers: HashMap<NodeId, Receiver<DroneCommand>> = HashMap::new();
     let mut simcontroller_senders: HashMap<NodeId, Sender<DroneCommand>> = HashMap::new();
@@ -40,23 +40,25 @@ fn main() {
 
     let opt = SimControllerOptions {
         command_send: simcontroller_senders,
-        command_recv: command_from_node,
+        event_recv: event_from_node,
         // todo: simulate this too
         packet_send: HashMap::<NodeId, Sender<Packet>>::new(),
         config,
         node_handles: Vec::new(),
     };
-
     let mut simcontr = MySimulationController::new(opt);
-    simcontr.run();
+    let join_handle = thread::spawn(move || {
+        simcontr.run();
+    });
 
     // here you can do something with dummy_command_to_stimcontr and dummy_drone_receivers to check if
-    dummy_command_to_simcontr.send(NodeEvent::PacketSent(Packet {
+    let send = dummy_command_to_simcontr.send(NodeEvent::PacketSent(Packet {
         pack_type: wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack::Dropped(35)),
         routing_header: wg_2024::network::SourceRoutingHeader {
-            hop_index: 4,
-            hops: vec![],
+            hop_index: 3,
+            hops: vec![1, 2, 3, 4, 5, 6],
         },
         session_id: 6,
     }));
+    let res = join_handle.join();
 }

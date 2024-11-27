@@ -5,17 +5,20 @@ use ratatui::{
     symbols,
     text::Text,
     widgets::{
-        Block, Borders, HighlightSpacing, List, ListDirection, Paragraph, StatefulWidget, Widget,
+        Block, Borders, HighlightSpacing, List, ListDirection, Paragraph, Row, StatefulWidget,
+        Table, Widget,
     },
 };
 
 use crate::{utilities::theme::*, Model};
 
+use super::packet_formatter::format_packet;
+
 pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
     let [r1, r2, r3] = Layout::horizontal([
         Constraint::Fill(1),
-        Constraint::Fill(1),
-        Constraint::Fill(1),
+        Constraint::Fill(3),
+        Constraint::Fill(3),
     ])
     .areas(area);
 
@@ -84,26 +87,38 @@ pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
 
     // Packets Sent
 
+    let widths = [
+        Constraint::Length(3),
+        Constraint::Length(3),
+        Constraint::Length(3),
+        Constraint::Length(4),
+        Constraint::Min(10),
+    ];
+    let header = Row::new(vec!["", "sid", "src", "dest", "about"]);
+
     if let Some(n) = model.get_selected_node() {
-        let items = n
-            .sent
-            .iter()
-            .map(|x| format!("{}", x.session_id))
-            .collect::<Vec<String>>();
-        let list = List::new(items)
-            .block(Block::bordered().title("List"))
-            .style(Style::new().white())
-            .highlight_style(Style::new().bold().bg(HIGHLIGHT_COLOR))
-            .highlight_symbol("»")
-            .repeat_highlight_symbol(true)
-            .direction(ListDirection::TopToBottom)
-            .block(b2)
-            .highlight_spacing(HighlightSpacing::Always);
-        Widget::render(list, r2, buf);
+        let rows: Vec<Row<'_>> = n.sent.iter().map(|p| format_packet(p)).collect();
+        let table = Table::new(rows, widths)
+            .column_spacing(1)
+            .style(Style::new().red())
+            .header(header.clone())
+            .block(b2);
+        Widget::render(table, r2, buf);
     } else {
         b2.render(r2, buf);
     }
+    // Packets received
+    if let Some(n) = model.get_selected_node() {
+        let rows: Vec<Row<'_>> = n.received.iter().map(|p| format_packet(p)).collect();
+        let table = Table::new(rows, widths)
+            .column_spacing(1)
+            .style(Style::new().red())
+            .header(header)
+            .block(b3);
+        Widget::render(table, r3, buf);
+    } else {
+        b3.render(r3, buf);
+    }
 
     Paragraph::new(desc_text).block(b1).render(r1, buf);
-    b3.render(r3, buf);
 }
