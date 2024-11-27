@@ -59,6 +59,8 @@ impl MySimulationController {
         self.model.node_list_state.select(Some(0));
 
         while running {
+            // gets all messages in receive before going on, todo: check this doesn't slow
+            // interface
             match self.command_recv.try_recv() {
                 Ok(event) => match event {
                     NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),

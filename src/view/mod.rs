@@ -1,6 +1,7 @@
 mod footer;
 mod keys;
 mod list;
+mod packet_formatter;
 mod simulation;
 mod stats;
 
