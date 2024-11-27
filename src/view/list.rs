@@ -4,6 +4,7 @@ use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Style, Stylize},
+    symbols,
     widgets::{Block, Borders, HighlightSpacing, List, ListDirection, StatefulWidget},
 };
 
@@ -11,7 +12,7 @@ use crate::Model;
 
 pub fn render_list(model: &mut Model, area: Rect, buf: &mut Buffer) {
     let left_block = Block::new()
-        .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
+        .borders(Borders::TOP | Borders::LEFT)
         .title("Nodes")
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
@@ -19,7 +20,7 @@ pub fn render_list(model: &mut Model, area: Rect, buf: &mut Buffer) {
     let items = model
         .nodes
         .iter()
-        .map(|x| format!("{}",x))
+        .map(|x| format!("{}", x))
         .collect::<Vec<String>>();
     //let items = ["Drone  #12321","Drone  #12321","Drone  #12321","Drone  #12321", "Client #22343", "Server #32342"];
     let list = List::new(items)

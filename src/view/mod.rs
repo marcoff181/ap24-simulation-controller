@@ -1,6 +1,7 @@
 mod footer;
 mod keys;
 mod list;
+mod packet_formatter;
 mod simulation;
 mod stats;
 
@@ -14,29 +15,30 @@ use stats::render_stats;
 use crate::model::screen::Screen;
 use crate::model::Model;
 
-pub fn render(model: &mut Model, area: Rect, buf: &mut Buffer) {
-    let [main, footer] = Layout::vertical([Constraint::Min(0), Constraint::Length(1)]).areas(area);
-    render_footer(model, footer, buf);
+pub fn render(model: &mut Model, frame: &mut Frame) {
+    let [main, footer] =
+        Layout::vertical([Constraint::Min(0), Constraint::Length(1)]).areas(frame.area());
+    render_footer(model, footer, frame.buffer_mut());
 
     match model.screen {
         Screen::Start => {
             //render_start(main, buf);
         }
         Screen::Main | Screen::Move | Screen::AddConnection { origin: _ } | Screen::AddNode => {
-            render_default(model, main, buf);
+            render_default(model, main, frame);
         }
     }
 }
 
-fn render_default(model: &mut Model, area: Rect, buf: &mut Buffer) {
-    let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(area);
+fn render_default(model: &mut Model, area: Rect, frame: &mut Frame) {
+    let [top, bottom] =
+        Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(area);
 
-    let [top_right, bottom_right] =
-        Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(right);
+    let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(top);
 
-    render_list(model, left, buf);
-    render_simulation(model, top_right, buf);
-    render_stats(model, bottom_right, buf);
+    render_simulation(model, right, frame.buffer_mut());
+    render_stats(model, bottom, frame);
+    render_list(model, left, frame.buffer_mut());
 }
 
 // fn render_start(model:&Model, area: Rect, buf: &mut Buffer) {

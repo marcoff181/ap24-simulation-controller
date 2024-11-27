@@ -3,7 +3,7 @@ mod model;
 mod utilities;
 mod view;
 
-use std::{collections::HashMap, thread::JoinHandle};
+use std::{collections::HashMap, task::Wake, thread::JoinHandle};
 
 use crate::model::Model;
 use crossbeam_channel::{Receiver, Sender};
@@ -19,7 +19,7 @@ use wg_2024::{
 pub struct SimControllerOptions {
     pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
-    pub command_recv: Receiver<NodeEvent>,
+    pub event_recv: Receiver<NodeEvent>,
     pub config: Config,
     pub node_handles: Vec<JoinHandle<()>>,
 }
@@ -37,7 +37,7 @@ impl MySimulationController {
     pub fn new(opt: SimControllerOptions) -> Self {
         MySimulationController {
             command_send: opt.command_send,
-            command_recv: opt.command_recv,
+            command_recv: opt.event_recv,
             packet_send: opt.packet_send,
             config: opt.config.clone(),
             model: Model::new(&opt.config),
@@ -59,15 +59,8 @@ impl MySimulationController {
         self.model.node_list_state.select(Some(0));
 
         while running {
-            // the view renders based on an immutable reference to the model
-            // apart from that list that needed it
-            terminal.draw(|frame| {
-                crate::view::render(&mut self.model, frame.area(), frame.buffer_mut())
-            })?;
-            // keypress handler returns a Action enum or something and based on that we decide what to do
-            // when the event handling requires just modifying the model it is done inside the function
-            // but when there are modifications that involve SimulationController and Communication between Nodes
-            // there is an AppMessage struct that comes back
+            terminal.draw(|frame| crate::view::render(&mut self.model, frame))?;
+
             if let Some(message) = keypress_handler::handle_crossterm_events(&mut self.model)? {
                 match message {
                     utilities::app_message::AppMessage::AddConnection { from, to } => {
@@ -78,10 +71,32 @@ impl MySimulationController {
                     utilities::app_message::AppMessage::AddNode { node } => todo!(),
                 }
             };
+
+            while let Ok(event) = self.command_recv.try_recv() {
+                match event {
+                    NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),
+                    NodeEvent::PacketDropped(packet) => self.save_packet_dropped(packet),
+                }
+            }
         }
+
         Ok(())
     }
     // handle commands from drone
+
+    fn save_packet_sent(&mut self, packet: Packet) {
+        let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
+        if let Some(node) = self.model.get_mut_node_from_id(id) {
+            node.sent.push_front(packet);
+        }
+    }
+
+    fn save_packet_dropped(&mut self, packet: Packet) {
+        let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
+        if let Some(node) = self.model.get_mut_node_from_id(id) {
+            node.dropped.push_front(packet);
+        }
+    }
 
     fn add_connection(&mut self, from: NodeId, to: NodeId) {
         //check connection is not between two clients/servers

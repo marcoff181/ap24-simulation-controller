@@ -1,31 +1,41 @@
 // use std::hash::Hash;
 
-use std::{fmt::Display};
+use std::{
+    collections::{HashSet, VecDeque},
+    fmt::Display,
+};
 
 use rand::Rng;
-use wg_2024::{config::{Client, Drone, Server}, network::NodeId};
+use wg_2024::{
+    config::{Client, Drone, Server},
+    network::NodeId,
+    packet::Packet,
+};
 
 use super::node_kind::NodeKind;
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug)]
 pub struct NodeRepresentation {
-    // will have a field with the actual drone
     //todo: do they all need to be pub?
     pub id: NodeId,
     pub x: u32,
     pub y: u32,
     pub kind: NodeKind,
-    pub repr: String,
-    pub adj: Vec<NodeId>,
+    pub adj: HashSet<NodeId>,
+    pub sent: VecDeque<Packet>,
+    pub dropped: VecDeque<Packet>,
 }
 
-
-impl Eq for NodeRepresentation{
-
+impl PartialEq for NodeRepresentation {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
+
+impl Eq for NodeRepresentation {}
 
 // there are no nodes with the same id
-impl std::hash::Hash for NodeRepresentation{
+impl std::hash::Hash for NodeRepresentation {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.id.hash(state);
     }
@@ -42,31 +52,31 @@ impl Default for NodeRepresentation {
                 pdr: 0.0,
                 crashed: false,
             },
-            vec![],
+            HashSet::new(),
         )
     }
 }
 
-impl Display for NodeRepresentation{
+impl Display for NodeRepresentation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.kind{
-            NodeKind::Drone { pdr:_, crashed:_ } =>  write!(f, "{}  #{}", self.kind, self.id),
-            NodeKind::Server | NodeKind::Client =>  write!(f, "{} #{}", self.kind, self.id),
+        match self.kind {
+            NodeKind::Drone { pdr: _, crashed: _ } => write!(f, "{}  #{}", self.kind, self.id),
+            NodeKind::Server | NodeKind::Client => write!(f, "{} #{}", self.kind, self.id),
         }
-       
     }
 }
 
 impl NodeRepresentation {
-    pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: Vec<NodeId>) -> Self {
+    pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: HashSet<NodeId>) -> Self {
         let s = format!("{:?} #{}", kind, id);
         NodeRepresentation {
             id,
             x,
             y,
             kind,
-            repr: s,
             adj,
+            sent: VecDeque::new(),
+            dropped: VecDeque::new(),
         }
     }
 
@@ -79,7 +89,7 @@ impl NodeRepresentation {
                 pdr: d.pdr,
                 crashed: false,
             },
-            d.connected_node_ids.clone(),
+            d.connected_node_ids.iter().cloned().collect(),
         )
     }
 
@@ -89,7 +99,7 @@ impl NodeRepresentation {
             rand::thread_rng().gen_range(0..=100),
             rand::thread_rng().gen_range(0..=100),
             NodeKind::Client,
-            d.connected_drone_ids.clone(),
+            d.connected_drone_ids.iter().cloned().collect(),
         )
     }
 
@@ -99,7 +109,7 @@ impl NodeRepresentation {
             rand::thread_rng().gen_range(0..=100),
             rand::thread_rng().gen_range(0..=100),
             NodeKind::Server,
-            d.connected_drone_ids.clone(),
+            d.connected_drone_ids.iter().cloned().collect(),
         )
     }
 

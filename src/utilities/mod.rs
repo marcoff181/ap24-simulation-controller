@@ -1,12 +1,11 @@
-pub mod theme;
 pub mod app_message;
+pub mod theme;
 
 use image::GenericImageView;
 use rand::Rng;
 use ratatui::{buffer::Buffer, layout::Rect, style::Color};
 
-
-pub fn render_image(area: Rect, buf: &mut Buffer, path: &str, transparent_color:Color) {
+pub fn render_image(area: Rect, buf: &mut Buffer, path: &str, transparent_color: Color) {
     let img = image::open(path).expect("Failed to open image");
 
     let (w, h) = img.dimensions();
