@@ -72,11 +72,11 @@ impl Model {
 
         // todo: decide if there is need to keep this logic related to adj
         if let Some(nodefrom_id) = self.get_mut_node_from_id(from) {
-            nodefrom_id.adj.push(to as NodeId);
+            nodefrom_id.adj.insert(to as NodeId);
         }
 
         if let Some(nodeto_id) = self.get_mut_node_from_id(to) {
-            nodeto_id.adj.push(from as NodeId);
+            nodeto_id.adj.insert(from as NodeId);
         }
     }
 

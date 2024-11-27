@@ -75,7 +75,7 @@ impl MySimulationController {
             while let Ok(event) = self.command_recv.try_recv() {
                 match event {
                     NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),
-                    NodeEvent::PacketDropped(packet) => self.save_packet_recv(packet),
+                    NodeEvent::PacketDropped(packet) => self.save_packet_dropped(packet),
                 }
             }
         }
@@ -91,10 +91,10 @@ impl MySimulationController {
         }
     }
 
-    fn save_packet_recv(&mut self, packet: Packet) {
-        let id = packet.routing_header.hops[packet.routing_header.hop_index];
+    fn save_packet_dropped(&mut self, packet: Packet) {
+        let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
         if let Some(node) = self.model.get_mut_node_from_id(id) {
-            node.received.push_front(packet);
+            node.dropped.push_front(packet);
         }
     }
 

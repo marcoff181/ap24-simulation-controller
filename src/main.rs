@@ -7,9 +7,8 @@ use wg_2024::{
     config::Config,
     controller::{DroneCommand, NodeEvent},
     network::NodeId,
-    packet::Packet,
+    packet::{Ack, FloodRequest, FloodResponse, Fragment, Packet, PacketType},
 };
-
 // used while developing to check how the GUI is functioning
 fn main() {
     let config_data = std::fs::read_to_string("./src/tests/config_files/input.toml")
@@ -57,8 +56,14 @@ fn main() {
             break;
         }
 
-        let send = dummy_command_to_simcontr.send(NodeEvent::PacketSent(Packet {
-            pack_type: wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack::Dropped(35)),
+        let send = dummy_command_to_simcontr.send(NodeEvent::PacketSent(random_packet()));
+        let send = dummy_command_to_simcontr.send(NodeEvent::PacketDropped(Packet {
+            pack_type: PacketType::MsgFragment(Fragment {
+                fragment_index: rand::random_range(1..256),
+                total_n_fragments: rand::random_range(1..345),
+                length: rand::random_range(1..80),
+                data: [0; 80],
+            }),
             routing_header: wg_2024::network::SourceRoutingHeader {
                 hop_index: rand::random_range(1..=6) as usize,
                 hops: vec![1, 2, 3, 4, 5, 6],
@@ -67,5 +72,35 @@ fn main() {
         }));
 
         thread::sleep(Duration::from_millis(100));
+    }
+}
+pub fn random_packet() -> Packet {
+    Packet {
+        pack_type: match rand::random_range(1..=5u64) {
+            1 => wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack::Dropped(35)),
+            2 => PacketType::Ack(Ack {
+                fragment_index: rand::random_range(1..3456),
+            }),
+            3 => PacketType::MsgFragment(Fragment {
+                fragment_index: rand::random_range(1..256),
+                total_n_fragments: rand::random_range(1..345),
+                length: rand::random_range(1..80),
+                data: [0; 80],
+            }),
+            4 => PacketType::FloodRequest(FloodRequest {
+                flood_id: 3,
+                initiator_id: 4,
+                path_trace: vec![],
+            }),
+            _ => PacketType::FloodResponse(FloodResponse {
+                flood_id: 2,
+                path_trace: vec![],
+            }),
+        },
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: rand::random_range(1..=6) as usize,
+            hops: vec![1, 2, 3, 4, 5, 6],
+        },
+        session_id: rand::random_range(1..256),
     }
 }

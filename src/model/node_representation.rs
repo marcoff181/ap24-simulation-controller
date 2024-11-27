@@ -1,6 +1,9 @@
 // use std::hash::Hash;
 
-use std::{collections::VecDeque, fmt::Display};
+use std::{
+    collections::{HashSet, VecDeque},
+    fmt::Display,
+};
 
 use rand::Rng;
 use wg_2024::{
@@ -19,10 +22,9 @@ pub struct NodeRepresentation {
     pub x: u32,
     pub y: u32,
     pub kind: NodeKind,
-    pub repr: String,
-    pub adj: Vec<NodeId>,
+    pub adj: HashSet<NodeId>,
     pub sent: VecDeque<Packet>,
-    pub received: VecDeque<Packet>,
+    pub dropped: VecDeque<Packet>,
 }
 
 impl PartialEq for NodeRepresentation {
@@ -51,7 +53,7 @@ impl Default for NodeRepresentation {
                 pdr: 0.0,
                 crashed: false,
             },
-            vec![],
+            HashSet::new(),
         )
     }
 }
@@ -66,17 +68,16 @@ impl Display for NodeRepresentation {
 }
 
 impl NodeRepresentation {
-    pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: Vec<NodeId>) -> Self {
+    pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: HashSet<NodeId>) -> Self {
         let s = format!("{:?} #{}", kind, id);
         NodeRepresentation {
             id,
             x,
             y,
             kind,
-            repr: s,
             adj,
             sent: VecDeque::new(),
-            received: VecDeque::new(),
+            dropped: VecDeque::new(),
         }
     }
 
@@ -89,7 +90,7 @@ impl NodeRepresentation {
                 pdr: d.pdr,
                 crashed: false,
             },
-            d.connected_node_ids.clone(),
+            d.connected_node_ids.iter().cloned().collect(),
         )
     }
 
@@ -99,7 +100,7 @@ impl NodeRepresentation {
             rand::thread_rng().gen_range(0..=100),
             rand::thread_rng().gen_range(0..=100),
             NodeKind::Client,
-            d.connected_drone_ids.clone(),
+            d.connected_drone_ids.iter().cloned().collect(),
         )
     }
 
@@ -109,7 +110,7 @@ impl NodeRepresentation {
             rand::thread_rng().gen_range(0..=100),
             rand::thread_rng().gen_range(0..=100),
             NodeKind::Server,
-            d.connected_drone_ids.clone(),
+            d.connected_drone_ids.iter().cloned().collect(),
         )
     }
 

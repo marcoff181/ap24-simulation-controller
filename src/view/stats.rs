@@ -3,7 +3,7 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Style, Stylize},
     symbols,
-    text::Text,
+    text::{Line, Span, Text},
     widgets::{
         Block, Borders, Clear, HighlightSpacing, List, ListDirection, Paragraph, Row,
         StatefulWidget, Table, Widget,
@@ -11,7 +11,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::{utilities::theme::*, Model};
+use crate::{model::node_kind::NodeKind, utilities::theme::*, Model};
 
 use super::packet_formatter::format_packet;
 
@@ -22,22 +22,6 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
         Constraint::Fill(3),
     ])
     .areas(area);
-
-    //let collapsed_top_and_left_border_set = symbols::border::Set {
-    //    top_left: symbols::line::NORMAL.vertical_right,
-    //    top_right: symbols::line::NORMAL.vertical_left,
-    //    bottom_left: symbols::line::NORMAL.horizontal_up,
-    //    ..symbols::border::PLAIN
-    //};
-    //
-    //// let bottom_right_block =
-    //Block::new()
-    //    .border_set(collapsed_top_and_left_border_set)
-    //    .borders(Borders::ALL)
-    //    .title("Stats")
-    //    .bg(BG_COLOR)
-    //    .fg(TEXT_COLOR)
-    //    .render(area, buf);
 
     let border_set1 = symbols::border::Set {
         top_left: symbols::line::NORMAL.vertical_right,
@@ -79,13 +63,25 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
     let b3 = Block::new()
         .border_set(border_set3)
         .borders(Borders::BOTTOM | Borders::RIGHT | Borders::TOP)
-        .title("Received")
+        .title("Dropped")
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
 
     // Stats
-    let desc_text = Text::styled(format!("Pdr:{}", 4), Style::new());
-
+    if let Some(n) = model.get_selected_node() {
+        let mut spans: Vec<Line> = vec![];
+        match n.kind {
+            NodeKind::Client | NodeKind::Server => {}
+            NodeKind::Drone { pdr, crashed } => {
+                spans.push(Line::from(format!("Pdr:{}", pdr)));
+                spans.push(Line::from(format!("Crashed:{}", crashed)));
+            }
+        }
+        spans.push(Line::from(format!("adj: {:?}", n.adj)));
+        Paragraph::new(Text::from(spans))
+            .block(b1)
+            .render(r1, frame.buffer_mut());
+    }
     let widths = [
         Constraint::Length(3),
         Constraint::Length(3),
@@ -106,9 +102,9 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
     } else {
         b2.render(r2, frame.buffer_mut());
     }
-    // Packets received
+    // Packets dropped
     if let Some(n) = model.get_selected_node() {
-        let rows: Vec<Row<'_>> = n.received.iter().map(|p| format_packet(p)).collect();
+        let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| format_packet(p)).collect();
         let table = Table::new(rows, widths)
             .column_spacing(1)
             .style(Style::new().red())
@@ -118,8 +114,4 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
     } else {
         b3.render(r3, frame.buffer_mut());
     }
-
-    Paragraph::new(desc_text)
-        .block(b1)
-        .render(r1, frame.buffer_mut());
 }
