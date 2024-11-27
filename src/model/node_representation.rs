@@ -1,13 +1,17 @@
 // use std::hash::Hash;
 
-use std::{fmt::Display};
+use std::{collections::VecDeque, fmt::Display};
 
 use rand::Rng;
-use wg_2024::{config::{Client, Drone, Server}, network::NodeId};
+use wg_2024::{
+    config::{Client, Drone, Server},
+    network::NodeId,
+    packet::Packet,
+};
 
 use super::node_kind::NodeKind;
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug)]
 pub struct NodeRepresentation {
     // will have a field with the actual drone
     //todo: do they all need to be pub?
@@ -17,15 +21,20 @@ pub struct NodeRepresentation {
     pub kind: NodeKind,
     pub repr: String,
     pub adj: Vec<NodeId>,
+    pub sent: VecDeque<Packet>,
+    pub received: VecDeque<Packet>,
 }
 
-
-impl Eq for NodeRepresentation{
-
+impl PartialEq for NodeRepresentation {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
+
+impl Eq for NodeRepresentation {}
 
 // there are no nodes with the same id
-impl std::hash::Hash for NodeRepresentation{
+impl std::hash::Hash for NodeRepresentation {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.id.hash(state);
     }
@@ -47,13 +56,12 @@ impl Default for NodeRepresentation {
     }
 }
 
-impl Display for NodeRepresentation{
+impl Display for NodeRepresentation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.kind{
-            NodeKind::Drone { pdr:_, crashed:_ } =>  write!(f, "{}  #{}", self.kind, self.id),
-            NodeKind::Server | NodeKind::Client =>  write!(f, "{} #{}", self.kind, self.id),
+        match self.kind {
+            NodeKind::Drone { pdr: _, crashed: _ } => write!(f, "{}  #{}", self.kind, self.id),
+            NodeKind::Server | NodeKind::Client => write!(f, "{} #{}", self.kind, self.id),
         }
-       
     }
 }
 
@@ -67,6 +75,8 @@ impl NodeRepresentation {
             kind,
             repr: s,
             adj,
+            sent: VecDeque::new(),
+            received: VecDeque::new(),
         }
     }
 

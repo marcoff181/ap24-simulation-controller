@@ -81,7 +81,10 @@ pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
 
+    // Stats
     let desc_text = Text::styled(format!("Pdr:{}", 4), Style::new());
+
+    // Packets Sent
 
     Paragraph::new(desc_text).block(b1).render(r1, buf);
     b2.render(r2, buf);
