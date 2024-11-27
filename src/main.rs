@@ -15,7 +15,7 @@ fn main() {
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
-    let (_dummy_command_to_simcontr, command_from_node) = unbounded::<NodeEvent>();
+    let (dummy_command_to_simcontr, command_from_node) = unbounded::<NodeEvent>();
 
     let mut dummy_drone_receivers: HashMap<NodeId, Receiver<DroneCommand>> = HashMap::new();
     let mut simcontroller_senders: HashMap<NodeId, Sender<DroneCommand>> = HashMap::new();
@@ -51,5 +51,12 @@ fn main() {
     simcontr.run();
 
     // here you can do something with dummy_command_to_stimcontr and dummy_drone_receivers to check if
+    dummy_command_to_simcontr.send(NodeEvent::PacketSent(Packet {
+        pack_type: wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack::Dropped(35)),
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 4,
+            hops: vec![],
+        },
+        session_id: 6,
+    }));
 }
-

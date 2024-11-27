@@ -3,7 +3,7 @@ mod model;
 mod utilities;
 mod view;
 
-use std::{collections::HashMap, thread::JoinHandle};
+use std::{collections::HashMap, task::Wake, thread::JoinHandle};
 
 use crate::model::Model;
 use crossbeam_channel::{Receiver, Sender};
@@ -59,6 +59,13 @@ impl MySimulationController {
         self.model.node_list_state.select(Some(0));
 
         while running {
+            match self.command_recv.try_recv() {
+                Ok(event) => match event {
+                    NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),
+                    NodeEvent::PacketDropped(packet) => self.save_packet_recv(packet),
+                },
+                Err(_) => continue,
+            };
             // the view renders based on an immutable reference to the model
             // apart from that list that needed it
             terminal.draw(|frame| {
@@ -82,6 +89,20 @@ impl MySimulationController {
         Ok(())
     }
     // handle commands from drone
+
+    fn save_packet_sent(&mut self, packet: Packet) {
+        let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
+        if let Some(node) = self.model.get_mut_node_from_id(id) {
+            node.sent.push_back(packet);
+        }
+    }
+
+    fn save_packet_recv(&mut self, packet: Packet) {
+        let id = packet.routing_header.hops[packet.routing_header.hop_index];
+        if let Some(node) = self.model.get_mut_node_from_id(id) {
+            node.received.push_back(packet);
+        }
+    }
 
     fn add_connection(&mut self, from: NodeId, to: NodeId) {
         //check connection is not between two clients/servers

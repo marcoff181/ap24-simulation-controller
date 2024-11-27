@@ -1,15 +1,15 @@
-
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
     style::{Style, Stylize},
     symbols,
     text::Text,
-    widgets::{Block, Borders, Paragraph, Widget},
+    widgets::{
+        Block, Borders, HighlightSpacing, List, ListDirection, Paragraph, StatefulWidget, Widget,
+    },
 };
 
 use crate::{utilities::theme::*, Model};
-
 
 pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
     let [r1, r2, r3] = Layout::horizontal([
@@ -84,7 +84,26 @@ pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
 
     // Packets Sent
 
+    if let Some(n) = model.get_selected_node() {
+        let items = n
+            .sent
+            .iter()
+            .map(|x| format!("{}", x.session_id))
+            .collect::<Vec<String>>();
+        let list = List::new(items)
+            .block(Block::bordered().title("List"))
+            .style(Style::new().white())
+            .highlight_style(Style::new().bold().bg(HIGHLIGHT_COLOR))
+            .highlight_symbol("»")
+            .repeat_highlight_symbol(true)
+            .direction(ListDirection::TopToBottom)
+            .block(b2)
+            .highlight_spacing(HighlightSpacing::Always);
+        Widget::render(list, r2, buf);
+    } else {
+        b2.render(r2, buf);
+    }
+
     Paragraph::new(desc_text).block(b1).render(r1, buf);
-    b2.render(r2, buf);
     b3.render(r3, buf);
 }
