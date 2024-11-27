@@ -59,23 +59,8 @@ impl MySimulationController {
         self.model.node_list_state.select(Some(0));
 
         while running {
-            // gets all messages in receive before going on, todo: check this doesn't slow
-            // interface
-            while let Ok(event) = self.command_recv.try_recv() {
-                match event {
-                    NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),
-                    NodeEvent::PacketDropped(packet) => self.save_packet_recv(packet),
-                }
-            }
-            // the view renders based on an immutable reference to the model
-            // apart from that list that needed it
-            terminal.draw(|frame| {
-                crate::view::render(&mut self.model, frame.area(), frame.buffer_mut())
-            })?;
-            // keypress handler returns a Action enum or something and based on that we decide what to do
-            // when the event handling requires just modifying the model it is done inside the function
-            // but when there are modifications that involve SimulationController and Communication between Nodes
-            // there is an AppMessage struct that comes back
+            terminal.draw(|frame| crate::view::render(&mut self.model, frame))?;
+
             if let Some(message) = keypress_handler::handle_crossterm_events(&mut self.model)? {
                 match message {
                     utilities::app_message::AppMessage::AddConnection { from, to } => {
@@ -86,7 +71,15 @@ impl MySimulationController {
                     utilities::app_message::AppMessage::AddNode { node } => todo!(),
                 }
             };
+
+            while let Ok(event) = self.command_recv.try_recv() {
+                match event {
+                    NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),
+                    NodeEvent::PacketDropped(packet) => self.save_packet_recv(packet),
+                }
+            }
         }
+
         Ok(())
     }
     // handle commands from drone
@@ -94,14 +87,14 @@ impl MySimulationController {
     fn save_packet_sent(&mut self, packet: Packet) {
         let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
         if let Some(node) = self.model.get_mut_node_from_id(id) {
-            node.sent.push_back(packet);
+            node.sent.push_front(packet);
         }
     }
 
     fn save_packet_recv(&mut self, packet: Packet) {
         let id = packet.routing_header.hops[packet.routing_header.hop_index];
         if let Some(node) = self.model.get_mut_node_from_id(id) {
-            node.received.push_back(packet);
+            node.received.push_front(packet);
         }
     }
 

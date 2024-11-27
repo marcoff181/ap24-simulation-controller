@@ -2,6 +2,7 @@ use std::{collections::HashMap, thread, time::Duration};
 
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
+use rand::Rng;
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, NodeEvent},
@@ -50,15 +51,21 @@ fn main() {
     let join_handle = thread::spawn(move || {
         simcontr.run();
     });
+    loop {
+        if join_handle.is_finished() {
+            println!("Simulation Controller has finished its work.");
+            break;
+        }
 
-    // here you can do something with dummy_command_to_stimcontr and dummy_drone_receivers to check if
-    let send = dummy_command_to_simcontr.send(NodeEvent::PacketSent(Packet {
-        pack_type: wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack::Dropped(35)),
-        routing_header: wg_2024::network::SourceRoutingHeader {
-            hop_index: 3,
-            hops: vec![1, 2, 3, 4, 5, 6],
-        },
-        session_id: 6,
-    }));
-    let res = join_handle.join();
+        let send = dummy_command_to_simcontr.send(NodeEvent::PacketSent(Packet {
+            pack_type: wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack::Dropped(35)),
+            routing_header: wg_2024::network::SourceRoutingHeader {
+                hop_index: rand::random_range(1..=6) as usize,
+                hops: vec![1, 2, 3, 4, 5, 6],
+            },
+            session_id: rand::random_range(1..256),
+        }));
+
+        thread::sleep(Duration::from_millis(100));
+    }
 }

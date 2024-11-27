@@ -5,16 +5,17 @@ use ratatui::{
     symbols,
     text::Text,
     widgets::{
-        Block, Borders, HighlightSpacing, List, ListDirection, Paragraph, Row, StatefulWidget,
-        Table, Widget,
+        Block, Borders, Clear, HighlightSpacing, List, ListDirection, Paragraph, Row,
+        StatefulWidget, Table, Widget,
     },
+    Frame,
 };
 
 use crate::{utilities::theme::*, Model};
 
 use super::packet_formatter::format_packet;
 
-pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
+pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
     let [r1, r2, r3] = Layout::horizontal([
         Constraint::Fill(1),
         Constraint::Fill(3),
@@ -85,8 +86,6 @@ pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
     // Stats
     let desc_text = Text::styled(format!("Pdr:{}", 4), Style::new());
 
-    // Packets Sent
-
     let widths = [
         Constraint::Length(3),
         Constraint::Length(3),
@@ -103,9 +102,9 @@ pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
             .style(Style::new().red())
             .header(header.clone())
             .block(b2);
-        Widget::render(table, r2, buf);
+        frame.render_widget(table, r2);
     } else {
-        b2.render(r2, buf);
+        b2.render(r2, frame.buffer_mut());
     }
     // Packets received
     if let Some(n) = model.get_selected_node() {
@@ -115,10 +114,12 @@ pub fn render_stats(model: &Model, area: Rect, buf: &mut Buffer) {
             .style(Style::new().red())
             .header(header)
             .block(b3);
-        Widget::render(table, r3, buf);
+        frame.render_widget(table, r3);
     } else {
-        b3.render(r3, buf);
+        b3.render(r3, frame.buffer_mut());
     }
 
-    Paragraph::new(desc_text).block(b1).render(r1, buf);
+    Paragraph::new(desc_text)
+        .block(b1)
+        .render(r1, frame.buffer_mut());
 }
