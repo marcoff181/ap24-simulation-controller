@@ -9,6 +9,7 @@ use crate::model::Model;
 use crossbeam_channel::{Receiver, Sender};
 use model::{node_kind::NodeKind, screen::Screen};
 use ratatui::DefaultTerminal;
+use utilities::app_message::AppMessage;
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, NodeEvent},
@@ -66,9 +67,10 @@ impl MySimulationController {
                     utilities::app_message::AppMessage::AddConnection { from, to } => {
                         self.add_connection(from, to)
                     }
-                    utilities::app_message::AppMessage::Crash { drone: id } => self.crash(id),
-                    utilities::app_message::AppMessage::Quit => running = false,
-                    utilities::app_message::AppMessage::AddNode { node } => todo!(),
+                    AppMessage::Crash { drone: id } => self.crash(id),
+                    AppMessage::Quit => running = false,
+                    AppMessage::AddNode { node } => todo!(),
+                    AppMessage::AddConnection { from, to } => self.add_connection(from, to),
                 }
             };
 
