@@ -3,10 +3,7 @@ use ratatui::{
     style::{Style, Stylize},
     symbols::{self},
     text::{Line, Text},
-    widgets::{
-        Block, Borders, Paragraph, Row,
-        StatefulWidget, Table, Widget,
-    },
+    widgets::{Block, Borders, Paragraph, Row, StatefulWidget, Table, Widget},
     Frame,
 };
 
@@ -25,7 +22,6 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
     let border_set1 = symbols::border::Set {
         top_left: symbols::line::NORMAL.vertical_right,
         top_right: symbols::line::NORMAL.horizontal_down,
-        bottom_left: symbols::line::NORMAL.horizontal_up,
         bottom_right: symbols::line::NORMAL.horizontal_up,
         ..symbols::border::PLAIN
     };
