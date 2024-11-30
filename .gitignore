@@ -21,3 +21,4 @@ Cargo.lock
 #.idea/
 
 # Added by cargo
+*.lock

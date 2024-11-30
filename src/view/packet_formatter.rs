@@ -1,9 +1,9 @@
-
 use rand::seq::IndexedRandom;
 use ratatui::style::Style;
 use ratatui::text::Span;
 use ratatui::widgets::Row;
 use wg_2024::packet::Nack;
+use wg_2024::packet::NackType;
 use wg_2024::packet::Packet;
 use wg_2024::packet::PacketType;
 
@@ -38,11 +38,11 @@ pub fn format_packet(packet: &Packet) -> Row {
         }
         PacketType::Nack(nack) => {
             ptype = Span::styled("NCK", ptype_style.bg(PACKET_NACK_COLOR));
-            depends_on_type = Span::from(match nack {
-                Nack::ErrorInRouting(id) => format!("ErrorInRouting({})", id),
-                Nack::DestinationIsDrone => "DestinationIsDrone".to_string(),
-                Nack::Dropped(frag) => format!("Dropped({})", frag),
-                Nack::UnexpectedRecipient(id) => format!("UnexpectedRecipient({})", id),
+            depends_on_type = Span::from(match nack.nack_type {
+                NackType::ErrorInRouting(id) => format!("ErrorInRouting: neigbor({})", id),
+                NackType::DestinationIsDrone => "DestinationIsDrone".to_string(),
+                NackType::Dropped => format!("Dropped({})", nack.fragment_index),
+                NackType::UnexpectedRecipient(id) => format!("UnexpectedRecipient({})", id),
             });
         }
         PacketType::Ack(ack) => {

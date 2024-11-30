@@ -1,4 +1,4 @@
-use std::{collections::HashMap, thread, time::Duration};
+use std::{collections::HashMap, task::Wake, thread, time::Duration};
 
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
@@ -6,7 +6,7 @@ use wg_2024::{
     config::Config,
     controller::{DroneCommand, NodeEvent},
     network::NodeId,
-    packet::{Ack, FloodRequest, FloodResponse, Fragment, Packet, PacketType},
+    packet::{Ack, FloodRequest, FloodResponse, Fragment, NackType, Packet, PacketType},
 };
 // used while developing to check how the GUI is functioning
 fn main() {
@@ -76,7 +76,10 @@ fn main() {
 pub fn random_packet() -> Packet {
     Packet {
         pack_type: match rand::random_range(1..=5u64) {
-            1 => wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack::Dropped(35)),
+            1 => PacketType::Nack(wg_2024::packet::Nack {
+                fragment_index: 34,
+                nack_type: NackType::Dropped,
+            }),
             2 => PacketType::Ack(Ack {
                 fragment_index: rand::random_range(1..3456),
             }),
