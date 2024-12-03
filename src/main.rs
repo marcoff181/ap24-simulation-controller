@@ -60,8 +60,8 @@ fn main() {
             pack_type: PacketType::MsgFragment(Fragment {
                 fragment_index: rand::random_range(1..256),
                 total_n_fragments: rand::random_range(1..345),
-                length: rand::random_range(1..80),
-                data: [0; 80],
+                length: rand::random_range(1..128),
+                data: [0; 128],
             }),
             routing_header: wg_2024::network::SourceRoutingHeader {
                 hop_index: rand::random_range(1..=6) as usize,
@@ -86,8 +86,8 @@ pub fn random_packet() -> Packet {
             3 => PacketType::MsgFragment(Fragment {
                 fragment_index: rand::random_range(1..256),
                 total_n_fragments: rand::random_range(1..345),
-                length: rand::random_range(1..80),
-                data: [0; 80],
+                length: rand::random_range(1..128),
+                data: [0; 128],
             }),
             4 => PacketType::FloodRequest(FloodRequest {
                 flood_id: 3,

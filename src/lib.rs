@@ -78,6 +78,7 @@ impl MySimulationController {
                 match event {
                     DroneEvent::PacketSent(packet) => self.save_packet_sent(packet),
                     DroneEvent::PacketDropped(packet) => self.save_packet_dropped(packet),
+                    DroneEvent::ControllerShortcut(packet) => todo!(),
                 }
             }
         }
