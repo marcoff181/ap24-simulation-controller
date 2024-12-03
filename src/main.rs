@@ -4,7 +4,7 @@ use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
 use wg_2024::{
     config::Config,
-    controller::{DroneCommand, NodeEvent},
+    controller::{DroneCommand, DroneEvent},
     network::NodeId,
     packet::{Ack, FloodRequest, FloodResponse, Fragment, NackType, Packet, PacketType},
 };
@@ -14,7 +14,7 @@ fn main() {
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
-    let (dummy_command_to_simcontr, event_from_node) = unbounded::<NodeEvent>();
+    let (dummy_command_to_simcontr, event_from_node) = unbounded::<DroneEvent>();
 
     let mut dummy_drone_receivers: HashMap<NodeId, Receiver<DroneCommand>> = HashMap::new();
     let mut simcontroller_senders: HashMap<NodeId, Sender<DroneCommand>> = HashMap::new();
@@ -55,8 +55,8 @@ fn main() {
             break;
         }
 
-        let send = dummy_command_to_simcontr.send(NodeEvent::PacketSent(random_packet()));
-        let send = dummy_command_to_simcontr.send(NodeEvent::PacketDropped(Packet {
+        let send = dummy_command_to_simcontr.send(DroneEvent::PacketSent(random_packet()));
+        let send = dummy_command_to_simcontr.send(DroneEvent::PacketDropped(Packet {
             pack_type: PacketType::MsgFragment(Fragment {
                 fragment_index: rand::random_range(1..256),
                 total_n_fragments: rand::random_range(1..345),

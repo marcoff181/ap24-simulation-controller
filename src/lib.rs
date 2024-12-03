@@ -12,7 +12,7 @@ use ratatui::DefaultTerminal;
 use utilities::app_message::AppMessage;
 use wg_2024::{
     config::Config,
-    controller::{DroneCommand, NodeEvent},
+    controller::{DroneCommand, DroneEvent},
     network::NodeId,
     packet::Packet,
 };
@@ -20,14 +20,14 @@ use wg_2024::{
 pub struct SimControllerOptions {
     pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
-    pub event_recv: Receiver<NodeEvent>,
+    pub event_recv: Receiver<DroneEvent>,
     pub config: Config,
     pub node_handles: Vec<JoinHandle<()>>,
 }
 
 pub struct MySimulationController {
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
-    command_recv: Receiver<NodeEvent>,
+    command_recv: Receiver<DroneEvent>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
     config: Config,
     model: Model,
@@ -76,8 +76,8 @@ impl MySimulationController {
 
             while let Ok(event) = self.command_recv.try_recv() {
                 match event {
-                    NodeEvent::PacketSent(packet) => self.save_packet_sent(packet),
-                    NodeEvent::PacketDropped(packet) => self.save_packet_dropped(packet),
+                    DroneEvent::PacketSent(packet) => self.save_packet_sent(packet),
+                    DroneEvent::PacketDropped(packet) => self.save_packet_dropped(packet),
                 }
             }
         }
