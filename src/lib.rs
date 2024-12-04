@@ -7,6 +7,7 @@ use std::{collections::HashMap, thread::JoinHandle};
 
 use crate::model::Model;
 use crossbeam_channel::{Receiver, Sender};
+use log::debug;
 use model::{node_kind::NodeKind, screen::Screen};
 use ratatui::DefaultTerminal;
 use utilities::app_message::AppMessage;
@@ -90,6 +91,7 @@ impl MySimulationController {
     fn save_packet_sent(&mut self, packet: Packet) {
         let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
         if let Some(node) = self.model.get_mut_node_from_id(id) {
+            debug!("Drone {id} sent event PacketSent with packet {packet}");
             node.sent.push_front(packet);
         }
     }
