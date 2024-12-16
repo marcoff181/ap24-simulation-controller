@@ -65,13 +65,10 @@ impl MySimulationController {
 
             if let Some(message) = keypress_handler::handle_crossterm_events(&mut self.model)? {
                 match message {
-                    utilities::app_message::AppMessage::AddConnection { from, to } => {
-                        self.add_connection(from, to)
-                    }
+                    AppMessage::AddConnection { from, to } => self.add_connection(from, to),
                     AppMessage::Crash { drone: id } => self.crash(id),
                     AppMessage::Quit => running = false,
                     AppMessage::AddNode { node } => todo!(),
-                    AppMessage::AddConnection { from, to } => self.add_connection(from, to),
                 }
             };
 

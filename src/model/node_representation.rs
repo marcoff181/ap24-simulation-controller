@@ -83,7 +83,8 @@ impl NodeRepresentation {
     pub fn new_from_cfgdrone(d: &Drone) -> Self {
         NodeRepresentation::new(
             d.id,
-            rand::thread_rng().gen_range(0..=100),
+            d.id as u32 * 10,
+            //rand::thread_rng().gen_range(0..=100),
             rand::thread_rng().gen_range(0..=100),
             NodeKind::Drone {
                 pdr: d.pdr,
@@ -96,7 +97,8 @@ impl NodeRepresentation {
     pub fn new_from_cfgclient(d: &Client) -> Self {
         NodeRepresentation::new(
             d.id,
-            rand::thread_rng().gen_range(0..=100),
+            d.id as u32 * 10,
+            //rand::thread_rng().gen_range(0..=100),
             rand::thread_rng().gen_range(0..=100),
             NodeKind::Client,
             d.connected_drone_ids.iter().cloned().collect(),
@@ -106,7 +108,8 @@ impl NodeRepresentation {
     pub fn new_from_cfgserver(d: &Server) -> Self {
         NodeRepresentation::new(
             d.id,
-            rand::thread_rng().gen_range(0..=100),
+            d.id as u32 * 10,
+            //rand::thread_rng().gen_range(0..=100),
             rand::thread_rng().gen_range(0..=100),
             NodeKind::Server,
             d.connected_drone_ids.iter().cloned().collect(),
