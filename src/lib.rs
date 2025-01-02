@@ -30,7 +30,7 @@ pub struct MySimulationController {
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
     command_recv: Receiver<DroneEvent>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
-    config: Config,
+    //config: Config,
     model: Model,
     pub node_handles: Vec<JoinHandle<()>>,
 }
@@ -41,7 +41,7 @@ impl MySimulationController {
             command_send: opt.command_send,
             command_recv: opt.event_recv,
             packet_send: opt.packet_send,
-            config: opt.config.clone(),
+            //config: opt.config.clone(),
             model: Model::new(&opt.config),
             node_handles: opt.node_handles,
         }

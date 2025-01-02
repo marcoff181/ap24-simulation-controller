@@ -36,8 +36,4 @@ pub const MAIN_KEYS_ADD_NODE: [(&str, &str); 4] = [
     ("q", "Quit"),
 ];
 
-pub const MOVE_KEYS: [(&str, &str); 3] = [
-    ("↑/↓/→/←", "Move"), 
-    ("Enter", "Ok"), 
-    ("q", "Quit")
-];
+pub const MOVE_KEYS: [(&str, &str); 3] = [("↑/↓/→/←", "Move"), ("Enter", "Ok"), ("q", "Quit")];
