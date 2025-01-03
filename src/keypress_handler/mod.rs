@@ -1,25 +1,16 @@
 use std::time::Duration;
 
-use crate::{
-    model::{screen::Screen, Model},
-    utilities::app_message::AppMessage,
-};
-use add_connection_handler::handle_keypress_add_connection;
-use add_node_handler::handle_keypress_add_node;
+use crate::network::node_kind::NodeKind;
+use crate::screen::{Screen, Window};
+use crate::utilities::app_message::AppMessage;
+use crossterm::event::KeyCode;
 use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
-use main_handler::handle_keypress_main;
-use move_handler::handle_keypress_move;
 
-mod add_connection_handler;
-mod add_node_handler;
-mod main_handler;
-mod move_handler;
-
-pub fn handle_crossterm_events(model: &mut Model) -> std::io::Result<Option<AppMessage>> {
+pub fn handle_crossterm_events(screen: &Screen) -> std::io::Result<Option<AppMessage>> {
     if event::poll(Duration::from_millis(100))? {
         match event::read()? {
             // check KeyEventKind::Press to avoid handling key release events
-            Event::Key(key) if key.kind == KeyEventKind::Press => Ok(handle_keypress(model, key)),
+            Event::Key(key) if key.kind == KeyEventKind::Press => Ok(handle_keypress(screen, &key)),
             // Event::Mouse(_) => Ok(None),
             // Event::Resize(_, _) => Ok(None),
             _ => Ok(None),
@@ -29,23 +20,96 @@ pub fn handle_crossterm_events(model: &mut Model) -> std::io::Result<Option<AppM
     }
 }
 
-/// Handles the key events and updates the state of [`App`].
-fn handle_keypress(model: &mut Model, key: KeyEvent) -> Option<AppMessage> {
-    match model.screen {
-        Screen::Start => None, //handle_keypress_start(model,key),
-        Screen::Main => handle_keypress_main(model, key),
-        Screen::Move => handle_keypress_move(model, key),
-        Screen::AddNode => handle_keypress_add_node(model, key),
-        Screen::AddConnection { origin: from } => handle_keypress_add_connection(model, key, from),
+/// Handles the key events and returns an AppMessage defining the action that is requested
+fn handle_keypress(screen: &Screen, key: &KeyEvent) -> Option<AppMessage> {
+    match screen.window {
+        Window::AddConnection { origin: _ } => handle_keypress_add_connection(key),
+        Window::AddNode { toadd: _ } => handle_keypress_add_node(key),
+        Window::ChangePdr { pdr: _ } => handle_keypress_changepdr(key),
+        Window::Detail => handle_keypress_detail(key),
+        Window::Main => handle_keypress_main(screen.kind, key),
+        Window::Move => handle_keypress_move(key),
     }
 }
 
-// fn handle_keypress_start(model:&mut Model, key: KeyEvent) {
-//     match (key.modifiers, key.code) {
-//         (_, KeyCode::Char('q')) => model.running = false,
-//         // (_, KeyCode::Up) => model.node_list_state.scroll_up_by(1),
-//         // (_, KeyCode::Down) => model.node_list_state.scroll_down_by(1),
-//         (_, KeyCode::Char('+')) => model.screen = Screen::Main,
-//         _ => {}
-//     }
-// }
+pub fn handle_keypress_changepdr(key: &KeyEvent) -> Option<AppMessage> {
+    match (key.modifiers, key.code) {
+        //(_, KeyCode::Char('q')) => Some(AppMessage::Quit),
+        //(_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
+        //(_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
+        //(_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
+        //(_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
+        //(_, KeyCode::Enter) => Some(AppMessage::Done),
+        _ => None,
+    }
+}
+
+pub fn handle_keypress_detail(key: &KeyEvent) -> Option<AppMessage> {
+    match (key.modifiers, key.code) {
+        //(_, KeyCode::Char('q')) => Some(AppMessage::Quit),
+        //(_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
+        //(_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
+        //(_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
+        //(_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
+        //(_, KeyCode::Enter) => Some(AppMessage::Done),
+        _ => None,
+    }
+}
+
+pub fn handle_keypress_main(sel_type: NodeKind, key: &KeyEvent) -> Option<AppMessage> {
+    match (key.modifiers, key.code) {
+        (_, KeyCode::Up) => Some(AppMessage::ScrollUp),
+        (_, KeyCode::Down) => Some(AppMessage::ScrollDown),
+        (_, KeyCode::Char('q')) => Some(AppMessage::Quit),
+        (_, KeyCode::Char('m')) => Some(AppMessage::WindowMove),
+        (_, KeyCode::Char('c')) => Some(AppMessage::WindowAddConnection),
+        (_, KeyCode::Char('+')) => Some(AppMessage::WindowAddNode),
+        (_, KeyCode::Char('p')) if matches!(sel_type, NodeKind::Drone { .. }) => {
+            Some(AppMessage::WindowChangePDR)
+        }
+        (_, KeyCode::Char('k')) if matches!(sel_type, NodeKind::Drone { .. }) => {
+            Some(AppMessage::Crash)
+        }
+        _ => None,
+    }
+}
+
+pub fn handle_keypress_move(key: &KeyEvent) -> Option<AppMessage> {
+    match (key.modifiers, key.code) {
+        (_, KeyCode::Char('q')) => Some(AppMessage::Quit),
+        (_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
+        (_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
+        (_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
+        (_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
+        (_, KeyCode::Enter) => Some(AppMessage::Done),
+        _ => None,
+    }
+}
+
+pub fn handle_keypress_add_node(key: &KeyEvent) -> Option<AppMessage> {
+    match (key.modifiers, key.code) {
+        (_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
+        (_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
+        (_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
+        (_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
+        (_, KeyCode::Char('c')) => Some(AppMessage::SetNodeKind(NodeKind::Client)),
+        (_, KeyCode::Char('s')) => Some(AppMessage::SetNodeKind(NodeKind::Server)),
+        (_, KeyCode::Char('d')) => Some(AppMessage::SetNodeKind(NodeKind::Drone {
+            pdr: 0.05,
+            crashed: false,
+        })),
+        (_, KeyCode::Enter) => Some(AppMessage::Done),
+        (_, KeyCode::Char('q')) => Some(AppMessage::Quit),
+        _ => None,
+    }
+}
+
+pub fn handle_keypress_add_connection(key: &KeyEvent) -> Option<AppMessage> {
+    match (key.modifiers, key.code) {
+        (_, KeyCode::Char('q')) => Some(AppMessage::Quit),
+        (_, KeyCode::Up) => Some(AppMessage::ScrollUp),
+        (_, KeyCode::Down) => Some(AppMessage::ScrollDown),
+        (_, KeyCode::Enter) => Some(AppMessage::Done),
+        _ => None,
+    }
+}

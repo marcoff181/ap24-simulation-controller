@@ -8,36 +8,53 @@ mod stats;
 use footer::render_footer;
 use list::render_list;
 use ratatui::prelude::*;
+use ratatui::widgets::ListState;
 use simulation::render_simulation;
 use stats::render_stats;
 
-use crate::model::screen::Screen;
-use crate::model::Model;
+use crate::network::Network;
+use crate::screen::Window;
+use crate::Screen;
 
-pub fn render(model: &mut Model, frame: &mut Frame) {
+pub fn render(
+    network: &Network,
+    screen: &Screen,
+    node_list_state: &mut ListState,
+    frame: &mut Frame,
+) {
     let [main, footer] =
         Layout::vertical([Constraint::Min(0), Constraint::Length(1)]).areas(frame.area());
-    render_footer(model, footer, frame.buffer_mut());
+    render_footer(network, screen, footer, frame.buffer_mut());
 
-    match model.screen {
-        Screen::Start => {
+    match screen.window {
+        Window::Detail => {
             //render_start(main, buf);
         }
-        Screen::Main | Screen::Move | Screen::AddConnection { origin: _ } | Screen::AddNode => {
-            render_default(model, main, frame);
+        Window::Main
+        | Window::ChangePdr { pdr: _ }
+        | Window::Move
+        | Window::AddConnection { origin: _ }
+        | Window::AddNode { toadd: _ } => {
+            render_standard(network, screen, node_list_state, main, frame);
         }
     }
 }
 
-fn render_default(model: &mut Model, area: Rect, frame: &mut Frame) {
+fn render_standard(
+    network: &Network,
+    screen: &Screen,
+    node_list_state: &mut ListState,
+    area: Rect,
+    frame: &mut Frame,
+) {
     let [top, bottom] =
         Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(area);
 
     let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(top);
 
-    render_simulation(model, right, frame.buffer_mut());
-    render_stats(model, bottom, frame);
-    render_list(model, left, frame.buffer_mut());
+    render_simulation(network, screen, right, frame.buffer_mut());
+    render_stats(network, screen, bottom, frame);
+    render_list(network, screen, node_list_state, left, frame.buffer_mut());
 }
 
 // fn render_start(model:&Model, area: Rect, buf: &mut Buffer) {

@@ -14,7 +14,7 @@ use wg_2024::{
 
 use super::node_kind::NodeKind;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NodeRepresentation {
     //todo: do they all need to be pub?
     pub id: NodeId,
@@ -45,7 +45,7 @@ impl Default for NodeRepresentation {
     fn default() -> Self {
         NodeRepresentation::new(
             // todo: check if there is a node with same id
-            rand::thread_rng().gen_range(0..=255),
+            rand::random_range(0..=255),
             0,
             0,
             NodeKind::Drone {
@@ -68,7 +68,7 @@ impl Display for NodeRepresentation {
 
 impl NodeRepresentation {
     pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: HashSet<NodeId>) -> Self {
-        let s = format!("{:?} #{}", kind, id);
+        //let s = format!("{:?} #{}", kind, id);
         NodeRepresentation {
             id,
             x,
@@ -84,8 +84,7 @@ impl NodeRepresentation {
         NodeRepresentation::new(
             d.id,
             d.id as u32 * 10,
-            //rand::thread_rng().gen_range(0..=100),
-            rand::thread_rng().gen_range(0..=100),
+            rand::random_range(0..=100),
             NodeKind::Drone {
                 pdr: d.pdr,
                 crashed: false,
@@ -98,8 +97,7 @@ impl NodeRepresentation {
         NodeRepresentation::new(
             d.id,
             d.id as u32 * 10,
-            //rand::thread_rng().gen_range(0..=100),
-            rand::thread_rng().gen_range(0..=100),
+            rand::random_range(0..=100),
             NodeKind::Client,
             d.connected_drone_ids.iter().cloned().collect(),
         )
@@ -109,8 +107,7 @@ impl NodeRepresentation {
         NodeRepresentation::new(
             d.id,
             d.id as u32 * 10,
-            //rand::thread_rng().gen_range(0..=100),
-            rand::thread_rng().gen_range(0..=100),
+            rand::random_range(0..=100),
             NodeKind::Server,
             d.connected_drone_ids.iter().cloned().collect(),
         )

@@ -1,5 +1,8 @@
 use super::keys::*;
-use crate::utilities::theme::*;
+use crate::{
+    screen::{Screen, Window},
+    utilities::theme::*,
+};
 
 use ratatui::{
     buffer::Buffer,
@@ -9,21 +12,19 @@ use ratatui::{
     widgets::{StatefulWidget, Widget},
 };
 
-use crate::{
-    model::{node_kind::NodeKind, screen::Screen},
-    Model,
-};
+use crate::{network::node_kind::NodeKind, Network};
 
-pub fn render_footer(model: &Model, area: Rect, buf: &mut Buffer) {
-    let keys: &[(&str, &str)] = match model.screen {
-        Screen::Main => match model.get_selected_kind() {
-            Some(NodeKind::Drone { pdr: _, crashed: _ }) => &MAIN_KEYS_OVER_DRONE,
+pub fn render_footer(network: &Network, screen: &Screen, area: Rect, buf: &mut Buffer) {
+    let keys: &[(&str, &str)] = match screen.window {
+        Window::Main => match screen.kind {
+            NodeKind::Drone { pdr: _, crashed: _ } => &MAIN_KEYS_OVER_DRONE,
             _ => &MAIN_KEYS,
         },
-        Screen::Start => &START_KEYS,
-        Screen::Move => &MOVE_KEYS,
-        Screen::AddConnection { origin: _ } => &MAIN_KEYS_ADD_CONNECTION,
-        Screen::AddNode => &MAIN_KEYS_ADD_NODE,
+        Window::Move => &MOVE_KEYS,
+        Window::AddConnection { origin: _ } => &MAIN_KEYS_ADD_CONNECTION,
+        Window::AddNode { toadd: _ } => &MAIN_KEYS_ADD_NODE,
+        Window::ChangePdr { pdr } => todo!(),
+        Window::Detail => todo!(),
     };
 
     let spans: Vec<Span> = keys

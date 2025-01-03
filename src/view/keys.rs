@@ -1,9 +1,9 @@
-pub const START_KEYS: [(&str, &str); 2] = [
-    // ("↑", "Up"),
-    // ("↓", "Down"),
-    ("+", "Open initialization file"),
-    ("q", "Quit"),
-];
+//pub const START_KEYS: [(&str, &str); 2] = [
+//    // ("↑", "Up"),
+//    // ("↓", "Down"),
+//    ("+", "Open initialization file"),
+//    ("q", "Quit"),
+//];
 
 pub const MAIN_KEYS: [(&str, &str); 5] = [
     ("↑/↓", "Scroll list"),

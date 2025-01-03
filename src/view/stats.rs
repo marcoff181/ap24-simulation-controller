@@ -7,11 +7,11 @@ use ratatui::{
     Frame,
 };
 
-use crate::{model::node_kind::NodeKind, utilities::theme::*, Model};
+use crate::{network::node_kind::NodeKind, screen::Screen, utilities::theme::*, Network};
 
 use super::packet_formatter::format_packet;
 
-pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
+pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut Frame) {
     let [r1, r2, r3] = Layout::horizontal([
         Constraint::Fill(1),
         Constraint::Fill(3),
@@ -63,20 +63,19 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
         .fg(TEXT_COLOR);
 
     // Stats
-    if let Some(n) = model.get_selected_node() {
-        let mut spans: Vec<Line> = vec![];
-        match n.kind {
-            NodeKind::Client | NodeKind::Server => {}
-            NodeKind::Drone { pdr, crashed } => {
-                spans.push(Line::from(format!("Pdr:{}", pdr)));
-                spans.push(Line::from(format!("Crashed:{}", crashed)));
-            }
+    let n = network.get_node_from_id(screen.focus).unwrap();
+    let mut spans: Vec<Line> = vec![];
+    match n.kind {
+        NodeKind::Client | NodeKind::Server => {}
+        NodeKind::Drone { pdr, crashed } => {
+            spans.push(Line::from(format!("Pdr:{}", pdr)));
+            spans.push(Line::from(format!("Crashed:{}", crashed)));
         }
-        spans.push(Line::from(format!("adj:{:?}", n.adj)));
-        Paragraph::new(Text::from(spans))
-            .block(b1)
-            .render(r1, frame.buffer_mut());
     }
+    spans.push(Line::from(format!("adj:{:?}", n.adj)));
+    Paragraph::new(Text::from(spans))
+        .block(b1)
+        .render(r1, frame.buffer_mut());
     let widths = [
         Constraint::Length(3),
         Constraint::Length(3),
@@ -86,27 +85,27 @@ pub fn render_stats(model: &Model, area: Rect, frame: &mut Frame) {
     ];
     let header = Row::new(vec!["", "sid", "src", "dest", "about"]);
 
-    if let Some(n) = model.get_selected_node() {
-        let rows: Vec<Row<'_>> = n.sent.iter().map(|p| format_packet(p)).collect();
-        let table = Table::new(rows, widths)
-            .column_spacing(1)
-            .style(Style::new().red())
-            .header(header.clone())
-            .block(b2);
-        frame.render_widget(table, r2);
-    } else {
-        b2.render(r2, frame.buffer_mut());
-    }
+    //if let Some(n) = model.get_selected_node() {
+    let rows: Vec<Row<'_>> = n.sent.iter().map(|p| format_packet(p)).collect();
+    let table = Table::new(rows, widths)
+        .column_spacing(1)
+        .style(Style::new().red())
+        .header(header.clone())
+        .block(b2);
+    frame.render_widget(table, r2);
+    //} else {
+    //    b2.render(r2, frame.buffer_mut());
+    //}
     // Packets dropped
-    if let Some(n) = model.get_selected_node() {
-        let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| format_packet(p)).collect();
-        let table = Table::new(rows, widths)
-            .column_spacing(1)
-            .style(Style::new().red())
-            .header(header)
-            .block(b3);
-        frame.render_widget(table, r3);
-    } else {
-        b3.render(r3, frame.buffer_mut());
-    }
+    //if let Some(n) = model.get_selected_node() {
+    let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| format_packet(p)).collect();
+    let table = Table::new(rows, widths)
+        .column_spacing(1)
+        .style(Style::new().red())
+        .header(header)
+        .block(b3);
+    frame.render_widget(table, r3);
+    //} else {
+    //    b3.render(r3, frame.buffer_mut());
+    //}
 }

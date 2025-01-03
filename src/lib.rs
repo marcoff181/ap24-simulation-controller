@@ -1,15 +1,18 @@
 mod keypress_handler;
-mod model;
+mod network;
+mod screen;
 mod utilities;
 mod view;
 
+use crate::screen::Screen;
 use std::{collections::HashMap, thread::JoinHandle};
 
-use crate::model::Model;
+use crate::network::Network;
 use crossbeam_channel::{Receiver, Sender};
 use log::debug;
-use model::{node_kind::NodeKind, screen::Screen};
-use ratatui::DefaultTerminal;
+use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
+use ratatui::{widgets::ListState, DefaultTerminal};
+use screen::Window;
 use utilities::app_message::AppMessage;
 use wg_2024::{
     config::Config,
@@ -27,12 +30,16 @@ pub struct SimControllerOptions {
 }
 
 pub struct MySimulationController {
+    // external comms
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
     command_recv: Receiver<DroneEvent>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
-    //config: Config,
-    model: Model,
-    pub node_handles: Vec<JoinHandle<()>>,
+    node_handles: Vec<JoinHandle<()>>,
+    // internal state
+    running: bool,
+    network: Network,
+    node_list_state: ListState,
+    screen: Screen,
 }
 
 impl MySimulationController {
@@ -41,9 +48,19 @@ impl MySimulationController {
             command_send: opt.command_send,
             command_recv: opt.event_recv,
             packet_send: opt.packet_send,
-            //config: opt.config.clone(),
-            model: Model::new(&opt.config),
             node_handles: opt.node_handles,
+            network: Network::new(&opt.config),
+            node_list_state: ListState::default(),
+            screen: Screen {
+                focus: opt.config.drone[0].id,
+                //TODO: fix
+                kind: NodeKind::Drone {
+                    pdr: opt.config.drone[0].pdr,
+                    crashed: false,
+                },
+                window: Window::Main,
+            },
+            running: true,
         }
     }
 
@@ -57,19 +74,20 @@ impl MySimulationController {
 
 impl MySimulationController {
     fn start(&mut self, mut terminal: DefaultTerminal) -> Result<(), std::io::Error> {
-        let mut running = true;
-        self.model.node_list_state.select(Some(0));
+        // TODO: do in the new
+        self.node_list_state.select(Some(0));
+        while self.running {
+            terminal.draw(|frame| {
+                crate::view::render(
+                    &self.network,
+                    &self.screen,
+                    &mut self.node_list_state,
+                    frame,
+                )
+            })?;
 
-        while running {
-            terminal.draw(|frame| crate::view::render(&mut self.model, frame))?;
-
-            if let Some(message) = keypress_handler::handle_crossterm_events(&mut self.model)? {
-                match message {
-                    AppMessage::AddConnection { from, to } => self.add_connection(from, to),
-                    AppMessage::Crash { drone: id } => self.crash(id),
-                    AppMessage::Quit => running = false,
-                    AppMessage::AddNode { node } => todo!(),
-                }
+            if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen)? {
+                self.transition(message);
             };
 
             while let Ok(event) = self.command_recv.try_recv() {
@@ -87,7 +105,7 @@ impl MySimulationController {
 
     fn save_packet_sent(&mut self, packet: Packet) {
         let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
-        if let Some(node) = self.model.get_mut_node_from_id(id) {
+        if let Some(node) = self.network.get_mut_node_from_id(id) {
             debug!("Drone {id} sent event PacketSent with packet {packet}");
             node.sent.push_front(packet);
         }
@@ -95,7 +113,7 @@ impl MySimulationController {
 
     fn save_packet_dropped(&mut self, packet: Packet) {
         let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
-        if let Some(node) = self.model.get_mut_node_from_id(id) {
+        if let Some(node) = self.network.get_mut_node_from_id(id) {
             node.dropped.push_front(packet);
         }
     }
@@ -103,8 +121,8 @@ impl MySimulationController {
     fn add_connection(&mut self, from: NodeId, to: NodeId) {
         //check connection is not between two clients/servers
         if let (Some(nfrom), Some(nto)) = (
-            self.model.get_node_from_id(from),
-            self.model.get_node_from_id(to),
+            self.network.get_node_from_id(from),
+            self.network.get_node_from_id(to),
         ) {
             if !matches!(nfrom.kind, NodeKind::Drone { .. })
                 && !matches!(nto.kind, NodeKind::Drone { .. })
@@ -134,9 +152,9 @@ impl MySimulationController {
             command_sender_to.send(DroneCommand::AddSender(from, packet_sender_from.clone()));
 
             // for now we assume they succesfully added channel, and show it in the model
-            self.model.add_edge(from, to);
-            self.model.select_node(from);
-            self.model.screen = Screen::Main;
+            self.network.add_edge(from, to);
+            // TODO: select correct node
+            //self.model.select_node(from);
         } else {
             panic!("could not create connection")
         }
@@ -153,12 +171,13 @@ impl MySimulationController {
         // wg will decide but I think drones should be the ones to handle the crash
 
         // set in the model the corresponding node to crashed true
-        self.model.crash_drone(id);
+        self.network.crash_drone(id);
     }
 
-    /// adds `to the proper simulation` a node that has already been added to the model
-    fn add_node(&mut self, id: NodeId) {
-        if let Some(n) = self.model.get_node_from_id(id) {
+    /// TODO: adds to the model and to the simulation the given node
+    fn add_node(&mut self, node: NodeRepresentation) {
+        // TODO: add node here instead
+        if let Some(n) = self.network.get_node_from_id(node.id) {
             match n.kind {
                 NodeKind::Drone { pdr, crashed } => todo!(),
                 NodeKind::Client => todo!(),
@@ -167,6 +186,116 @@ impl MySimulationController {
         } else {
             //todo:improve
             panic!("added drone not found");
+        }
+        //self.node_list_state.select_last();
+    }
+    fn change_pdr(&mut self, pdr: f64) {
+        todo!();
+    }
+}
+
+impl MySimulationController {
+    fn transition(&mut self, message: AppMessage) {
+        let kind = self.screen.kind;
+        let id = self.screen.focus;
+        match message {
+            AppMessage::Quit => self.running = false,
+            AppMessage::Crash => match self.screen.window {
+                Window::Main | Window::Detail if matches!(kind, NodeKind::Drone { .. }) => {
+                    self.crash(id);
+                    self.network.crash_drone(id);
+                    self.screen.window = Window::Main;
+                }
+                _ => {}
+            },
+            // for add node
+            AppMessage::SetNodeKind(kind) => match self.screen.window {
+                Window::AddNode { ref mut toadd } => {
+                    toadd.kind = kind;
+                }
+                _ => {}
+            },
+            // Window changes
+            AppMessage::WindowAddConnection => match self.screen.window {
+                Window::Main => self.screen.window = Window::AddConnection { origin: id },
+                _ => {}
+            },
+            AppMessage::WindowAddNode => match self.screen.window {
+                Window::Main => {
+                    self.screen.window = Window::AddNode {
+                        toadd: NodeRepresentation::default(),
+                    }
+                }
+                _ => {}
+            },
+            AppMessage::WindowChangePDR => match self.screen.window {
+                Window::Main => self.screen.window = Window::ChangePdr { pdr: 0.05 },
+                _ => {}
+            },
+            AppMessage::WindowMove => match self.screen.window {
+                Window::Main => self.screen.window = Window::Move,
+                _ => {}
+            },
+            AppMessage::WindowDetail => match self.screen.window {
+                Window::Main => self.screen.window = Window::Detail,
+                _ => {}
+            },
+            AppMessage::Done => match self.screen.window {
+                Window::Main => {}
+                Window::Move | Window::Detail => self.screen.window = Window::Main,
+                Window::AddNode { ref toadd } => {
+                    self.add_node(toadd.clone());
+                    self.screen.window = Window::Main
+                }
+                Window::AddConnection { origin } => {
+                    self.add_connection(origin, id);
+                    self.screen.window = Window::Main
+                }
+                Window::ChangePdr { pdr } => {
+                    self.change_pdr(pdr);
+                    self.screen.window = Window::Main;
+                }
+            },
+            // List movement
+            AppMessage::ScrollUp => match self.screen.window {
+                // TODO: check not adding connection client client, also in scrolldown
+                Window::Main | Window::AddConnection { .. } => {
+                    self.node_list_state.scroll_up_by(1);
+                    let node = self
+                        .network
+                        .get_node_from_pos(self.node_list_state.selected().unwrap())
+                        .unwrap();
+                    self.screen.focus = node.id;
+                    self.screen.kind = node.kind;
+                }
+                _ => {}
+            },
+            AppMessage::ScrollDown => match self.screen.window {
+                Window::Main | Window::AddConnection { .. } => {
+                    self.node_list_state.scroll_down_by(1);
+                    let node = self
+                        .network
+                        .get_node_from_pos(self.node_list_state.selected().unwrap())
+                        .unwrap();
+                    self.screen.focus = node.id;
+                    self.screen.kind = node.kind;
+                }
+                _ => {}
+            },
+            // Node movement
+            AppMessage::MoveNode { x, y } => {
+                let node = self.network.get_mut_node_from_id(id).unwrap();
+                if x > 0 {
+                    node.x.saturating_add(x as u32);
+                } else {
+                    node.x.saturating_sub(x as u32);
+                }
+                if y > 0 {
+                    node.y.saturating_add(y as u32);
+                } else {
+                    node.y.saturating_sub(y as u32);
+                }
+            }
         }
     }
 }
