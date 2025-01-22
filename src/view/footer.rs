@@ -19,13 +19,13 @@ pub fn render_footer(_network: &Network, screen: &Screen, area: Rect, buf: &mut 
         Window::Main => &MAIN_KEYS,
         Window::Move => &MOVE_KEYS,
         Window::AddConnection { origin: _ } => &MAIN_KEYS_ADD_CONNECTION,
-        Window::AddNode { toadd: _ } => &MAIN_KEYS_ADD_NODE,
         Window::ChangePdr { pdr: _ } => todo!(),
         Window::Detail { tab: _ } => match screen.kind {
             NodeKind::Drone { pdr: _, crashed: _ } => &DETAIL_KEYS_DRONE,
             NodeKind::Client => &DETAIL_KEYS_CLIENT,
             NodeKind::Server => &DETAIL_KEYS_SERVER,
         },
+        Window::Error { message: _ } => &ERROR_KEYS,
     };
 
     let spans: Vec<Span> = keys

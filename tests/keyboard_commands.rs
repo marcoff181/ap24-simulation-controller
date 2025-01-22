@@ -1,7 +1,9 @@
-use std::{collections::HashMap, task::Wake, thread, time::Duration};
+use core::panic;
+use std::{collections::HashMap, sync::mpsc, task::Wake, thread, time::Duration};
 
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, DroneEvent},
@@ -12,7 +14,7 @@ use wg_2024::{
 
 #[test]
 fn changes() {
-    let config_data = std::fs::read_to_string("./src/tests/config_files/input.toml")
+    let config_data = std::fs::read_to_string("./tests/config_files/input.toml")
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
@@ -51,29 +53,37 @@ fn changes() {
     let join_handle = thread::spawn(move || {
         simcontr.run();
     });
-    loop {
-        if join_handle.is_finished() {
-            println!("Simulation Controller has finished its work.");
-            break;
-        }
 
-        let send = dummy_command_to_simcontr.send(DroneEvent::PacketSent(random_packet()));
-        let send = dummy_command_to_simcontr.send(DroneEvent::PacketDropped(Packet {
-            pack_type: PacketType::MsgFragment(Fragment {
-                fragment_index: rand::random_range(1..256),
-                total_n_fragments: rand::random_range(1..345),
-                length: rand::random_range(1..128),
-                data: [35; 128],
-            }),
-            routing_header: wg_2024::network::SourceRoutingHeader {
-                hop_index: rand::random_range(1..=6) as usize,
-                hops: vec![1, 2, 3, 4, 5, 6],
-            },
-            session_id: rand::random_range(1..256),
-        }));
+    let (tx, rx) = mpsc::channel();
+    thread::sleep(Duration::from_millis(500));
+    // Simulate pressing the 'q' key
+    tx.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE))
+        .unwrap();
+    // Add a small delay to mimic user behavior
+    thread::sleep(Duration::from_millis(100));
 
-        thread::sleep(Duration::from_millis(100));
+    if join_handle.is_finished() {
+        println!("Simulation Controller has finished its work.");
+    } else {
+        panic!("sc did not exit");
     }
+
+    //let send = dummy_command_to_simcontr.send(DroneEvent::PacketSent(random_packet()));
+    //let send = dummy_command_to_simcontr.send(DroneEvent::PacketDropped(Packet {
+    //    pack_type: PacketType::MsgFragment(Fragment {
+    //        fragment_index: rand::random_range(1..256),
+    //        total_n_fragments: rand::random_range(1..345),
+    //        length: rand::random_range(1..128),
+    //        data: [35; 128],
+    //    }),
+    //    routing_header: wg_2024::network::SourceRoutingHeader {
+    //        hop_index: rand::random_range(1..=6) as usize,
+    //        hops: vec![1, 2, 3, 4, 5, 6],
+    //    },
+    //    session_id: rand::random_range(1..256),
+    //}));
+    //
+    //thread::sleep(Duration::from_millis(100));
 }
 pub fn random_packet() -> Packet {
     Packet {

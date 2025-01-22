@@ -5,12 +5,16 @@ mod utilities;
 mod view;
 
 use crate::screen::Screen;
-use std::{collections::HashMap, thread::JoinHandle};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    thread::{Builder, JoinHandle},
+};
 
 use crate::network::Network;
-use crossbeam_channel::{Receiver, Sender};
-use log::debug;
+use crossbeam_channel::{unbounded, Receiver, Sender};
+use log::{debug, error, info, trace, warn};
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
+use rand::random;
 use ratatui::{
     widgets::{ListState, TableState},
     DefaultTerminal,
@@ -20,6 +24,7 @@ use utilities::app_message::AppMessage;
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, DroneEvent},
+    drone::Drone,
     network::NodeId,
     packet::Packet,
 };
@@ -35,7 +40,7 @@ pub struct SimControllerOptions {
 pub struct MySimulationController {
     // external comms
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
-    command_recv: Receiver<DroneEvent>,
+    event_recv: Receiver<DroneEvent>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
     node_handles: Vec<JoinHandle<()>>,
     // internal state
@@ -48,9 +53,10 @@ pub struct MySimulationController {
 
 impl MySimulationController {
     pub fn new(opt: SimControllerOptions) -> Self {
+        info!("created SC");
         MySimulationController {
             command_send: opt.command_send,
-            command_recv: opt.event_recv,
+            event_recv: opt.event_recv,
             packet_send: opt.packet_send,
             node_handles: opt.node_handles,
             network: Network::new(&opt.config),
@@ -79,6 +85,7 @@ impl MySimulationController {
 
 impl MySimulationController {
     fn start(&mut self, mut terminal: DefaultTerminal) -> Result<(), std::io::Error> {
+        info!("started SC");
         while self.running {
             terminal.draw(|frame| {
                 crate::view::render(
@@ -91,10 +98,11 @@ impl MySimulationController {
             })?;
 
             if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen)? {
+                debug!("received AppMessage: {:?}", message);
                 self.transition(message);
             };
 
-            while let Ok(event) = self.command_recv.try_recv() {
+            while let Ok(event) = self.event_recv.try_recv() {
                 if let DroneEvent::ControllerShortcut(packet) = event {
                     todo!()
                 }
@@ -105,6 +113,9 @@ impl MySimulationController {
         Ok(())
     }
 
+    /// saves inside the NodeRepresentation the events received on the sc channel, logs the event
+    /// received, and in the case of the Detail window, it scrolls the table state to match the
+    /// newly added packet
     fn save_event(&mut self, event: DroneEvent) {
         let packet = match event {
             DroneEvent::PacketSent(ref packet) => packet,
@@ -112,15 +123,19 @@ impl MySimulationController {
             DroneEvent::ControllerShortcut(ref packet) => packet,
         };
         let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
-        debug!("Drone {id} sent event PacketSent with packet {packet}");
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {
             match event {
                 DroneEvent::PacketSent(ref packet) => {
+                    trace!("Drone {id} sent event PacketSent with packet {packet}");
                     node.sent.push_front(packet.clone());
                 }
-                DroneEvent::PacketDropped(ref packet) => node.dropped.push_front(packet.clone()),
+                DroneEvent::PacketDropped(ref packet) => {
+                    trace!("Drone {id} sent event PacketDropped with packet {packet}");
+                    node.dropped.push_front(packet.clone())
+                }
                 DroneEvent::ControllerShortcut(ref packet) => {
+                    debug!("Drone {id} sent event ControllerShortcut with packet {packet}");
                     node.shortcutted.push_front(packet.clone())
                 }
             }
@@ -145,33 +160,67 @@ impl MySimulationController {
         }
     }
 
-    fn add_connection(&mut self, from: NodeId, to: NodeId) {
-        //check connection is not between two clients/servers
-        // TODO: error message instead of panic
-        // TODO: check the connection doesnt already exist
+    /// adds a connection between two nodes, first checking that the given source and destination
+    /// follow certain rules(connections does not exist, at least one is a drone, not between same
+    /// node,none of them crashed), then sends to the corresponding nodes in the simulation the command to add a
+    /// neighbor, if unsuccessful returns an error with explanation, when the error is unexpected
+    /// it panics
+    fn add_connection(&self, from: NodeId, to: NodeId) -> Result<(), &'static str> {
+        debug!("checking if connection to be added is not between two client/server, not between same node, does not exist...");
         if let (Some(nfrom), Some(nto)) = (
             self.network.get_node_from_id(from),
             self.network.get_node_from_id(to),
         ) {
-            if !matches!(nfrom.kind, NodeKind::Drone { .. })
-                && !matches!(nto.kind, NodeKind::Drone { .. })
-            {
-                panic!(
-                    "Cannot connect {} and {}, at least one should be a drone",
-                    nfrom.kind, nto.kind
+            match (nfrom.kind, nto.kind) {
+                (
+                    NodeKind::Drone {
+                        pdr: _,
+                        crashed: true,
+                    },
+                    _,
                 )
+                | (
+                    _,
+                    NodeKind::Drone {
+                        pdr: _,
+                        crashed: true,
+                    },
+                ) => {
+                    warn!(
+                        "Cannot connect {} and {}, one or both of them are a crashed drone",
+                        nfrom.kind, nto.kind
+                    );
+                    return Err("Cannot connect to a crashed drone");
+                }
+                (NodeKind::Client | NodeKind::Server, NodeKind::Client | NodeKind::Server) => {
+                    warn!(
+                        "Cannot connect {} and {}, at least one should be a drone",
+                        nfrom.kind, nto.kind
+                    );
+                    return Err("trying to connect two Clients/Servers");
+                }
+                _ => {}
             }
             if nfrom.id == nto.id {
-                panic!(
+                warn!(
                     "Cannot connect {} and {}, they are the same node ",
                     nfrom.id, nto.id
-                )
+                );
+                return Err("trying to connect a node with itself");
+            }
+            if nfrom.adj.contains(&to) || nto.adj.contains(&from) {
+                warn!(
+                    "Cannot connect {} and {}, they are already connected",
+                    nfrom.id, nto.id
+                );
+                return Err("trying to connect two already connected nodes");
             }
         } else {
-            panic!("nodes not found");
+            panic!("nodes to connect not found: {from} and {to} are not present in the network representation");
         }
 
         // tell the real nodes via command channels to add edge
+        debug!("getting command and packet senders to tell nodes to add neighbor...");
         if let (
             Some(command_sender_from),
             Some(command_sender_to),
@@ -187,40 +236,102 @@ impl MySimulationController {
             let _ =
                 command_sender_to.send(DroneCommand::AddSender(from, packet_sender_from.clone()));
 
-            // we assume they succesfully added channel, and show it in the model
-            self.network.add_edge(from, to);
+            Ok(())
         } else {
+            error!(
+                "could not find command senders or packet senders for nodes with id {} and {}",
+                from, to
+            );
+            error!("packet senders: {:?}", self.packet_send);
+            error!("command senders: {:?}", self.command_send);
             panic!("could not create connection")
         }
     }
 
-    fn crash(&mut self, id: NodeId) {
-        // send command to corresponding drone to crash
+    /// send crash command to drone, removesender command to neighbors
+    /// # Panics
+    /// - if there is no noderepresentation in the network for the crashing drone
+    /// - if the id is not of a drone
+    /// - if there is no command sender for the drone or any of its neighbors
+    fn crash(&mut self, id: NodeId) -> Result<(), &'static str> {
         if let Some(drone_command_sender) = self.command_send.get(&id) {
-            // todo: handle error
+            // send command to corresponding drone to crash
             let _ = drone_command_sender.send(DroneCommand::Crash);
+            let node = self
+                .network
+                .get_node_from_id(id)
+                .expect("could not find noderepresentation for drone {id}");
+            if !matches!(node.kind, NodeKind::Drone { .. }) {
+                panic!("trying to crash non-drone node #{id}")
+            }
+            let nodes = node.adj.clone();
+            for n in nodes {
+                let sender = self
+                    .command_send
+                    .get(&n)
+                    .expect("could not find comm sender for drone {n}");
+
+                // send command to neighbor drones to remove sender
+                let _ = sender.send(DroneCommand::RemoveSender(id));
+            }
+            Ok(())
+        } else {
+            panic!("could not find command sender for drone #{id}")
         }
-
-        // TODO:  tell the other drones to remove edges that point to crashed drone
-
-        // set in the model the corresponding node to crashed true
-        self.network.crash_drone(id);
+    }
+    fn random_unique_id(&self) -> NodeId {
+        loop {
+            let id = random::<u8>();
+            if self.network.get_node_from_id(id).is_none() {
+                return id;
+            }
+        }
     }
 
-    /// TODO: adds to the model and to the simulation the given node
-    fn add_node(&mut self, node: NodeRepresentation) {
-        // TODO: add node here instead
-        if let Some(n) = self.network.get_node_from_id(node.id) {
-            match n.kind {
-                NodeKind::Drone { pdr, crashed } => todo!(),
-                NodeKind::Client => todo!(),
-                NodeKind::Server => todo!(),
-            }
-        } else {
-            //todo:improve
-            panic!("added drone not found");
-        }
-        //self.node_list_state.select_last();
+    fn spawn_drone(&mut self) {
+        let kind = NodeKind::Drone {
+            pdr: 0.05,
+            crashed: false,
+        };
+        // -> Result<NodeRepresentation, &'static str>
+        let n = NodeRepresentation {
+            id: self.random_unique_id(),
+            x: 0,
+            y: 0,
+            kind,
+            adj: HashSet::new(),
+            sent: VecDeque::new(),
+            dropped: VecDeque::new(),
+            shortcutted: VecDeque::new(),
+        };
+
+        //let event_send = todo!();
+        let (command_send, command_recv) = unbounded::<DroneCommand>();
+        let (packet_send, packet_recv) = unbounded::<Packet>();
+
+        self.command_send.insert(n.id, command_send);
+        self.packet_send.insert(n.id, packet_send);
+
+        let handle = Builder::new()
+            .name(format!("NullPointer#{}", n.id))
+            .spawn(move || {
+                null_pointer_drone::MyDrone::new(
+                    n.id,
+                    event_send,
+                    command_recv,
+                    packet_recv,
+                    HashMap::new(),
+                    0.05,
+                )
+                .run()
+            });
+
+        self.network.nodes.push(n);
+
+        self.node_list_state.select_last();
+
+        self.screen.focus = n.id;
+        self.screen.kind = kind;
     }
     fn change_pdr(&mut self, pdr: f64) {
         todo!();
@@ -239,6 +350,17 @@ impl MySimulationController {
             }
         }
     }
+
+    fn reset_list(&mut self) {
+        self.node_list_state.select_first();
+
+        if let Some(selected) = self.node_list_state.selected() {
+            if let Some(node) = self.network.get_node_from_pos(selected) {
+                self.screen.focus = node.id;
+                self.screen.kind = node.kind;
+            }
+        }
+    }
 }
 
 impl MySimulationController {
@@ -246,13 +368,23 @@ impl MySimulationController {
         let kind = self.screen.kind;
         let id = self.screen.focus;
         match message {
-            AppMessage::Quit => self.running = false,
+            AppMessage::Quit => {
+                info!("received AppMessage::Quit, exiting...");
+                self.running = false
+            }
             AppMessage::Crash => match self.screen.window {
                 Window::Detail { tab: _ } if matches!(kind, NodeKind::Drone { .. }) => {
-                    // TODO: first check that actual crash was succesful?
-                    self.crash(id);
-                    self.network.crash_drone(id);
-                    self.screen.window = Window::Main;
+                    match self.crash(id) {
+                        Ok(_) => {
+                            // mark the drone as crashed in the network
+                            self.network.crash_drone(id);
+                            self.screen.window = Window::Main;
+                        }
+                        Err(message) => {
+                            debug!("error crashing drone, switching to Window::Error");
+                            self.screen.window = Window::Error { message };
+                        }
+                    };
                 }
                 _ => {}
             },
@@ -268,23 +400,19 @@ impl MySimulationController {
                     }
                 }
             }
-            // for add node
-            AppMessage::SetNodeKind(kind) => {
-                if let Window::AddNode { ref mut toadd } = self.screen.window {
-                    toadd.kind = kind;
+            // spawn drone
+            AppMessage::SpawnDrone => {
+                if let Window::Main = self.screen.window {
+                    match self.spawn_drone() {
+                        Ok(_) => todo!(),
+                        Err(_) => todo!(),
+                    };
                 }
             }
             // Window changes
             AppMessage::WindowAddConnection => {
                 if let Window::Main = self.screen.window {
                     self.screen.window = Window::AddConnection { origin: id }
-                }
-            }
-            AppMessage::WindowAddNode => {
-                if let Window::Main = self.screen.window {
-                    self.screen.window = Window::AddNode {
-                        toadd: NodeRepresentation::default(),
-                    }
                 }
             }
             AppMessage::WindowChangePDR => {
@@ -307,15 +435,26 @@ impl MySimulationController {
             }
             AppMessage::Done => match self.screen.window {
                 Window::Main => {}
-                Window::Move | Window::Detail { tab: _ } => self.screen.window = Window::Main,
-                Window::AddNode { ref toadd } => {
-                    self.add_node(toadd.clone());
-                    self.screen.window = Window::Main
+                Window::Error { message: _ } => {
+                    self.reset_list();
+                    self.screen.window = Window::Main;
                 }
+                Window::Move | Window::Detail { tab: _ } => self.screen.window = Window::Main,
                 Window::AddConnection { origin } => {
-                    self.add_connection(origin, id);
-                    self.node_list_state.select_first();
-                    self.screen.window = Window::Main
+                    info!("received AppMessage::Done, current window is AddConnection, adding connection...");
+                    let res = self.add_connection(origin, id);
+                    match res {
+                        Ok(_) => {
+                            self.network.add_edge(origin, id);
+                            self.reset_list();
+                            self.screen.window = Window::Main;
+                            info!("connection added succesfully, switched back to Window::Main");
+                        }
+                        Err(s) => {
+                            debug!("could not add connection, switching to Window::Error");
+                            self.screen.window = Window::Error { message: s };
+                        }
+                    };
                 }
                 Window::ChangePdr { pdr } => {
                     self.change_pdr(pdr);

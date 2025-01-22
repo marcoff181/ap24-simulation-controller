@@ -1,13 +1,13 @@
 use wg_2024::network::NodeId;
 
-use crate::network::{node_kind::NodeKind, node_representation::NodeRepresentation};
+use crate::network::node_kind::NodeKind;
 
 #[derive(Debug)]
 pub enum Window {
     AddConnection { origin: NodeId },
-    AddNode { toadd: NodeRepresentation },
     ChangePdr { pdr: f64 },
     Detail { tab: usize },
+    Error { message: &'static str },
     Main,
     Move,
 }

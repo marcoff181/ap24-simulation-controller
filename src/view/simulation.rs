@@ -70,10 +70,7 @@ fn paint_edges(ctx: &mut Context, network: &Network, screen: &Screen) {
 
         if *from == id || *to == id {
             match screen.window {
-                Window::Main
-                | Window::Move
-                | Window::AddNode { toadd: _ }
-                | Window::ChangePdr { pdr: _ } => {
+                Window::Main | Window::Move | Window::ChangePdr { pdr: _ } => {
                     c = HIGHLIGHT_COLOR;
                     is_line_front = true
                 }
@@ -81,9 +78,7 @@ fn paint_edges(ctx: &mut Context, network: &Network, screen: &Screen) {
                     c = TEXT_COLOR;
                     is_line_front = false;
                 }
-                Window::Detail { tab: _ } => {
-                    unreachable!("this should have been filtered out earlier")
-                }
+                Window::Detail { tab: _ } | Window::Error { message: _ } => unreachable!(),
             }
         };
 
@@ -192,14 +187,7 @@ fn print_labels(ctx: &mut Context, model: &Network, screen: &Screen) {
                     s = s.bold();
                 }
             }
-            // highlight green the new node
-            Window::AddNode { toadd: _ } => {
-                if selected_index == n.id {
-                    s = s.bg(Color::Green);
-                    s = s.bold();
-                }
-            }
-            Window::Detail { tab: _ } => unreachable!(),
+            Window::Detail { tab: _ } | Window::Error { message: _ } => unreachable!(),
         }
 
         ctx.print(

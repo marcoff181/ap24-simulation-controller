@@ -2,6 +2,8 @@ use std::{collections::HashMap, task::Wake, thread, time::Duration};
 
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
+use log::LevelFilter;
+use simplelog::{format_description, ConfigBuilder, ThreadLogMode, ThreadPadding, WriteLogger};
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, DroneEvent},
@@ -10,38 +12,59 @@ use wg_2024::{
 };
 // used while developing to check how the GUI is functioning
 fn main() {
+    let log_level = LevelFilter::Debug;
+    let _logger = WriteLogger::init(
+        log_level,
+        ConfigBuilder::new()
+            //.set_thread_mode(ThreadLogMode::Both)
+            .set_thread_level(LevelFilter::Error)
+            //.set_thread_padding(ThreadPadding::Right(15))
+            .build(),
+        std::fs::File::create("app.log").expect("Could not create log file"),
+    );
+
     let config_data = std::fs::read_to_string("./tests/config_files/input.toml")
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
     let (dummy_command_to_simcontr, event_from_node) = unbounded::<DroneEvent>();
 
-    let mut dummy_drone_receivers: HashMap<NodeId, Receiver<DroneCommand>> = HashMap::new();
-    let mut simcontroller_senders: HashMap<NodeId, Sender<DroneCommand>> = HashMap::new();
+    let mut command_receivers: HashMap<NodeId, Receiver<DroneCommand>> = HashMap::new();
+    let mut command_senders: HashMap<NodeId, Sender<DroneCommand>> = HashMap::new();
+    let mut packet_receivers: HashMap<NodeId, Receiver<Packet>> = HashMap::new();
+    let mut packet_senders: HashMap<NodeId, Sender<Packet>> = HashMap::new();
 
     for n in config.drone.iter() {
-        let (command_to_node, command_from_simcontr) = unbounded::<DroneCommand>();
-        dummy_drone_receivers.insert(n.id, command_from_simcontr);
-        simcontroller_senders.insert(n.id, command_to_node);
+        let (cs, cr) = unbounded::<DroneCommand>();
+        command_receivers.insert(n.id, cr);
+        command_senders.insert(n.id, cs);
+        let (ps, pr) = unbounded::<Packet>();
+        packet_receivers.insert(n.id, pr);
+        packet_senders.insert(n.id, ps);
     }
 
     for n in config.server.iter() {
-        let (command_to_node, command_from_simcontr) = unbounded::<DroneCommand>();
-        dummy_drone_receivers.insert(n.id, command_from_simcontr);
-        simcontroller_senders.insert(n.id, command_to_node);
+        let (cs, cr) = unbounded::<DroneCommand>();
+        command_receivers.insert(n.id, cr);
+        command_senders.insert(n.id, cs);
+        let (ps, pr) = unbounded::<Packet>();
+        packet_receivers.insert(n.id, pr);
+        packet_senders.insert(n.id, ps);
     }
 
     for n in config.client.iter() {
-        let (command_to_node, command_from_simcontr) = unbounded::<DroneCommand>();
-        dummy_drone_receivers.insert(n.id, command_from_simcontr);
-        simcontroller_senders.insert(n.id, command_to_node);
+        let (cs, cr) = unbounded::<DroneCommand>();
+        command_receivers.insert(n.id, cr);
+        command_senders.insert(n.id, cs);
+        let (ps, pr) = unbounded::<Packet>();
+        packet_receivers.insert(n.id, pr);
+        packet_senders.insert(n.id, ps);
     }
 
     let opt = SimControllerOptions {
-        command_send: simcontroller_senders,
+        command_send: command_senders,
         event_recv: event_from_node,
-        // todo: simulate this too
-        packet_send: HashMap::<NodeId, Sender<Packet>>::new(),
+        packet_send: packet_senders,
         config,
         node_handles: Vec::new(),
     };

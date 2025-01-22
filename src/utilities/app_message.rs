@@ -1,5 +1,4 @@
-use crate::network::node_kind::NodeKind;
-
+#[derive(Debug)]
 pub enum AppMessage {
     // used in move node and add node
     MoveNode { x: i8, y: i8 },
@@ -9,10 +8,10 @@ pub enum AppMessage {
 
     // used in main
     WindowAddConnection,
-    WindowAddNode,
     WindowChangePDR,
     WindowMove,
     WindowDetail,
+    SpawnDrone,
     Crash,
 
     // used in main, add connection
@@ -21,9 +20,6 @@ pub enum AppMessage {
 
     // used in add connection, add node, Detail, Move, Changepdr
     Done,
-
-    // used in add node
-    SetNodeKind(NodeKind),
 
     // used in all
     Quit,

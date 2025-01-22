@@ -52,11 +52,11 @@ impl Network {
             std::cmp::Ordering::Less => {
                 self.edges.insert((from, to));
             }
-            std::cmp::Ordering::Equal => {
+            std::cmp::Ordering::Greater => {
                 self.edges.insert((to, from));
             }
             // node can't have edge that points to itself
-            std::cmp::Ordering::Greater => {}
+            std::cmp::Ordering::Equal => {}
         };
 
         // todo: decide if there is need to keep this logic related to adj

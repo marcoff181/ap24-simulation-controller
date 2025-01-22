@@ -13,3 +13,5 @@ crossterm = "0.28.1"
 crossbeam-channel = "0.5.13"
 toml = "0.8.19"
 log = "0.4.22"
+simplelog = "0.12.2"
+null-pointer-drone = { git = "https://github.com/The-Null-Pointer-Patrol/null-pointer-drone.git"}
