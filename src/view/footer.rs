@@ -14,17 +14,18 @@ use ratatui::{
 
 use crate::{network::node_kind::NodeKind, Network};
 
-pub fn render_footer(network: &Network, screen: &Screen, area: Rect, buf: &mut Buffer) {
+pub fn render_footer(_network: &Network, screen: &Screen, area: Rect, buf: &mut Buffer) {
     let keys: &[(&str, &str)] = match screen.window {
-        Window::Main => match screen.kind {
-            NodeKind::Drone { pdr: _, crashed: _ } => &MAIN_KEYS_OVER_DRONE,
-            _ => &MAIN_KEYS,
-        },
+        Window::Main => &MAIN_KEYS,
         Window::Move => &MOVE_KEYS,
         Window::AddConnection { origin: _ } => &MAIN_KEYS_ADD_CONNECTION,
         Window::AddNode { toadd: _ } => &MAIN_KEYS_ADD_NODE,
-        Window::ChangePdr { pdr } => todo!(),
-        Window::Detail => todo!(),
+        Window::ChangePdr { pdr: _ } => todo!(),
+        Window::Detail { tab: _ } => match screen.kind {
+            NodeKind::Drone { pdr: _, crashed: _ } => &DETAIL_KEYS_DRONE,
+            NodeKind::Client => &DETAIL_KEYS_CLIENT,
+            NodeKind::Server => &DETAIL_KEYS_SERVER,
+        },
     };
 
     let spans: Vec<Span> = keys

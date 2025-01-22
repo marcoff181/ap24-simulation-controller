@@ -32,7 +32,7 @@ pub fn render_simulation(network: &Network, screen: &Screen, area: Rect, buf: &m
 
     let inner_area = block.inner(area);
 
-    // redo to avoid panic
+    //TODO redo to avoid panic
     let max_x = network.nodes.iter().map(|n| n.x).max().unwrap();
     let max_y = network.nodes.iter().map(|n| n.y).max().unwrap();
     let min_x = network.nodes.iter().map(|n| n.x).min().unwrap();
@@ -81,7 +81,9 @@ fn paint_edges(ctx: &mut Context, network: &Network, screen: &Screen) {
                     c = TEXT_COLOR;
                     is_line_front = false;
                 }
-                Window::Detail => unreachable!("this should have been filtered out earlier"),
+                Window::Detail { tab: _ } => {
+                    unreachable!("this should have been filtered out earlier")
+                }
             }
         };
 
@@ -197,7 +199,7 @@ fn print_labels(ctx: &mut Context, model: &Network, screen: &Screen) {
                     s = s.bold();
                 }
             }
-            Window::Detail => unreachable!(),
+            Window::Detail { tab: _ } => unreachable!(),
         }
 
         ctx.print(

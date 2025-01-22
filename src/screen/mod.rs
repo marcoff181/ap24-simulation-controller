@@ -7,7 +7,7 @@ pub enum Window {
     AddConnection { origin: NodeId },
     AddNode { toadd: NodeRepresentation },
     ChangePdr { pdr: f64 },
-    Detail,
+    Detail { tab: usize },
     Main,
     Move,
 }

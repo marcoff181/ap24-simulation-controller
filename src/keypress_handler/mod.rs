@@ -26,7 +26,7 @@ fn handle_keypress(screen: &Screen, key: &KeyEvent) -> Option<AppMessage> {
         Window::AddConnection { origin: _ } => handle_keypress_add_connection(key),
         Window::AddNode { toadd: _ } => handle_keypress_add_node(key),
         Window::ChangePdr { pdr: _ } => handle_keypress_changepdr(key),
-        Window::Detail => handle_keypress_detail(key),
+        Window::Detail { tab: _ } => handle_keypress_detail(key),
         Window::Main => handle_keypress_main(screen.kind, key),
         Window::Move => handle_keypress_move(key),
     }
@@ -46,12 +46,11 @@ pub fn handle_keypress_changepdr(key: &KeyEvent) -> Option<AppMessage> {
 
 pub fn handle_keypress_detail(key: &KeyEvent) -> Option<AppMessage> {
     match (key.modifiers, key.code) {
-        //(_, KeyCode::Char('q')) => Some(AppMessage::Quit),
-        //(_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
-        //(_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
-        //(_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
-        //(_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
-        //(_, KeyCode::Enter) => Some(AppMessage::Done),
+        (_, KeyCode::Up) => Some(AppMessage::ScrollUp),
+        (_, KeyCode::Down) => Some(AppMessage::ScrollDown),
+        (_, KeyCode::Tab) => Some(AppMessage::ChangeTab),
+        (_, KeyCode::Enter) => Some(AppMessage::Done),
+        (_, KeyCode::Char('q')) => Some(AppMessage::Quit),
         _ => None,
     }
 }
@@ -64,6 +63,7 @@ pub fn handle_keypress_main(sel_type: NodeKind, key: &KeyEvent) -> Option<AppMes
         (_, KeyCode::Char('m')) => Some(AppMessage::WindowMove),
         (_, KeyCode::Char('c')) => Some(AppMessage::WindowAddConnection),
         (_, KeyCode::Char('+')) => Some(AppMessage::WindowAddNode),
+        (_, KeyCode::Char('d')) => Some(AppMessage::WindowDetail),
         (_, KeyCode::Char('p')) if matches!(sel_type, NodeKind::Drone { .. }) => {
             Some(AppMessage::WindowChangePDR)
         }
@@ -76,11 +76,11 @@ pub fn handle_keypress_main(sel_type: NodeKind, key: &KeyEvent) -> Option<AppMes
 
 pub fn handle_keypress_move(key: &KeyEvent) -> Option<AppMessage> {
     match (key.modifiers, key.code) {
+        (_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
+        (_, KeyCode::Down) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
+        (_, KeyCode::Left) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
+        (_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
         (_, KeyCode::Char('q')) => Some(AppMessage::Quit),
-        (_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
-        (_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
-        (_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
-        (_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
         (_, KeyCode::Enter) => Some(AppMessage::Done),
         _ => None,
     }
@@ -88,10 +88,10 @@ pub fn handle_keypress_move(key: &KeyEvent) -> Option<AppMessage> {
 
 pub fn handle_keypress_add_node(key: &KeyEvent) -> Option<AppMessage> {
     match (key.modifiers, key.code) {
-        (_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
-        (_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
-        (_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
-        (_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
+        (_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
+        (_, KeyCode::Down) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
+        (_, KeyCode::Left) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
+        (_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
         (_, KeyCode::Char('c')) => Some(AppMessage::SetNodeKind(NodeKind::Client)),
         (_, KeyCode::Char('s')) => Some(AppMessage::SetNodeKind(NodeKind::Server)),
         (_, KeyCode::Char('d')) => Some(AppMessage::SetNodeKind(NodeKind::Drone {

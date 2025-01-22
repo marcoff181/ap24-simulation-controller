@@ -5,23 +5,23 @@
 //    ("q", "Quit"),
 //];
 
-pub const MAIN_KEYS: [(&str, &str); 5] = [
+pub const MAIN_KEYS: [(&str, &str); 6] = [
     ("↑/↓", "Scroll list"),
     ("m", "Move node"),
     ("c", "Add connection"),
     ("+", "Add node"),
     ("q", "Quit"),
+    ("d", "Detail view"),
 ];
 
-pub const MAIN_KEYS_OVER_DRONE: [(&str, &str); 7] = [
-    ("↑/↓", "Scroll list"),
-    ("m", "Move node"),
-    ("c", "Add connection"),
-    ("+", "Add node"),
-    ("p", "Edit PDR"),
-    ("k", "Crash"),
-    ("q", "Quit"),
-];
+//pub const MAIN_KEYS_OVER_DRONE: [(&str, &str); 8] = [
+//    ("↑/↓", "Scroll list"),
+//    ("m", "Move node"),
+//    ("c", "Add connection"),
+//    ("+", "Add node"),
+//    ("q", "Quit"),
+//    ("d", "Detail view"),
+//];
 
 pub const MAIN_KEYS_ADD_CONNECTION: [(&str, &str); 3] = [
     ("↑/↓", "Scroll list"),
@@ -30,10 +30,34 @@ pub const MAIN_KEYS_ADD_CONNECTION: [(&str, &str); 3] = [
 ];
 
 pub const MAIN_KEYS_ADD_NODE: [(&str, &str); 4] = [
-    ("↑/↓/→/←", "Move"),
+    ("↑/↓/←/→", "Move"),
     ("s/c/d", "Set drone type"),
     ("Enter", "Add node"),
     ("q", "Quit"),
 ];
 
 pub const MOVE_KEYS: [(&str, &str); 3] = [("↑/↓/→/←", "Move"), ("Enter", "Ok"), ("q", "Quit")];
+
+pub const DETAIL_KEYS_DRONE: [(&str, &str); 6] = [
+    ("↑/↓", "Scroll list"),
+    ("tab", "Next list"),
+    ("p", "Edit PDR"),
+    ("k", "Crash"),
+    ("Enter", "Done"),
+    ("q", "Quit"),
+];
+
+pub const DETAIL_KEYS_SERVER: [(&str, &str); 4] = [
+    ("↑/↓", "Scroll list"),
+    ("tab", "Next list"),
+    ("Enter", "Done"),
+    ("q", "Quit"),
+];
+
+pub const DETAIL_KEYS_CLIENT: [(&str, &str); 5] = [
+    ("↑/↓", "Scroll list"),
+    ("tab", "Next list"),
+    ("m", "Send Message?"),
+    ("Enter", "Done"),
+    ("q", "Quit"),
+];

@@ -1,10 +1,11 @@
-use wg_2024::packet::NodeType;
-
 use crate::network::node_kind::NodeKind;
 
 pub enum AppMessage {
     // used in move node and add node
     MoveNode { x: i8, y: i8 },
+
+    // used in Detail
+    ChangeTab,
 
     // used in main
     WindowAddConnection,

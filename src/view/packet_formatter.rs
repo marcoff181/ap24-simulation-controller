@@ -1,14 +1,18 @@
 use rand::seq::IndexedRandom;
 use ratatui::style::Style;
+use ratatui::text::Line;
 use ratatui::text::Span;
+use ratatui::text::Text;
+use ratatui::widgets::Paragraph;
 use ratatui::widgets::Row;
+use ratatui::widgets::Wrap;
 use wg_2024::packet::Nack;
 use wg_2024::packet::NackType;
 use wg_2024::packet::Packet;
 use wg_2024::packet::PacketType;
 
 use crate::utilities::theme::*;
-pub fn format_packet(packet: &Packet) -> Row {
+pub fn packet_table_row(packet: &Packet) -> Row {
     let sess_id: Span = Span::styled(format!("{}", packet.session_id), Style::new());
 
     let src: Span;
@@ -52,7 +56,7 @@ pub fn format_packet(packet: &Packet) -> Row {
         PacketType::FloodRequest(flood_request) => {
             ptype = Span::styled("FRQ", ptype_style.bg(PACKET_FLOOD_REQUEST_COLOR));
             depends_on_type = Span::from(format!(
-                "flood_id({}) initiated_by({})",
+                "id({}) initiator({})",
                 flood_request.flood_id, flood_request.initiator_id
             ));
         }
@@ -63,4 +67,74 @@ pub fn format_packet(packet: &Packet) -> Row {
     }
 
     Row::new(vec![ptype, sess_id, src, dest, depends_on_type])
+}
+
+pub fn packet_detail(packet: &Packet) -> Paragraph {
+    let routing = Line::from(format!(
+        "SID: {} Hops: {}",
+        packet.session_id, packet.routing_header
+    ));
+    let theader: Line;
+    let depends_on_type: Line;
+
+    let mut res = Text::from(routing);
+    match &packet.pack_type {
+        PacketType::MsgFragment(fragment) => {
+            theader = Line::styled("Fragment", Style::new().bg(PACKET_FRAGMENT_COLOR));
+            depends_on_type = Line::from(format!(
+                "Index:{}/{} Size:{}",
+                fragment.fragment_index, fragment.total_n_fragments, fragment.length
+            ));
+
+            res.push_line(theader);
+            res.push_line(depends_on_type);
+            res.push_line("Data:");
+            let p = Line::from(format!("{:?}", fragment.data));
+            res.push_line(p);
+        }
+        PacketType::Nack(nack) => {
+            theader = Line::styled("Nack", Style::new().bg(PACKET_NACK_COLOR));
+            depends_on_type = Line::from(match nack.nack_type {
+                NackType::ErrorInRouting(id) => format!("Type: ErrorInRouting(id:{})", id),
+                NackType::DestinationIsDrone => "Type: DestinationIsDrone".to_string(),
+                NackType::Dropped => format!("Type: Dropped(id:{})", nack.fragment_index),
+                NackType::UnexpectedRecipient(id) => {
+                    format!("Type: UnexpectedRecipient(id:{})", id)
+                }
+            });
+            res.push_line(theader);
+            res.push_line(depends_on_type);
+        }
+        PacketType::Ack(ack) => {
+            theader = Line::styled("(Qu)Ack", Style::new().bg(PACKET_ACK_COLOR));
+            depends_on_type = Line::from(format!("Fragment index:{}", ack.fragment_index));
+            res.push_line(theader);
+            res.push_line(depends_on_type);
+        }
+        PacketType::FloodRequest(flood_request) => {
+            theader = Line::styled("Flood Request", Style::new().bg(PACKET_FLOOD_REQUEST_COLOR));
+            depends_on_type = Line::from(format!(
+                "Id:{} Initiator:{}",
+                flood_request.flood_id, flood_request.initiator_id
+            ));
+            res.push_line(theader);
+            res.push_line(depends_on_type);
+            res.push_line("Path trace:");
+            let p = Line::from(format!("{:?}", flood_request.path_trace));
+            res.push_line(p);
+        }
+        PacketType::FloodResponse(flood_response) => {
+            theader = Line::styled(
+                "Flood Response",
+                Style::new().bg(PACKET_FLOOD_RESPONSE_COLOR),
+            );
+            depends_on_type = Line::from(format!("Flood id:{}", flood_response.flood_id));
+            res.push_line(theader);
+            res.push_line(depends_on_type);
+            res.push_line("Path trace:");
+            let p = Line::from(format!("{:?}", flood_response.path_trace));
+            res.push_line(p);
+        }
+    }
+    Paragraph::new(res).wrap(Wrap { trim: true })
 }

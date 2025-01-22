@@ -9,7 +9,7 @@ use ratatui::{
 
 use crate::{network::node_kind::NodeKind, screen::Screen, utilities::theme::*, Network};
 
-use super::packet_formatter::format_packet;
+use super::packet_formatter::packet_table_row;
 
 pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut Frame) {
     let [r1, r2, r3] = Layout::horizontal([
@@ -86,7 +86,7 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
     let header = Row::new(vec!["", "sid", "src", "dest", "about"]);
 
     //if let Some(n) = model.get_selected_node() {
-    let rows: Vec<Row<'_>> = n.sent.iter().map(|p| format_packet(p)).collect();
+    let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .style(Style::new().red())
@@ -98,7 +98,7 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
     //}
     // Packets dropped
     //if let Some(n) = model.get_selected_node() {
-    let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| format_packet(p)).collect();
+    let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| packet_table_row(p)).collect();
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .style(Style::new().red())

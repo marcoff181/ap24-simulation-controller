@@ -5,7 +5,6 @@ use std::{
     fmt::Display,
 };
 
-use rand::Rng;
 use wg_2024::{
     config::{Client, Drone, Server},
     network::NodeId,
@@ -24,6 +23,7 @@ pub struct NodeRepresentation {
     pub adj: HashSet<NodeId>,
     pub sent: VecDeque<Packet>,
     pub dropped: VecDeque<Packet>,
+    pub shortcutted: VecDeque<Packet>,
 }
 
 impl PartialEq for NodeRepresentation {
@@ -77,6 +77,7 @@ impl NodeRepresentation {
             adj,
             sent: VecDeque::new(),
             dropped: VecDeque::new(),
+            shortcutted: VecDeque::new(),
         }
     }
 

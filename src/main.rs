@@ -61,7 +61,7 @@ fn main() {
                 fragment_index: rand::random_range(1..256),
                 total_n_fragments: rand::random_range(1..345),
                 length: rand::random_range(1..128),
-                data: [0; 128],
+                data: [35; 128],
             }),
             routing_header: wg_2024::network::SourceRoutingHeader {
                 hop_index: rand::random_range(1..=6) as usize,
