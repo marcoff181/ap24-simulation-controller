@@ -33,6 +33,7 @@ pub struct SimControllerOptions {
     pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
     pub event_recv: Receiver<DroneEvent>,
+    pub event_send: Sender<DroneEvent>,
     pub config: Config,
     pub node_handles: Vec<JoinHandle<()>>,
 }
@@ -41,6 +42,7 @@ pub struct MySimulationController {
     // external comms
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
     event_recv: Receiver<DroneEvent>,
+    event_send: Sender<DroneEvent>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
     node_handles: Vec<JoinHandle<()>>,
     // internal state
@@ -57,6 +59,7 @@ impl MySimulationController {
         MySimulationController {
             command_send: opt.command_send,
             event_recv: opt.event_recv,
+            event_send: opt.event_send,
             packet_send: opt.packet_send,
             node_handles: opt.node_handles,
             network: Network::new(&opt.config),
@@ -84,6 +87,10 @@ impl MySimulationController {
 }
 
 impl MySimulationController {
+    /// runs the main loop of the sc, repeats the following:
+    /// - draw tui
+    /// - handle keypresses
+    /// - handle all DroneEvents
     fn start(&mut self, mut terminal: DefaultTerminal) -> Result<(), std::io::Error> {
         info!("started SC");
         while self.running {
@@ -279,6 +286,8 @@ impl MySimulationController {
             panic!("could not find command sender for drone #{id}")
         }
     }
+
+    /// generates a random id for a node, different from any of the simulation drones
     fn random_unique_id(&self) -> NodeId {
         loop {
             let id = random::<u8>();
@@ -288,12 +297,14 @@ impl MySimulationController {
         }
     }
 
+    /// creates drone with random id, spawns its thread, and adds it to the SC
+    /// # Panics
+    /// panics if it can't create the drone thread
     fn spawn_drone(&mut self) {
         let kind = NodeKind::Drone {
             pdr: 0.05,
             crashed: false,
         };
-        // -> Result<NodeRepresentation, &'static str>
         let n = NodeRepresentation {
             id: self.random_unique_id(),
             x: 0,
@@ -305,7 +316,7 @@ impl MySimulationController {
             shortcutted: VecDeque::new(),
         };
 
-        //let event_send = todo!();
+        let event_send = self.event_send.clone();
         let (command_send, command_recv) = unbounded::<DroneCommand>();
         let (packet_send, packet_recv) = unbounded::<Packet>();
 
@@ -324,18 +335,23 @@ impl MySimulationController {
                     0.05,
                 )
                 .run()
-            });
+            })
+            .expect("could not spawn drone thread");
 
-        self.network.nodes.push(n);
+        self.node_handles.push(handle);
+
+        self.network.nodes.push(n.clone());
 
         self.node_list_state.select_last();
-
         self.screen.focus = n.id;
         self.screen.kind = kind;
     }
+
     fn change_pdr(&mut self, pdr: f64) {
         todo!();
     }
+
+    /// scrolls list either up or down, then  updates focus and kind accordingly
     fn scroll_list(&mut self, up: bool) {
         if up {
             self.node_list_state.scroll_up_by(1);
@@ -351,6 +367,7 @@ impl MySimulationController {
         }
     }
 
+    /// resets list to first node, then updates focus and kind accordingly
     fn reset_list(&mut self) {
         self.node_list_state.select_first();
 
@@ -403,10 +420,7 @@ impl MySimulationController {
             // spawn drone
             AppMessage::SpawnDrone => {
                 if let Window::Main = self.screen.window {
-                    match self.spawn_drone() {
-                        Ok(_) => todo!(),
-                        Err(_) => todo!(),
-                    };
+                    self.spawn_drone()
                 }
             }
             // Window changes

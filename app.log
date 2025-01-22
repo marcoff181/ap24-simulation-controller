@@ -1,10 +1,147 @@
-17:11:28 [INFO] (1) created SC
-17:11:28 [INFO] (2) started SC
-17:11:31 [DEBUG] (2) ap24_simulation_controller: received AppMessage: WindowAddNode
-17:11:32 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: -1 }
-17:11:32 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
-17:11:32 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
-17:11:33 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
-17:11:33 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
-17:11:33 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
-17:11:35 [DEBUG] (2) ap24_simulation_controller: received AppMessage: Done
+21:51:08 [INFO] (1) created SC
+21:51:08 [INFO] (2) started SC
+21:51:11 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:11 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: SpawnDrone
+21:51:16 [INFO] (3) pdr set to 0.05
+21:51:16 [INFO] (3) "null-pointer-drone" drone created: MyDrone { id: 157, controller_send: Sender { .. }, controller_recv: Receiver { .. }, packet_recv: Receiver { .. }, pdr: 0.05, packet_send: {}, known_flood_ids: {}, state: Working }
+21:51:22 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:22 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:22 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:23 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:23 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:27 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:28 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:28 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:28 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:33 [DEBUG] (2) ap24_simulation_controller: received AppMessage: WindowAddConnection
+21:51:34 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:34 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:35 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:35 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:35 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:37 [DEBUG] (2) ap24_simulation_controller: received AppMessage: Done
+21:51:37 [INFO] (2) received AppMessage::Done, current window is AddConnection, adding connection...
+21:51:37 [DEBUG] (2) ap24_simulation_controller: checking if connection to be added is not between two client/server, not between same node, does not exist...
+21:51:37 [DEBUG] (2) ap24_simulation_controller: getting command and packet senders to tell nodes to add neighbor...
+21:51:37 [INFO] (2) connection added succesfully, switched back to Window::Main
+21:51:37 [INFO] (3) Received controller command: Ok(AddSender(2, Sender { .. }))
+21:51:37 [INFO] (3) Sender channel to node 2 inserted
+21:51:38 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:38 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:38 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:39 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:39 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:39 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:40 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:40 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:40 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:51:41 [DEBUG] (2) ap24_simulation_controller: received AppMessage: WindowAddConnection
+21:51:41 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:41 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:42 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:42 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:42 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:43 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:51:44 [DEBUG] (2) ap24_simulation_controller: received AppMessage: Done
+21:51:44 [INFO] (2) received AppMessage::Done, current window is AddConnection, adding connection...
+21:51:44 [DEBUG] (2) ap24_simulation_controller: checking if connection to be added is not between two client/server, not between same node, does not exist...
+21:51:44 [DEBUG] (2) ap24_simulation_controller: getting command and packet senders to tell nodes to add neighbor...
+21:51:44 [INFO] (2) connection added succesfully, switched back to Window::Main
+21:51:44 [INFO] (3) Received controller command: Ok(AddSender(1, Sender { .. }))
+21:51:44 [INFO] (3) Sender channel to node 1 inserted
+21:51:51 [DEBUG] (2) ap24_simulation_controller: received AppMessage: SpawnDrone
+21:51:51 [INFO] (4) pdr set to 0.05
+21:51:51 [INFO] (4) "null-pointer-drone" drone created: MyDrone { id: 142, controller_send: Sender { .. }, controller_recv: Receiver { .. }, packet_recv: Receiver { .. }, pdr: 0.05, packet_send: {}, known_flood_ids: {}, state: Working }
+21:51:57 [DEBUG] (2) ap24_simulation_controller: received AppMessage: WindowAddConnection
+21:52:00 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:52:00 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:52:01 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:02 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:03 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:03 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:03 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:03 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:52:04 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:52:04 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:05 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:52:05 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollUp
+21:52:10 [DEBUG] (2) ap24_simulation_controller: received AppMessage: Done
+21:52:10 [INFO] (2) received AppMessage::Done, current window is AddConnection, adding connection...
+21:52:10 [DEBUG] (2) ap24_simulation_controller: checking if connection to be added is not between two client/server, not between same node, does not exist...
+21:52:10 [DEBUG] (2) ap24_simulation_controller: getting command and packet senders to tell nodes to add neighbor...
+21:52:10 [INFO] (2) connection added succesfully, switched back to Window::Main
+21:52:10 [INFO] (4) Received controller command: Ok(AddSender(4, Sender { .. }))
+21:52:10 [INFO] (4) Sender channel to node 4 inserted
+21:52:12 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:12 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:13 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:13 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:13 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:13 [DEBUG] (2) ap24_simulation_controller: received AppMessage: ScrollDown
+21:52:14 [DEBUG] (2) ap24_simulation_controller: received AppMessage: WindowMove
+21:52:14 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:14 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:14 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:15 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:16 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:17 [DEBUG] (2) ap24_simulation_controller: received AppMessage: MoveNode { x: 0, y: 1 }
+21:52:22 [DEBUG] (2) ap24_simulation_controller: received AppMessage: Done
+21:52:25 [DEBUG] (2) ap24_simulation_controller: received AppMessage: WindowDetail
+21:52:25 [INFO] (4) Received controller command: Err(RecvError)
+21:52:25 [INFO] (3) Received controller command: Err(RecvError)

@@ -27,7 +27,7 @@ fn main() {
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
-    let (dummy_command_to_simcontr, event_from_node) = unbounded::<DroneEvent>();
+    let (event_send, event_recv) = unbounded::<DroneEvent>();
 
     let mut command_receivers: HashMap<NodeId, Receiver<DroneCommand>> = HashMap::new();
     let mut command_senders: HashMap<NodeId, Sender<DroneCommand>> = HashMap::new();
@@ -63,7 +63,8 @@ fn main() {
 
     let opt = SimControllerOptions {
         command_send: command_senders,
-        event_recv: event_from_node,
+        event_recv,
+        event_send: event_send.clone(),
         packet_send: packet_senders,
         config,
         node_handles: Vec::new(),
@@ -78,8 +79,8 @@ fn main() {
             break;
         }
 
-        let send = dummy_command_to_simcontr.send(DroneEvent::PacketSent(random_packet()));
-        let send = dummy_command_to_simcontr.send(DroneEvent::PacketDropped(Packet {
+        let send = event_send.send(DroneEvent::PacketSent(random_packet()));
+        let send = event_send.send(DroneEvent::PacketDropped(Packet {
             pack_type: PacketType::MsgFragment(Fragment {
                 fragment_index: rand::random_range(1..256),
                 total_n_fragments: rand::random_range(1..345),
