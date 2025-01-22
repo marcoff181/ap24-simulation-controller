@@ -19,7 +19,7 @@ pub fn render_footer(_network: &Network, screen: &Screen, area: Rect, buf: &mut 
         Window::Main => &MAIN_KEYS,
         Window::Move => &MOVE_KEYS,
         Window::AddConnection { origin: _ } => &MAIN_KEYS_ADD_CONNECTION,
-        Window::ChangePdr { pdr: _ } => todo!(),
+        Window::ChangePdr { pdr: _ } => &PDR_KEYS,
         Window::Detail { tab: _ } => match screen.kind {
             NodeKind::Drone { pdr: _, crashed: _ } => &DETAIL_KEYS_DRONE,
             NodeKind::Client => &DETAIL_KEYS_CLIENT,

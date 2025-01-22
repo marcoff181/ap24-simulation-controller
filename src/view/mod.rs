@@ -10,7 +10,9 @@ use footer::render_footer;
 use layout::Flex;
 use list::render_list;
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Borders, Clear, ListState, Padding, Paragraph, TableState, Wrap};
+use ratatui::widgets::{
+    Block, Borders, Clear, Gauge, ListState, Padding, Paragraph, TableState, Wrap,
+};
 use simulation::render_simulation;
 use stats::render_stats;
 //use wg_2024::config::{Client, Drone, Server};
@@ -18,7 +20,7 @@ use stats::render_stats;
 use crate::network::node_kind::NodeKind;
 use crate::network::Network;
 use crate::screen::Window;
-use crate::utilities::theme::{BG_COLOR, CRASH_COLOR, TEXT_COLOR};
+use crate::utilities::theme::{BG_COLOR, CRASH_COLOR, HIGHLIGHT_COLOR, TEXT_COLOR};
 use crate::Screen;
 
 pub fn render(
@@ -39,15 +41,40 @@ pub fn render(
         Window::Detail { tab } => {
             render_detail(network, tab, screen, table_state, main, frame);
         }
-        Window::Main
-        | Window::ChangePdr { pdr: _ }
-        | Window::Move
-        | Window::AddConnection { origin: _ } => {
+        Window::Main | Window::Move | Window::AddConnection { origin: _ } => {
             render_standard(network, screen, node_list_state, main, frame);
         }
+        Window::ChangePdr { pdr } => render_changepdr(pdr, main, frame),
     }
 }
 
+fn render_changepdr(pdr: f32, area: Rect, frame: &mut Frame) {
+    let vertical = Layout::vertical([Constraint::Fill(1), Constraint::Max(5), Constraint::Fill(1)]);
+    let horizontal = Layout::horizontal([
+        Constraint::Fill(1),
+        Constraint::Fill(10),
+        Constraint::Fill(1),
+    ]);
+    let [_, area, _] = vertical.areas(area);
+    let [_, area, _] = horizontal.areas(area);
+
+    let mut block = Block::bordered();
+    let inner = block.inner(area);
+    //format!("PDR: {:.2}", pdr)
+    let mut gauge = Gauge::default();
+    if pdr == 1.0 {
+        gauge = gauge.label(Span::from("🦆🦆🦆🦆🦆🦆🦆🦆🦆".to_string()));
+        gauge = gauge.gauge_style(CRASH_COLOR).ratio(pdr as f64);
+        block = block.border_style(Style::default().fg(CRASH_COLOR));
+    } else {
+        gauge = gauge.label(Span::from(format!("PDR: {:.2}", pdr)));
+        gauge = gauge.gauge_style(HIGHLIGHT_COLOR).ratio(pdr as f64);
+        block = block.border_style(Style::default().fg(TEXT_COLOR));
+    }
+
+    frame.render_widget(block, area);
+    gauge.render(inner, frame.buffer_mut());
+}
 fn render_error(message: &str, area: Rect, frame: &mut Frame) {
     let vertical = Layout::vertical([Constraint::Fill(1), Constraint::Max(5), Constraint::Fill(1)]);
     let horizontal = Layout::horizontal([

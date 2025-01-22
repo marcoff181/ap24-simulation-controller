@@ -5,6 +5,7 @@ mod utilities;
 mod view;
 
 use crate::screen::Screen;
+use core::f32;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     thread::{Builder, JoinHandle},
@@ -347,8 +348,32 @@ impl MySimulationController {
         self.screen.kind = kind;
     }
 
-    fn change_pdr(&mut self, pdr: f64) {
-        todo!();
+    /// changes pdr of drone in representation and of actual drone
+    /// Panics
+    /// panics if it can't find drone in the network, if it's not a drone, if it's crashed, if
+    /// there is no command sender for it
+    fn change_pdr(&mut self, newpdr: f32) {
+        let node = self
+            .network
+            .get_mut_node_from_id(self.screen.focus)
+            .expect("could not find drone with matching id");
+        match node.kind {
+            NodeKind::Drone {
+                ref mut pdr,
+                crashed: false,
+            } => {
+                // change pdr of simulation drone
+                *pdr = newpdr;
+
+                // change pdr of actual drone
+                let command_send = self
+                    .command_send
+                    .get(&node.id)
+                    .expect("could not find command sender for drone");
+                let _ = command_send.send(DroneCommand::SetPacketDropRate(newpdr));
+            }
+            _ => panic!("either not drone or crashed"),
+        }
     }
 
     /// scrolls list either up or down, then  updates focus and kind accordingly
@@ -430,8 +455,14 @@ impl MySimulationController {
                 }
             }
             AppMessage::WindowChangePDR => {
-                if let Window::Main = self.screen.window {
-                    self.screen.window = Window::ChangePdr { pdr: 0.05 }
+                if let Window::Detail { tab: _ } = self.screen.window {
+                    if let NodeKind::Drone {
+                        pdr,
+                        crashed: false,
+                    } = kind
+                    {
+                        self.screen.window = Window::ChangePdr { pdr }
+                    }
                 }
             }
             AppMessage::WindowMove => {
@@ -472,7 +503,7 @@ impl MySimulationController {
                 }
                 Window::ChangePdr { pdr } => {
                     self.change_pdr(pdr);
-                    self.screen.window = Window::Main;
+                    self.screen.window = Window::Detail { tab: 0 };
                 }
             },
             // List movement
@@ -483,6 +514,12 @@ impl MySimulationController {
                 Window::Detail { tab } => {
                     self.packet_table_state.scroll_up_by(1);
                 }
+                Window::ChangePdr { ref mut pdr } => {
+                    *pdr += 0.01;
+                    if *pdr > 1.0 {
+                        *pdr = 1.0
+                    }
+                }
                 _ => {}
             },
             AppMessage::ScrollDown => match self.screen.window {
@@ -491,6 +528,12 @@ impl MySimulationController {
                 }
                 Window::Detail { tab } => {
                     self.packet_table_state.scroll_down_by(1);
+                }
+                Window::ChangePdr { ref mut pdr } => {
+                    *pdr -= 0.01;
+                    if *pdr < 0.0 {
+                        *pdr = 0.0
+                    }
                 }
                 _ => {}
             },

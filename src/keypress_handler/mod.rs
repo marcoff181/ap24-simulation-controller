@@ -42,12 +42,10 @@ pub fn handle_keypress_error(key: &KeyEvent) -> Option<AppMessage> {
 //TODO
 pub fn handle_keypress_changepdr(key: &KeyEvent) -> Option<AppMessage> {
     match (key.modifiers, key.code) {
-        //(_, KeyCode::Char('q')) => Some(AppMessage::Quit),
-        //(_, KeyCode::Up) => Some(AppMessage::MoveNode { x: 1, y: 0 }),
-        //(_, KeyCode::Down) => Some(AppMessage::MoveNode { x: -1, y: 0 }),
-        //(_, KeyCode::Left) => Some(AppMessage::MoveNode { x: 0, y: 1 }),
-        //(_, KeyCode::Right) => Some(AppMessage::MoveNode { x: 0, y: -1 }),
-        //(_, KeyCode::Enter) => Some(AppMessage::Done),
+        (_, KeyCode::Up) => Some(AppMessage::ScrollUp),
+        (_, KeyCode::Down) => Some(AppMessage::ScrollDown),
+        (_, KeyCode::Enter) => Some(AppMessage::Done),
+        (_, KeyCode::Char('q')) => Some(AppMessage::Quit),
         _ => None,
     }
 }

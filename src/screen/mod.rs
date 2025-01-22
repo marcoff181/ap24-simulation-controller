@@ -5,7 +5,7 @@ use crate::network::node_kind::NodeKind;
 #[derive(Debug)]
 pub enum Window {
     AddConnection { origin: NodeId },
-    ChangePdr { pdr: f64 },
+    ChangePdr { pdr: f32 },
     Detail { tab: usize },
     Error { message: &'static str },
     Main,
