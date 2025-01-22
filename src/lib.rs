@@ -147,6 +147,8 @@ impl MySimulationController {
 
     fn add_connection(&mut self, from: NodeId, to: NodeId) {
         //check connection is not between two clients/servers
+        // TODO: error message instead of panic
+        // TODO: check the connection doesnt already exist
         if let (Some(nfrom), Some(nto)) = (
             self.network.get_node_from_id(from),
             self.network.get_node_from_id(to),
@@ -157,6 +159,12 @@ impl MySimulationController {
                 panic!(
                     "Cannot connect {} and {}, at least one should be a drone",
                     nfrom.kind, nto.kind
+                )
+            }
+            if nfrom.id == nto.id {
+                panic!(
+                    "Cannot connect {} and {}, they are the same node ",
+                    nfrom.id, nto.id
                 )
             }
         } else {
@@ -176,12 +184,11 @@ impl MySimulationController {
             self.packet_send.get(&to),
         ) {
             let _ = command_sender_from.send(DroneCommand::AddSender(to, packet_sender_to.clone()));
-            command_sender_to.send(DroneCommand::AddSender(from, packet_sender_from.clone()));
+            let _ =
+                command_sender_to.send(DroneCommand::AddSender(from, packet_sender_from.clone()));
 
-            // for now we assume they succesfully added channel, and show it in the model
+            // we assume they succesfully added channel, and show it in the model
             self.network.add_edge(from, to);
-            // TODO: select correct node
-            //self.model.select_node(from);
         } else {
             panic!("could not create connection")
         }
@@ -307,6 +314,7 @@ impl MySimulationController {
                 }
                 Window::AddConnection { origin } => {
                     self.add_connection(origin, id);
+                    self.node_list_state.select_first();
                     self.screen.window = Window::Main
                 }
                 Window::ChangePdr { pdr } => {
@@ -316,7 +324,6 @@ impl MySimulationController {
             },
             // List movement
             AppMessage::ScrollUp => match self.screen.window {
-                // TODO: check not adding connection client client, also in scrolldown
                 Window::Main | Window::AddConnection { .. } => {
                     self.scroll_list(true);
                 }

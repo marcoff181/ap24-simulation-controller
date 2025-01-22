@@ -9,8 +9,10 @@ use wg_2024::{
     packet::{Ack, FloodRequest, FloodResponse, Fragment, NackType, Packet, PacketType},
 };
 // used while developing to check how the GUI is functioning
-fn main() {
-    let config_data = std::fs::read_to_string("./tests/config_files/input.toml")
+
+#[test]
+fn changes() {
+    let config_data = std::fs::read_to_string("./src/tests/config_files/input.toml")
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
