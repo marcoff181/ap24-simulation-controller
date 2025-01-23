@@ -31,21 +31,21 @@ use wg_2024::{
 };
 
 pub struct SimControllerOptions {
-    pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
-    pub event_recv: Receiver<DroneEvent>,
+    pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub event_send: Sender<DroneEvent>,
+    pub event_recv: Receiver<DroneEvent>,
+    pub node_handles: HashMap<NodeId, JoinHandle<()>>,
     pub config: Config,
-    pub node_handles: Vec<JoinHandle<()>>,
 }
 
 pub struct MySimulationController {
     // external comms
-    command_send: HashMap<NodeId, Sender<DroneCommand>>,
-    event_recv: Receiver<DroneEvent>,
-    event_send: Sender<DroneEvent>,
     packet_send: HashMap<NodeId, Sender<Packet>>,
-    node_handles: Vec<JoinHandle<()>>,
+    command_send: HashMap<NodeId, Sender<DroneCommand>>,
+    event_send: Sender<DroneEvent>,
+    event_recv: Receiver<DroneEvent>,
+    node_handles: HashMap<NodeId, JoinHandle<()>>,
     // internal state
     running: bool,
     network: Network,
@@ -261,6 +261,7 @@ impl MySimulationController {
     /// - if there is no noderepresentation in the network for the crashing drone
     /// - if the id is not of a drone
     /// - if there is no command sender for the drone or any of its neighbors
+    /// - if there is no packet sender for the drone
     fn crash(&mut self, id: NodeId) -> Result<(), &'static str> {
         if let Some(drone_command_sender) = self.command_send.get(&id) {
             // send command to corresponding drone to crash
@@ -282,13 +283,18 @@ impl MySimulationController {
                 // send command to neighbor drones to remove sender
                 let _ = sender.send(DroneCommand::RemoveSender(id));
             }
+            // remove the sender kept by the sc
+            self.packet_send
+                .remove(&id)
+                .expect("could not find packet sender for drone {id}");
+
             Ok(())
         } else {
             panic!("could not find command sender for drone #{id}")
         }
     }
 
-    /// generates a random id for a node, different from any of the simulation drones
+    /// generates a random id for a node, different from any of the other nodes in the network
     fn random_unique_id(&self) -> NodeId {
         loop {
             let id = random::<u8>();
@@ -339,7 +345,7 @@ impl MySimulationController {
             })
             .expect("could not spawn drone thread");
 
-        self.node_handles.push(handle);
+        self.node_handles.insert(n.id, handle);
 
         self.network.nodes.push(n.clone());
 
@@ -421,6 +427,7 @@ impl MySimulationController {
                             // mark the drone as crashed in the network
                             self.network.crash_drone(id);
                             self.screen.window = Window::Main;
+                            // TODO at some point check that the drone's thread actually returns
                         }
                         Err(message) => {
                             debug!("error crashing drone, switching to Window::Error");

@@ -67,7 +67,7 @@ fn main() {
         event_send: event_send.clone(),
         packet_send: packet_senders,
         config,
-        node_handles: Vec::new(),
+        node_handles: HashMap::new(),
     };
     let mut simcontr = MySimulationController::new(opt);
     let join_handle = thread::spawn(move || {
