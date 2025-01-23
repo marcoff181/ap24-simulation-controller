@@ -3,6 +3,7 @@ use std::{collections::HashMap, task::Wake, thread, time::Duration};
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
 use log::LevelFilter;
+use messages::node_event::NodeEvent;
 use simplelog::{format_description, ConfigBuilder, ThreadLogMode, ThreadPadding, WriteLogger};
 use wg_2024::{
     config::Config,
@@ -27,7 +28,8 @@ fn main() {
         .expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
 
-    let (event_send, event_recv) = unbounded::<DroneEvent>();
+    let (droneevent_send, droneevent_recv) = unbounded::<DroneEvent>();
+    let (nodeevent_send, nodeevent_recv) = unbounded::<NodeEvent>();
 
     let mut command_receivers: HashMap<NodeId, Receiver<DroneCommand>> = HashMap::new();
     let mut command_senders: HashMap<NodeId, Sender<DroneCommand>> = HashMap::new();
@@ -63,8 +65,10 @@ fn main() {
 
     let opt = SimControllerOptions {
         command_send: command_senders,
-        event_recv,
-        event_send: event_send.clone(),
+        droneevent_recv,
+        droneevent_send: droneevent_send.clone(),
+        nodeevent_recv,
+        nodeevent_send,
         packet_send: packet_senders,
         config,
         node_handles: HashMap::new(),
@@ -79,8 +83,8 @@ fn main() {
             break;
         }
 
-        let send = event_send.send(DroneEvent::PacketSent(random_packet()));
-        let send = event_send.send(DroneEvent::PacketDropped(Packet {
+        let send = droneevent_send.send(DroneEvent::PacketSent(random_packet()));
+        let send = droneevent_send.send(DroneEvent::PacketDropped(Packet {
             pack_type: PacketType::MsgFragment(Fragment {
                 fragment_index: rand::random_range(1..256),
                 total_n_fragments: rand::random_range(1..345),

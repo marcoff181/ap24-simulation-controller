@@ -3,6 +3,8 @@ mod network;
 mod screen;
 mod utilities;
 mod view;
+use messages::node_event::NodeEvent;
+use messages::Message;
 
 use crate::screen::Screen;
 use core::f32;
@@ -12,7 +14,7 @@ use std::{
 };
 
 use crate::network::Network;
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::{select, select_biased, unbounded, Receiver, Sender};
 use log::{debug, error, info, trace, warn};
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
 use rand::random;
@@ -33,8 +35,10 @@ use wg_2024::{
 pub struct SimControllerOptions {
     pub packet_send: HashMap<NodeId, Sender<Packet>>,
     pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
-    pub event_send: Sender<DroneEvent>,
-    pub event_recv: Receiver<DroneEvent>,
+    pub droneevent_send: Sender<DroneEvent>,
+    pub droneevent_recv: Receiver<DroneEvent>,
+    pub nodeevent_send: Sender<NodeEvent>,
+    pub nodeevent_recv: Receiver<NodeEvent>,
     pub node_handles: HashMap<NodeId, JoinHandle<()>>,
     pub config: Config,
 }
@@ -43,8 +47,10 @@ pub struct MySimulationController {
     // external comms
     packet_send: HashMap<NodeId, Sender<Packet>>,
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
-    event_send: Sender<DroneEvent>,
-    event_recv: Receiver<DroneEvent>,
+    nodeevent_send: Sender<NodeEvent>,
+    nodeevent_recv: Receiver<NodeEvent>,
+    droneevent_send: Sender<DroneEvent>,
+    droneevent_recv: Receiver<DroneEvent>,
     node_handles: HashMap<NodeId, JoinHandle<()>>,
     // internal state
     running: bool,
@@ -59,8 +65,10 @@ impl MySimulationController {
         info!("created SC");
         MySimulationController {
             command_send: opt.command_send,
-            event_recv: opt.event_recv,
-            event_send: opt.event_send,
+            droneevent_recv: opt.droneevent_recv,
+            droneevent_send: opt.droneevent_send,
+            nodeevent_send: opt.nodeevent_send,
+            nodeevent_recv: opt.nodeevent_recv,
             packet_send: opt.packet_send,
             node_handles: opt.node_handles,
             network: Network::new(&opt.config),
@@ -109,12 +117,24 @@ impl MySimulationController {
                 debug!("received AppMessage: {:?}", message);
                 self.transition(message);
             };
+            loop {
+                select! {
+                    recv(self.droneevent_recv)->res =>{
+                        if let Ok(event) = res{
+                            if let DroneEvent::ControllerShortcut(packet) = event {
+                                todo!()
+                            }
+                            self.save_droneevent(event);
+                        }
+                    },
+                    recv(self.nodeevent_recv)-> res =>{
+                        if let Ok(event) = res{
+                        }
 
-            while let Ok(event) = self.event_recv.try_recv() {
-                if let DroneEvent::ControllerShortcut(packet) = event {
-                    todo!()
+                    }
+
+                    default => break,
                 }
-                self.save_event(event);
             }
         }
 
@@ -124,7 +144,7 @@ impl MySimulationController {
     /// saves inside the NodeRepresentation the events received on the sc channel, logs the event
     /// received, and in the case of the Detail window, it scrolls the table state to match the
     /// newly added packet
-    fn save_event(&mut self, event: DroneEvent) {
+    fn save_droneevent(&mut self, event: DroneEvent) {
         let packet = match event {
             DroneEvent::PacketSent(ref packet) => packet,
             DroneEvent::PacketDropped(ref packet) => packet,
@@ -323,7 +343,7 @@ impl MySimulationController {
             shortcutted: VecDeque::new(),
         };
 
-        let event_send = self.event_send.clone();
+        let event_send = self.droneevent_send.clone();
         let (command_send, command_recv) = unbounded::<DroneCommand>();
         let (packet_send, packet_recv) = unbounded::<Packet>();
 
