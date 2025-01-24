@@ -28,46 +28,41 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
         messages::MessageType::Request(request_type) => {
             mtype = Span::styled("RQS", ptype_style.bg(MESSAGE_REQUEST_COLOR));
             match request_type {
-                messages::RequestType::MediaRequest(_) => {
-                    rtype = Span::from("MED".to_string());
-                    //    rtype = Span::from(format!("media request: {:?}", media_request));
-                }
                 messages::RequestType::TextRequest(_) => {
-                    rtype = Span::from("TXT".to_string());
-                    //    rtype = Span::from(format!("text request: {:?}", text_request));
+                    rtype = Span::from("TXT".to_string()).bg(TEXT_MSG);
+                }
+                messages::RequestType::MediaRequest(_) => {
+                    rtype = Span::from("MED".to_string()).bg(MEDIA_MSG);
                 }
                 messages::RequestType::ChatRequest(_) => {
-                    rtype = Span::from("CHT".to_string());
-                    //    rtype = Span::from(format!("chat request: {:?}", chat_request));
+                    rtype = Span::from("CHT".to_string()).bg(CHAT_MSG);
                 }
                 messages::RequestType::DiscoveryRequest(_) => {
-                    rtype = Span::from("DSC".to_string());
-                    //    rtype = Span::from("discovery".to_string());
+                    rtype = Span::from("DSC".to_string()).bg(DISCOVERY_MSG);
                 }
             }
         }
         messages::MessageType::Response(response_type) => {
             mtype = Span::styled("RSP", ptype_style.bg(MESSAGE_RESPONSE_COLOR));
             match response_type {
-                messages::ResponseType::TextResponse(text_response) => {
-                    rtype = Span::from("TXT".to_string());
+                messages::ResponseType::TextResponse(_) => {
+                    rtype = Span::from("TXT".to_string()).bg(TEXT_MSG);
                 }
-                messages::ResponseType::MediaResponse(media_response) => {
-                    rtype = Span::from("MED".to_string());
+                messages::ResponseType::MediaResponse(_) => {
+                    rtype = Span::from("MED".to_string()).bg(MEDIA_MSG);
                 }
-                messages::ResponseType::ChatResponse(chat_response) => {
-                    rtype = Span::from("CHT".to_string());
+                messages::ResponseType::ChatResponse(_) => {
+                    rtype = Span::from("CHT".to_string()).bg(CHAT_MSG);
                 }
-                messages::ResponseType::DiscoveryResponse(server_type) => {
-                    //rtype = Span::from(format!("discovery response: {:?}", server_type));
-                    rtype = Span::from("DSC".to_string());
+                messages::ResponseType::DiscoveryResponse(_) => {
+                    rtype = Span::from("DSC".to_string()).bg(DISCOVERY_MSG);
                 }
             }
         }
     }
 
     if !finished_sending {
-        mtype = mtype.bg(MESSAGE_SENDING_COLOR).slow_blink();
+        mtype = mtype.slow_blink();
     }
     Row::new(vec![rtype, mtype, source, sess_id])
 }

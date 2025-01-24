@@ -161,9 +161,13 @@ fn render_detail(
 
     let node = network.get_node_from_id(screen.focus).unwrap();
     let packet = match (tab, screen.kind) {
-        (0, _) => node.sent.get(table_state.selected().unwrap()),
-        (1, NodeKind::Drone { .. }) => node.dropped.get(table_state.selected().unwrap()),
-        (2, NodeKind::Drone { .. }) => node.shortcutted.get(table_state.selected().unwrap()),
+        (0, _) => node.sent.get(table_state.selected().unwrap_or(usize::MAX)),
+        (1, NodeKind::Drone { .. }) => node
+            .dropped
+            .get(table_state.selected().unwrap_or(usize::MAX)),
+        (2, NodeKind::Drone { .. }) => node
+            .shortcutted
+            .get(table_state.selected().unwrap_or(usize::MAX)),
         _ => None,
     };
 

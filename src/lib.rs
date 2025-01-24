@@ -7,7 +7,7 @@ use messages::node_event::NodeEvent;
 use messages::Message;
 
 use crate::screen::Screen;
-use core::f32;
+use core::{f32, panic};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     thread::{Builder, JoinHandle},
@@ -149,8 +149,8 @@ impl MySimulationController {
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {
             // fix scrolling pushdown on certain tabs
-            if let Window::Detail { tab } = self.screen.window {
-                if id == self.screen.focus {
+            if id == self.screen.focus {
+                if let Window::Detail { tab } = self.screen.window {
                     match event {
                         NodeEvent::PacketSent(_) if tab == 0 => {
                             self.packet_table_state.scroll_down_by(1)
@@ -176,7 +176,11 @@ impl MySimulationController {
                         "Client/Server #{id} sent event MessageSentSuccessfully with Message {:?}",
                         message
                     );
-                    node.msent.insert(message.session_id, (message, true));
+                    if node.msent.contains_key(&message.session_id) {
+                        node.msent.insert(message.session_id, (message, true));
+                    } else {
+                        panic!("Got a MessageSentSuccessfully from #{id} with sid #{}, but didn't receive any StartingMessageTransmission for the same message yet",message.session_id)
+                    }
                 }
                 NodeEvent::StartingMessageTransmission(message) => {
                     debug!(
