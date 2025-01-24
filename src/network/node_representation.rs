@@ -1,10 +1,12 @@
 // use std::hash::Hash;
 
 use std::{
-    collections::{HashSet, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     fmt::Display,
 };
 
+use indexmap::IndexMap;
+use messages::{node_event::EventNetworkGraph, Message};
 use wg_2024::{
     config::{Client, Drone, Server},
     network::NodeId,
@@ -15,15 +17,21 @@ use super::node_kind::NodeKind;
 
 #[derive(Debug, Clone)]
 pub struct NodeRepresentation {
-    //todo: do they all need to be pub?
+    //TODO: do they all need to be pub?
     pub id: NodeId,
     pub x: u32,
     pub y: u32,
     pub kind: NodeKind,
     pub adj: HashSet<NodeId>,
+    // all nodes
     pub sent: VecDeque<Packet>,
+    // drone
     pub dropped: VecDeque<Packet>,
     pub shortcutted: VecDeque<Packet>,
+    // client and server
+    pub msent: IndexMap<u64, (Message, bool)>,
+    pub mreceived: VecDeque<Message>,
+    pub knowntopology: EventNetworkGraph,
 }
 
 impl PartialEq for NodeRepresentation {
@@ -44,7 +52,7 @@ impl std::hash::Hash for NodeRepresentation {
 impl Default for NodeRepresentation {
     fn default() -> Self {
         NodeRepresentation::new(
-            // todo: check if there is a node with same id
+            // TODO: check if there is a node with same id
             rand::random_range(0..=255),
             0,
             0,
@@ -78,6 +86,9 @@ impl NodeRepresentation {
             sent: VecDeque::new(),
             dropped: VecDeque::new(),
             shortcutted: VecDeque::new(),
+            msent: IndexMap::new(),
+            mreceived: VecDeque::new(),
+            knowntopology: EventNetworkGraph { nodes: Vec::new() },
         }
     }
 

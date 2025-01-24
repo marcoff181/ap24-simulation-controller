@@ -16,3 +16,7 @@ pub const PACKET_ACK_COLOR: Color = ADD_EDGE_COLOR;
 pub const PACKET_FRAGMENT_COLOR: Color = Color::LightBlue;
 pub const PACKET_FLOOD_REQUEST_COLOR: Color = Color::LightMagenta;
 pub const PACKET_FLOOD_RESPONSE_COLOR: Color = Color::LightYellow;
+
+pub const MESSAGE_REQUEST_COLOR: Color = Color::LightBlue;
+pub const MESSAGE_SENDING_COLOR: Color = Color::LightRed;
+pub const MESSAGE_RESPONSE_COLOR: Color = Color::LightGreen;

@@ -129,6 +129,7 @@ impl MySimulationController {
                     },
                     recv(self.nodeevent_recv)-> res =>{
                         if let Ok(event) = res{
+                            self.save_nodeevent(event);
                         }
 
                     }
@@ -139,6 +140,67 @@ impl MySimulationController {
         }
 
         Ok(())
+    }
+
+    fn save_nodeevent(&mut self, event: NodeEvent) {
+        let id = event
+            .source()
+            .expect("routing header does not have previous hop");
+
+        if let Some(node) = self.network.get_mut_node_from_id(id) {
+            // fix scrolling pushdown on certain tabs
+            if let Window::Detail { tab } = self.screen.window {
+                if id == self.screen.focus {
+                    match event {
+                        NodeEvent::PacketSent(_) if tab == 0 => {
+                            self.packet_table_state.scroll_down_by(1)
+                        }
+                        NodeEvent::StartingMessageTransmission(_) if tab == 1 => {
+                            self.packet_table_state.scroll_down_by(1)
+                        }
+                        NodeEvent::MessageReceived(_) if tab == 2 => {
+                            self.packet_table_state.scroll_down_by(1)
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            // save the data received in the correct location
+            match event {
+                NodeEvent::PacketSent(packet) => {
+                    trace!("Client/Server #{id} sent event PacketSent with packet {packet}");
+                    node.sent.push_front(packet.clone());
+                }
+                NodeEvent::MessageSentSuccessfully(message) => {
+                    debug!(
+                        "Client/Server #{id} sent event MessageSentSuccessfully with Message {:?}",
+                        message
+                    );
+                    node.msent.insert(message.session_id, (message, true));
+                }
+                NodeEvent::StartingMessageTransmission(message) => {
+                    debug!(
+                        "Client/Server #{id} sent event StartingMessageTransmission with Message {:?}",
+                        message
+                    );
+                    node.msent.insert(message.session_id, (message, false));
+                }
+                NodeEvent::MessageReceived(message) => {
+                    debug!(
+                        "Client/Server #{id} sent event MessageReceived with Message {:?}",
+                        message
+                    );
+                    node.mreceived.push_front(message);
+                }
+                NodeEvent::KnownNetworkGraph { source: _, graph } => {
+                    debug!(
+                        "Client/Server #{id} sent event KnownNetworkGraph with Network {:?}",
+                        graph
+                    );
+                    node.knowntopology = graph;
+                }
+            };
+        }
     }
 
     /// saves inside the NodeRepresentation the events received on the sc channel, logs the event
@@ -170,15 +232,14 @@ impl MySimulationController {
 
             if id == self.screen.focus {
                 if let Window::Detail { tab } = self.screen.window {
-                    let isdrone = matches!(self.screen.kind, NodeKind::Drone { .. });
                     match event {
                         DroneEvent::PacketSent(_) if tab == 0 => {
                             self.packet_table_state.scroll_down_by(1)
                         }
-                        DroneEvent::PacketDropped(_) if tab == 1 && isdrone => {
+                        DroneEvent::PacketDropped(_) if tab == 1 => {
                             self.packet_table_state.scroll_down_by(1)
                         }
-                        DroneEvent::ControllerShortcut(_) if tab == 2 && isdrone => {
+                        DroneEvent::ControllerShortcut(_) if tab == 2 => {
                             self.packet_table_state.scroll_down_by(1)
                         }
                         _ => {}
@@ -332,16 +393,7 @@ impl MySimulationController {
             pdr: 0.05,
             crashed: false,
         };
-        let n = NodeRepresentation {
-            id: self.random_unique_id(),
-            x: 0,
-            y: 0,
-            kind,
-            adj: HashSet::new(),
-            sent: VecDeque::new(),
-            dropped: VecDeque::new(),
-            shortcutted: VecDeque::new(),
-        };
+        let n = NodeRepresentation::new(self.random_unique_id(), 0, 0, kind, HashSet::new());
 
         let event_send = self.droneevent_send.clone();
         let (command_send, command_recv) = unbounded::<DroneCommand>();

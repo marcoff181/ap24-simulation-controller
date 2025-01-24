@@ -15,4 +15,5 @@ toml = "0.8.19"
 log = "0.4.22"
 simplelog = "0.12.2"
 null-pointer-drone = { git = "https://github.com/The-Null-Pointer-Patrol/null-pointer-drone.git"}
-messages = { git = "https://github.com/The-Null-Pointer-Patrol/messages.git"}
+messages = { git = "https://github.com/The-Null-Pointer-Patrol/messages.git", branch = "changemessage"}
+indexmap = "2.7.1"

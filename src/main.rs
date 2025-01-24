@@ -68,7 +68,7 @@ fn main() {
         droneevent_recv,
         droneevent_send: droneevent_send.clone(),
         nodeevent_recv,
-        nodeevent_send,
+        nodeevent_send: nodeevent_send.clone(),
         packet_send: packet_senders,
         config,
         node_handles: HashMap::new(),
@@ -83,6 +83,21 @@ fn main() {
             break;
         }
 
+        let send = nodeevent_send.send(NodeEvent::StartingMessageTransmission(messages::Message {
+            source_id: rand::random_range(1..=6),
+            session_id: 3,
+            content: messages::MessageType::Request(messages::RequestType::DiscoveryRequest(())),
+        }));
+        let send = nodeevent_send.send(NodeEvent::MessageSentSuccessfully(messages::Message {
+            source_id: rand::random_range(1..=6),
+            session_id: 3,
+            content: messages::MessageType::Request(messages::RequestType::DiscoveryRequest(())),
+        }));
+        let send = nodeevent_send.send(NodeEvent::MessageReceived(messages::Message {
+            source_id: rand::random_range(1..=6),
+            session_id: 3,
+            content: messages::MessageType::Request(messages::RequestType::DiscoveryRequest(())),
+        }));
         let send = droneevent_send.send(DroneEvent::PacketSent(random_packet()));
         let send = droneevent_send.send(DroneEvent::PacketDropped(Packet {
             pack_type: PacketType::MsgFragment(Fragment {

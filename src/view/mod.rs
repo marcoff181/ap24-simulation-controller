@@ -167,8 +167,9 @@ fn render_detail(
         _ => None,
     };
 
-    let t = packet_formatter::packet_detail(packet.unwrap());
-    t.render(bottom_inner, frame.buffer_mut());
+    //let t = packet_formatter::packet_detail(packet.unwrap());
+    //t.render(bottom_inner, frame.buffer_mut());
+
     //match kind {
     //    NodeKind::Client | NodeKind::Server => {
     //        let [left, right] =

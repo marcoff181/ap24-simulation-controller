@@ -1,5 +1,7 @@
+use messages::Message;
 use rand::seq::IndexedRandom;
 use ratatui::style::Style;
+use ratatui::style::Stylize;
 use ratatui::text::Line;
 use ratatui::text::Span;
 use ratatui::text::Text;
@@ -12,6 +14,64 @@ use wg_2024::packet::Packet;
 use wg_2024::packet::PacketType;
 
 use crate::utilities::theme::*;
+
+pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
+    let source: Span = Span::styled(format!("{}", message.source_id), Style::new());
+    let sess_id: Span = Span::styled(format!("{}", message.session_id), Style::new());
+
+    let mut mtype: Span;
+    let rtype: Span;
+
+    let ptype_style: Style = Style::new();
+
+    match &message.content {
+        messages::MessageType::Request(request_type) => {
+            mtype = Span::styled("RQS", ptype_style.bg(MESSAGE_REQUEST_COLOR));
+            match request_type {
+                messages::RequestType::MediaRequest(_) => {
+                    rtype = Span::from("MED".to_string());
+                    //    rtype = Span::from(format!("media request: {:?}", media_request));
+                }
+                messages::RequestType::TextRequest(_) => {
+                    rtype = Span::from("TXT".to_string());
+                    //    rtype = Span::from(format!("text request: {:?}", text_request));
+                }
+                messages::RequestType::ChatRequest(_) => {
+                    rtype = Span::from("CHT".to_string());
+                    //    rtype = Span::from(format!("chat request: {:?}", chat_request));
+                }
+                messages::RequestType::DiscoveryRequest(_) => {
+                    rtype = Span::from("DSC".to_string());
+                    //    rtype = Span::from("discovery".to_string());
+                }
+            }
+        }
+        messages::MessageType::Response(response_type) => {
+            mtype = Span::styled("RSP", ptype_style.bg(MESSAGE_RESPONSE_COLOR));
+            match response_type {
+                messages::ResponseType::TextResponse(text_response) => {
+                    rtype = Span::from("TXT".to_string());
+                }
+                messages::ResponseType::MediaResponse(media_response) => {
+                    rtype = Span::from("MED".to_string());
+                }
+                messages::ResponseType::ChatResponse(chat_response) => {
+                    rtype = Span::from("CHT".to_string());
+                }
+                messages::ResponseType::DiscoveryResponse(server_type) => {
+                    //rtype = Span::from(format!("discovery response: {:?}", server_type));
+                    rtype = Span::from("DSC".to_string());
+                }
+            }
+        }
+    }
+
+    if !finished_sending {
+        mtype = mtype.bg(MESSAGE_SENDING_COLOR).slow_blink();
+    }
+    Row::new(vec![rtype, mtype, source, sess_id])
+}
+
 pub fn packet_table_row(packet: &Packet) -> Row {
     let sess_id: Span = Span::styled(format!("{}", packet.session_id), Style::new());
 
