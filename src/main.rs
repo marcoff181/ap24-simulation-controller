@@ -178,8 +178,8 @@ pub fn random_packet() -> PacketType {
         }),
         4 => PacketType::FloodRequest(FloodRequest {
             flood_id: 3,
-            initiator_id: 4,
-            path_trace: vec![(rand::random::<u8>(), NodeType::Drone)],
+            initiator_id: 9,
+            path_trace: vec![(rand::random_range(1..=10), NodeType::Drone)],
         }),
         _ => PacketType::FloodResponse(FloodResponse {
             flood_id: 2,

@@ -8,6 +8,7 @@ use ratatui::text::Text;
 use ratatui::widgets::Paragraph;
 use ratatui::widgets::Row;
 use ratatui::widgets::Wrap;
+use wg_2024::packet::FloodRequest;
 use wg_2024::packet::Nack;
 use wg_2024::packet::NackType;
 use wg_2024::packet::Packet;
@@ -209,14 +210,40 @@ pub fn packet_table_row(packet: &Packet) -> Row {
 
     let src: Span;
     let dest: Span;
-    if packet.routing_header.hop_index < packet.routing_header.hops.len() {
-        let from = packet.routing_header.hops[packet.routing_header.hop_index - 1];
-        let to = packet.routing_header.hops[packet.routing_header.hop_index];
-        src = Span::styled(format!("{}", from), Style::new());
-        dest = Span::styled(format!("{}", to), Style::new());
-    } else {
-        src = Span::styled("Err".to_string(), Style::new());
-        dest = Span::styled("Err".to_string(), Style::new());
+    match (
+        packet.routing_header.previous_hop(),
+        packet.routing_header.current_hop(),
+        &packet.pack_type,
+    ) {
+        (
+            _,
+            _,
+            PacketType::FloodRequest(FloodRequest {
+                flood_id,
+                initiator_id,
+                path_trace,
+            }),
+        ) => {
+            if path_trace.is_empty() {
+                src = Span::styled("Err".to_string(), Style::new());
+                dest = Span::styled("Err".to_string(), Style::new());
+            } else {
+                src = Span::styled(format!("{}", path_trace.last().unwrap().0), Style::new());
+                if let Some(dst) = packet.routing_header.current_hop() {
+                    dest = Span::styled(format!("{dst}"), Style::new());
+                } else {
+                    dest = Span::styled("X".to_string(), Style::new());
+                }
+            }
+        }
+        (Some(s), Some(d), _) => {
+            src = Span::styled(format!("{}", s), Style::new());
+            dest = Span::styled(format!("{}", d), Style::new());
+        }
+        (_, _, _) => {
+            src = Span::styled("Err".to_string(), Style::new());
+            dest = Span::styled("Err".to_string(), Style::new());
+        }
     }
 
     let ptype: Span;

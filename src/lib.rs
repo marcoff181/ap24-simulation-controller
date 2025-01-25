@@ -29,7 +29,7 @@ use wg_2024::{
     controller::{DroneCommand, DroneEvent},
     drone::Drone,
     network::NodeId,
-    packet::Packet,
+    packet::{Packet, PacketType},
 };
 
 pub struct SimControllerOptions {
@@ -276,7 +276,7 @@ impl MySimulationController {
             DroneEvent::ControllerShortcut(ref packet) => packet,
         };
         let id: u8 = match &packet.pack_type {
-            wg_2024::packet::PacketType::FloodRequest(flood_request) => {
+            PacketType::FloodRequest(flood_request) => {
                 flood_request
                     .path_trace
                     .last()
