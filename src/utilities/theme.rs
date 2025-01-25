@@ -14,5 +14,13 @@ pub const ADD_EDGE_COLOR: Color = Color::Green;
 pub const PACKET_NACK_COLOR: Color = CRASH_COLOR;
 pub const PACKET_ACK_COLOR: Color = ADD_EDGE_COLOR;
 pub const PACKET_FRAGMENT_COLOR: Color = Color::LightBlue;
-pub const PACKET_FLOOD_REQUEST_COLOR: Color = Color::LightMagenta;
-pub const PACKET_FLOOD_RESPONSE_COLOR: Color = Color::LightYellow;
+pub const PACKET_FLOOD_REQUEST_COLOR: Color = Color::Magenta;
+pub const PACKET_FLOOD_RESPONSE_COLOR: Color = Color::LightMagenta;
+
+pub const MESSAGE_REQUEST_COLOR: Color = Color::LightBlue;
+pub const MESSAGE_RESPONSE_COLOR: Color = Color::Green;
+
+pub const TEXT_MSG: Color = Color::Cyan;
+pub const MEDIA_MSG: Color = Color::Yellow;
+pub const CHAT_MSG: Color = Color::Red;
+pub const DISCOVERY_MSG: Color = Color::LightMagenta;

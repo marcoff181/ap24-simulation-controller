@@ -1,22 +1,29 @@
-use crate::utilities::theme::*;
+use crate::{screen::Screen, utilities::theme::*};
 
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Style, Stylize},
-    widgets::{Block, Borders, HighlightSpacing, List, ListDirection, StatefulWidget},
+    widgets::{Block, Borders, HighlightSpacing, List, ListDirection, ListState, StatefulWidget},
 };
 
-use crate::Model;
+use crate::Network;
 
-pub fn render_list(model: &mut Model, area: Rect, buf: &mut Buffer) {
+pub fn render_list(
+    network: &Network,
+    screen: &Screen,
+    node_list_state: &mut ListState,
+    area: Rect,
+    buf: &mut Buffer,
+) {
+    let _ = screen;
     let left_block = Block::new()
         .borders(Borders::TOP | Borders::LEFT)
         .title("Nodes")
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
 
-    let items = model
+    let items = network
         .nodes
         .iter()
         .map(|x| format!("{}", x))
@@ -32,5 +39,5 @@ pub fn render_list(model: &mut Model, area: Rect, buf: &mut Buffer) {
         .block(left_block)
         .highlight_spacing(HighlightSpacing::Always);
 
-    StatefulWidget::render(list, area, buf, &mut model.node_list_state);
+    StatefulWidget::render(list, area, buf, node_list_state);
 }

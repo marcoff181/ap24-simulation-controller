@@ -1,11 +1,13 @@
 // use std::hash::Hash;
 
 use std::{
-    collections::{HashSet, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     fmt::Display,
 };
 
-use rand::Rng;
+use crossterm::style::Color;
+use indexmap::IndexMap;
+use messages::{node_event::EventNetworkGraph, Message};
 use wg_2024::{
     config::{Client, Drone, Server},
     network::NodeId,
@@ -14,16 +16,23 @@ use wg_2024::{
 
 use super::node_kind::NodeKind;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NodeRepresentation {
-    //todo: do they all need to be pub?
+    //TODO: do they all need to be pub?
     pub id: NodeId,
     pub x: u32,
     pub y: u32,
     pub kind: NodeKind,
     pub adj: HashSet<NodeId>,
+    // all nodes
     pub sent: VecDeque<Packet>,
+    // drone
     pub dropped: VecDeque<Packet>,
+    pub shortcutted: VecDeque<Packet>,
+    // client and server
+    pub msent: IndexMap<u64, (Message, bool)>,
+    pub mreceived: VecDeque<Message>,
+    pub knowntopology: EventNetworkGraph,
 }
 
 impl PartialEq for NodeRepresentation {
@@ -44,8 +53,8 @@ impl std::hash::Hash for NodeRepresentation {
 impl Default for NodeRepresentation {
     fn default() -> Self {
         NodeRepresentation::new(
-            // todo: check if there is a node with same id
-            rand::thread_rng().gen_range(0..=255),
+            // TODO: check if there is a node with same id
+            rand::random_range(0..=255),
             0,
             0,
             NodeKind::Drone {
@@ -68,7 +77,7 @@ impl Display for NodeRepresentation {
 
 impl NodeRepresentation {
     pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: HashSet<NodeId>) -> Self {
-        let s = format!("{:?} #{}", kind, id);
+        //let s = format!("{:?} #{}", kind, id);
         NodeRepresentation {
             id,
             x,
@@ -77,6 +86,37 @@ impl NodeRepresentation {
             adj,
             sent: VecDeque::new(),
             dropped: VecDeque::new(),
+            shortcutted: VecDeque::new(),
+            msent: IndexMap::new(),
+            mreceived: VecDeque::new(),
+            knowntopology: EventNetworkGraph { nodes: Vec::new() },
+        }
+    }
+
+    pub fn short_label(&self) -> String {
+        match self.kind {
+            NodeKind::Drone { pdr: _, crashed } => {
+                if crashed {
+                    "(X)".to_owned()
+                } else {
+                    "(D)".to_owned()
+                }
+            }
+            NodeKind::Client => "[C]".to_owned(),
+            NodeKind::Server => "[S]".to_owned(),
+        }
+    }
+    pub fn color(&self) -> ratatui::prelude::Color {
+        match self.kind {
+            NodeKind::Drone { pdr: _, crashed } => {
+                if crashed {
+                    crate::utilities::theme::CRASH_COLOR
+                } else {
+                    crate::utilities::theme::DRONE_COLOR
+                }
+            }
+            NodeKind::Client => crate::utilities::theme::CLIENT_COLOR,
+            NodeKind::Server => crate::utilities::theme::SERVER_COLOR,
         }
     }
 
@@ -84,8 +124,7 @@ impl NodeRepresentation {
         NodeRepresentation::new(
             d.id,
             d.id as u32 * 10,
-            //rand::thread_rng().gen_range(0..=100),
-            rand::thread_rng().gen_range(0..=100),
+            rand::random_range(0..=100),
             NodeKind::Drone {
                 pdr: d.pdr,
                 crashed: false,
@@ -98,8 +137,7 @@ impl NodeRepresentation {
         NodeRepresentation::new(
             d.id,
             d.id as u32 * 10,
-            //rand::thread_rng().gen_range(0..=100),
-            rand::thread_rng().gen_range(0..=100),
+            rand::random_range(0..=100),
             NodeKind::Client,
             d.connected_drone_ids.iter().cloned().collect(),
         )
@@ -109,8 +147,7 @@ impl NodeRepresentation {
         NodeRepresentation::new(
             d.id,
             d.id as u32 * 10,
-            //rand::thread_rng().gen_range(0..=100),
-            rand::thread_rng().gen_range(0..=100),
+            rand::random_range(0..=100),
             NodeKind::Server,
             d.connected_drone_ids.iter().cloned().collect(),
         )
