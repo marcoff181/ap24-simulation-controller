@@ -163,8 +163,8 @@ impl MySimulationController {
                 select! {
                     recv(self.droneevent_recv)->res =>{
                         if let Ok(event) = res{
-                            if let DroneEvent::ControllerShortcut(packet) = event {
-                                todo!()
+                            if let DroneEvent::ControllerShortcut(ref packet) = event {
+                                self.shortcut_packet(packet.clone());
                             }
                             self.save_droneevent(event);
                         }
@@ -182,6 +182,23 @@ impl MySimulationController {
         }
 
         Ok(())
+    }
+
+    /// sends the given packet directly to its final destination
+    /// Panics
+    /// - when the packet has no destination
+    /// - if there is no packet sender for the destination node
+    fn shortcut_packet(&mut self, packet: Packet) {
+        let dst = packet
+            .routing_header
+            .destination()
+            .unwrap_or_else(|| panic!("Destination for packet {packet} not found"));
+        let sender = self
+            .packet_send
+            .get(&dst)
+            .unwrap_or_else(|| panic!("packet sender for #{dst} not found"));
+        debug!("Shortcutted packet: {packet}");
+        let _ = sender.send(packet);
     }
 
     fn save_nodeevent(&mut self, event: NodeEvent) {
