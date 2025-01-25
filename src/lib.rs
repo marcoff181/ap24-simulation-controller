@@ -96,13 +96,16 @@ impl MySimulationController {
 }
 
 impl MySimulationController {
-    /// runs the main loop of the sc, repeats the following:
-    /// - draw tui
-    /// - handle keypresses
-    /// - handle all DroneEvents
+    /// runs the main loop of the sc
+    /// Panics
+    /// panics if a node thread exits and the node was not a crashing drone
     fn start(&mut self, mut terminal: DefaultTerminal) -> Result<(), std::io::Error> {
         info!("started SC");
+        let mut finished: Vec<NodeId> = Vec::new();
         while self.running {
+            // ---------------------------------------------------------------------------
+            // draw interface
+            // ---------------------------------------------------------------------------
             terminal.draw(|frame| {
                 crate::view::render(
                     &self.network,
@@ -113,10 +116,49 @@ impl MySimulationController {
                 )
             })?;
 
+            // ---------------------------------------------------------------------------
+            // listen for keypresses
+            // ---------------------------------------------------------------------------
             if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen)? {
                 debug!("received AppMessage: {:?}", message);
                 self.transition(message);
             };
+
+            // ---------------------------------------------------------------------------
+            // check if node threads exit
+            // ---------------------------------------------------------------------------
+            for (id, h) in self.node_handles.iter_mut() {
+                if h.is_finished() {
+                    finished.push(*id);
+                }
+            }
+            while let Some(id) = finished.pop() {
+                let h = self.node_handles.remove(&id).unwrap();
+                let node = self
+                    .network
+                    .get_node_from_id(id)
+                    .expect("could not find node for node_handle of id #{id}");
+                let res = h.join();
+                match (res, node.kind) {
+                    (
+                        Ok(_),
+                        NodeKind::Drone {
+                            pdr: _,
+                            crashed: true,
+                        },
+                    ) => info!("Crashed drone #{id} exited successfully"),
+                    (res, _) => {
+                        panic!(
+                            "Node #{id} unexpectedly exited thread, with result: {:?}",
+                            res
+                        )
+                    }
+                }
+            }
+
+            // ---------------------------------------------------------------------------
+            // go through all NodeEvents and DroneEvents
+            // ---------------------------------------------------------------------------
             loop {
                 select! {
                     recv(self.droneevent_recv)->res =>{
@@ -341,7 +383,8 @@ impl MySimulationController {
         }
     }
 
-    /// send crash command to drone, removesender command to neighbors
+    /// send crash command to drone, removesender command to neighbors, remove the sender kept by
+    /// the sc
     /// # Panics
     /// - if there is no noderepresentation in the network for the crashing drone
     /// - if the id is not of a drone
