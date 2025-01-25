@@ -160,19 +160,50 @@ fn render_detail(
     tabs::render_tab_content(tab, screen, network, table_state, left_inner, frame);
 
     let node = network.get_node_from_id(screen.focus).unwrap();
-    let packet = match (tab, screen.kind) {
-        (0, _) => node.sent.get(table_state.selected().unwrap_or(usize::MAX)),
-        (1, NodeKind::Drone { .. }) => node
-            .dropped
-            .get(table_state.selected().unwrap_or(usize::MAX)),
-        (2, NodeKind::Drone { .. }) => node
-            .shortcutted
-            .get(table_state.selected().unwrap_or(usize::MAX)),
-        _ => None,
-    };
+    if tab == 0 || matches!(screen.kind, NodeKind::Drone { .. }) {
+        let packet = match (tab, screen.kind) {
+            (0, _) => node.sent.get(table_state.selected().unwrap_or(usize::MAX)),
+            (1, NodeKind::Drone { .. }) => node
+                .dropped
+                .get(table_state.selected().unwrap_or(usize::MAX)),
+            (2, NodeKind::Drone { .. }) => node
+                .shortcutted
+                .get(table_state.selected().unwrap_or(usize::MAX)),
+            _ => None,
+        };
 
-    //let t = packet_formatter::packet_detail(packet.unwrap());
-    //t.render(bottom_inner, frame.buffer_mut());
+        let t = match packet {
+            Some(p) => packet_formatter::packet_detail(p),
+            None => Paragraph::default(),
+        };
+        t.render(bottom_inner, frame.buffer_mut());
+    } else {
+        let t = match (tab, screen.kind) {
+            (1, NodeKind::Client | NodeKind::Server) => {
+                if let Some((_, (m, _))) = node.msent.get_index(
+                    node.msent
+                        .len()
+                        .saturating_sub(table_state.selected().unwrap_or(usize::MAX) + 1),
+                ) {
+                    packet_formatter::message_detail(m)
+                } else {
+                    Paragraph::default()
+                }
+            }
+            (2, NodeKind::Client | NodeKind::Server) => {
+                if let Some(message) = node
+                    .mreceived
+                    .get(table_state.selected().unwrap_or(usize::MAX))
+                {
+                    packet_formatter::message_detail(message)
+                } else {
+                    Paragraph::default()
+                }
+            }
+            _ => Paragraph::default(),
+        };
+        t.render(bottom_inner, frame.buffer_mut());
+    };
 
     //match kind {
     //    NodeKind::Client | NodeKind::Server => {
