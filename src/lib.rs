@@ -275,7 +275,19 @@ impl MySimulationController {
             DroneEvent::PacketDropped(ref packet) => packet,
             DroneEvent::ControllerShortcut(ref packet) => packet,
         };
-        let id = packet.routing_header.hops[packet.routing_header.hop_index - 1];
+        let id: u8 = match &packet.pack_type {
+            wg_2024::packet::PacketType::FloodRequest(flood_request) => {
+                flood_request
+                    .path_trace
+                    .last()
+                    .unwrap_or_else(|| panic!("path trace is empty, got {packet}"))
+                    .0
+            }
+            _ => packet
+                .routing_header
+                .previous_hop()
+                .unwrap_or_else(|| panic!("could not find previous hop in packet {packet}")),
+        };
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {
             match event {

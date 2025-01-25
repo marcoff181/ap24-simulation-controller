@@ -14,7 +14,7 @@ use wg_2024::{
     config::Config,
     controller::{DroneCommand, DroneEvent},
     network::NodeId,
-    packet::{Ack, FloodRequest, FloodResponse, Fragment, NackType, Packet, PacketType},
+    packet::{Ack, FloodRequest, FloodResponse, Fragment, NackType, NodeType, Packet, PacketType},
 };
 // used while developing to check how the GUI is functioning
 fn main() {
@@ -179,7 +179,7 @@ pub fn random_packet() -> PacketType {
         4 => PacketType::FloodRequest(FloodRequest {
             flood_id: 3,
             initiator_id: 4,
-            path_trace: vec![],
+            path_trace: vec![(rand::random::<u8>(), NodeType::Drone)],
         }),
         _ => PacketType::FloodResponse(FloodResponse {
             flood_id: 2,
