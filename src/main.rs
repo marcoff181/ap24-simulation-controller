@@ -117,6 +117,14 @@ fn main() {
                     }));
                 }
                 _ => {
+                    let send = nodeevent_send.send(NodeEvent::PacketSent(Packet {
+                        pack_type: random_packet(),
+                        routing_header: wg_2024::network::SourceRoutingHeader {
+                            hop_index: 3,
+                            hops: vec![2, 3, id, 4],
+                        },
+                        session_id: sid,
+                    }));
                     if rand::random_bool(0.4) {
                         let send = nodeevent_send.send(NodeEvent::StartingMessageTransmission(
                             messages::Message {

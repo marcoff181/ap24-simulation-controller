@@ -1,6 +1,8 @@
+mod draw_options;
 mod footer;
 mod keys;
 mod list;
+mod node_detail;
 mod packet_formatter;
 mod simulation;
 mod stats;
@@ -109,8 +111,7 @@ fn render_detail(
     let [tabs, area] = Layout::vertical([Constraint::Max(1), Constraint::Fill(1)]).areas(area);
     let [left, right] = Layout::horizontal([Constraint::Max(16), Constraint::Fill(1)]).areas(area);
 
-    let [top, bottom] =
-        Layout::vertical([Constraint::Percentage(30), Constraint::Percentage(70)]).areas(right);
+    let [top, bottom] = Layout::vertical([Constraint::Fill(3), Constraint::Fill(1)]).areas(right);
 
     let left_border_set = symbols::border::Set {
         top_right: symbols::line::NORMAL.horizontal_down,
@@ -160,6 +161,9 @@ fn render_detail(
     tabs::render_tab_content(tab, screen, network, table_state, left_inner, frame);
 
     let node = network.get_node_from_id(screen.focus).unwrap();
+
+    node_detail::node_detail(node, top_inner, frame);
+
     if tab == 0 || matches!(screen.kind, NodeKind::Drone { .. }) {
         let packet = match (tab, screen.kind) {
             (0, _) => node.sent.get(table_state.selected().unwrap_or(usize::MAX)),
@@ -204,17 +208,6 @@ fn render_detail(
         };
         t.render(bottom_inner, frame.buffer_mut());
     };
-
-    //match kind {
-    //    NodeKind::Client | NodeKind::Server => {
-    //        let [left, right] =
-    //            Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(top);
-    //    }
-    //    NodeKind::Drone { pdr: _, crashed: _ } => {
-    //        let [left, right] =
-    //            Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(top);
-    //    }
-    //}
 }
 
 fn render_standard(
@@ -229,44 +222,27 @@ fn render_standard(
 
     let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(top);
 
-    render_simulation(network, screen, right, frame.buffer_mut());
+    let top_right_border_set = symbols::border::Set {
+        top_left: symbols::line::NORMAL.horizontal_down,
+        ..symbols::border::PLAIN
+    };
+
+    let block = Block::new()
+        .border_set(top_right_border_set)
+        .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
+        .title("Simulation")
+        .bg(BG_COLOR)
+        .fg(TEXT_COLOR)
+        .padding(Padding::proportional(1));
+
+    let inner_right = block.inner(right);
+
+    block.render(right, frame.buffer_mut());
+    render_simulation(
+        crate::view::draw_options::DrawGraphOptions::from_network(network, screen),
+        inner_right,
+        frame.buffer_mut(),
+    );
     render_stats(network, screen, bottom, frame);
     render_list(network, screen, node_list_state, left, frame.buffer_mut());
 }
-
-// fn render_start(model:&Model, area: Rect, buf: &mut Buffer) {
-//     let block = Block::new()
-//         .borders(Borders::ALL)
-//         // .title("Simulation Controller")
-//         .bg(BG_COLOR)
-//         .fg(TEXT_COLOR);
-
-//     let big_text = BigText::builder()
-//         .centered()
-//         .pixel_size(PixelSize::Sextant)
-//         .style(Style::new().blue().bg(BG_COLOR))
-//         .lines(vec![
-//             "Simulation".red().into(),
-//             "Controller".white().into(),
-//             // "by marcoff181".into(),
-//         ])
-//         .build();
-
-//     // Get the inner area of the block to render the BigText
-//     let inner_area = block.inner(area);
-
-//     let [top, bottom] =
-//         Layout::vertical([Constraint::Max(6), Constraint::Fill(1)]).areas(inner_area);
-
-//     // horiz crop
-//     // let [h,_] = Layout::horizontal([Constraint::Length(width), Constraint::Min(0)]).areas(bottom);
-//     //vert crop
-//     // let [hv,_] = Layout::horizontal([Constraint::Length(height), Constraint::Min(0)]).areas(h);
-
-//     // let mut text:String = String::new();
-
-//     big_text.render(top, buf);
-//     block.render(area, buf);
-
-//     //render_image(bottom, buf, "./media/pixil-frame-0.png");
-// }

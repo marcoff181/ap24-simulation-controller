@@ -5,6 +5,7 @@ use std::{
     fmt::Display,
 };
 
+use crossterm::style::Color;
 use indexmap::IndexMap;
 use messages::{node_event::EventNetworkGraph, Message};
 use wg_2024::{
@@ -89,6 +90,33 @@ impl NodeRepresentation {
             msent: IndexMap::new(),
             mreceived: VecDeque::new(),
             knowntopology: EventNetworkGraph { nodes: Vec::new() },
+        }
+    }
+
+    pub fn short_label(&self) -> String {
+        match self.kind {
+            NodeKind::Drone { pdr: _, crashed } => {
+                if crashed {
+                    "(X)".to_owned()
+                } else {
+                    "(D)".to_owned()
+                }
+            }
+            NodeKind::Client => "[C]".to_owned(),
+            NodeKind::Server => "[S]".to_owned(),
+        }
+    }
+    pub fn color(&self) -> ratatui::prelude::Color {
+        match self.kind {
+            NodeKind::Drone { pdr: _, crashed } => {
+                if crashed {
+                    crate::utilities::theme::CRASH_COLOR
+                } else {
+                    crate::utilities::theme::DRONE_COLOR
+                }
+            }
+            NodeKind::Client => crate::utilities::theme::CLIENT_COLOR,
+            NodeKind::Server => crate::utilities::theme::SERVER_COLOR,
         }
     }
 
