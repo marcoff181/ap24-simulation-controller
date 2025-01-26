@@ -9,11 +9,12 @@ use ratatui::{
 
 use crate::{network::node_kind::NodeKind, screen::Screen, utilities::theme::*, Network};
 
-use super::packet_formatter::packet_table_row;
+use super::packet_formatter::{message_table_row, packet_table_row};
 
 pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut Frame) {
-    let [r1, r2, r3] = Layout::horizontal([
+    let [r1, r2, r3, r4] = Layout::horizontal([
         Constraint::Fill(1),
+        Constraint::Fill(3),
         Constraint::Fill(3),
         Constraint::Fill(3),
     ])
@@ -36,9 +37,21 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
 
     let border_set3 = symbols::border::Set {
         top_left: symbols::line::NORMAL.horizontal_down,
+        top_right: symbols::line::NORMAL.horizontal_down,
+        bottom_left: symbols::line::NORMAL.horizontal_up,
+        bottom_right: symbols::line::NORMAL.horizontal_up,
+        ..symbols::border::PLAIN
+    };
+
+    let border_set4 = symbols::border::Set {
+        top_left: symbols::line::NORMAL.horizontal_down,
         top_right: symbols::line::NORMAL.vertical_left,
         bottom_left: symbols::line::NORMAL.horizontal_up,
         ..symbols::border::PLAIN
+    };
+    let (title3, title4) = match screen.kind {
+        NodeKind::Drone { .. } => ("Packets Dropped", "Packets Shortcutted"),
+        _ => ("Messages Sent", "Messages Received"),
     };
 
     let b1 = Block::new()
@@ -51,14 +64,21 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
     let b2 = Block::new()
         .border_set(border_set2)
         .borders(Borders::BOTTOM | Borders::RIGHT | Borders::TOP)
-        .title("Sent")
+        .title("Packets Sent")
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
 
     let b3 = Block::new()
         .border_set(border_set3)
         .borders(Borders::BOTTOM | Borders::RIGHT | Borders::TOP)
-        .title("Dropped")
+        .title(title3)
+        .bg(BG_COLOR)
+        .fg(TEXT_COLOR);
+
+    let b4 = Block::new()
+        .border_set(border_set4)
+        .borders(Borders::BOTTOM | Borders::RIGHT | Borders::TOP)
+        .title(title4)
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
 
@@ -83,29 +103,63 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
         Constraint::Length(4),
         Constraint::Min(10),
     ];
-    let header = Row::new(vec!["", "sid", "src", "dest", "about"]);
+    let pheader = Row::new(vec!["typ", "sid", "src", "dest", "about"]);
+    let mheader = Row::new(vec!["typ", "←/→", "src", "sid", "about"]);
 
-    //if let Some(n) = model.get_selected_node() {
-    let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
-    let table = Table::new(rows, widths)
-        .column_spacing(1)
-        .style(Style::new().red())
-        .header(header.clone())
-        .block(b2);
-    frame.render_widget(table, r2);
-    //} else {
-    //    b2.render(r2, frame.buffer_mut());
-    //}
-    // Packets dropped
-    //if let Some(n) = model.get_selected_node() {
-    let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| packet_table_row(p)).collect();
-    let table = Table::new(rows, widths)
-        .column_spacing(1)
-        .style(Style::new().red())
-        .header(header)
-        .block(b3);
-    frame.render_widget(table, r3);
-    //} else {
-    //    b3.render(r3, frame.buffer_mut());
-    //}
+    match screen.kind {
+        NodeKind::Drone { .. } => {
+            let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
+            let table = Table::new(rows, widths)
+                .column_spacing(1)
+                .header(pheader.clone())
+                .block(b2);
+            frame.render_widget(table, r2);
+
+            let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| packet_table_row(p)).collect();
+            let table = Table::new(rows, widths)
+                .column_spacing(1)
+                .header(pheader.clone())
+                .block(b3);
+            frame.render_widget(table, r3);
+
+            let rows: Vec<Row<'_>> = n.shortcutted.iter().map(|p| packet_table_row(p)).collect();
+            let table = Table::new(rows, widths)
+                .column_spacing(1)
+                .header(pheader)
+                .block(b4);
+            frame.render_widget(table, r4);
+        }
+        _ => {
+            let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
+            let table = Table::new(rows, widths)
+                .column_spacing(1)
+                .style(Style::new().red())
+                .header(pheader.clone())
+                .block(b2);
+            frame.render_widget(table, r2);
+
+            let rows: Vec<Row<'_>> = n
+                .msent
+                .values()
+                .rev()
+                .map(|p| message_table_row(&p.0, p.1))
+                .collect();
+            let table = Table::new(rows, widths)
+                .column_spacing(1)
+                .header(mheader.clone())
+                .block(b3);
+            frame.render_widget(table, r3);
+
+            let rows: Vec<Row<'_>> = n
+                .mreceived
+                .iter()
+                .map(|p| message_table_row(p, true))
+                .collect();
+            let table = Table::new(rows, widths)
+                .column_spacing(1)
+                .header(mheader)
+                .block(b4);
+            frame.render_widget(table, r4);
+        }
+    }
 }

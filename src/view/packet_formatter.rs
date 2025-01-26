@@ -1,4 +1,5 @@
 use messages::Message;
+use messages::ResponseType;
 use rand::seq::IndexedRandom;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
@@ -22,12 +23,14 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
 
     let mut mtype: Span;
     let rtype: Span;
+    let debug: Span;
 
     let ptype_style: Style = Style::new();
 
     match &message.content {
         messages::MessageType::Request(request_type) => {
             mtype = Span::styled("RQS", ptype_style.bg(MESSAGE_REQUEST_COLOR));
+            debug = Span::from(format!("{:?}", request_type));
             match request_type {
                 messages::RequestType::TextRequest(_) => {
                     rtype = Span::from("TXT".to_string()).bg(TEXT_MSG);
@@ -45,6 +48,7 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
         }
         messages::MessageType::Response(response_type) => {
             mtype = Span::styled("RSP", ptype_style.bg(MESSAGE_RESPONSE_COLOR));
+            debug = Span::from(format!("{:?}", response_type));
             match response_type {
                 messages::ResponseType::TextResponse(_) => {
                     rtype = Span::from("TXT".to_string()).bg(TEXT_MSG);
@@ -63,9 +67,9 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
     }
 
     if !finished_sending {
-        mtype = mtype.slow_blink();
+        mtype = mtype.bg(BG_COLOR).slow_blink();
     }
-    Row::new(vec![rtype, mtype, source, sess_id])
+    Row::new(vec![rtype, mtype, source, sess_id, debug])
 }
 
 pub fn message_detail(message: &Message) -> Paragraph {
