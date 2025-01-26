@@ -220,7 +220,7 @@ fn render_standard(
     let [top, bottom] =
         Layout::vertical([Constraint::Percentage(80), Constraint::Percentage(20)]).areas(area);
 
-    let [left, right] = Layout::horizontal([Constraint::Max(14), Constraint::Fill(1)]).areas(top);
+    let [left, right] = Layout::horizontal([Constraint::Max(20), Constraint::Fill(1)]).areas(top);
 
     let top_right_border_set = symbols::border::Set {
         top_left: symbols::line::NORMAL.horizontal_down,
