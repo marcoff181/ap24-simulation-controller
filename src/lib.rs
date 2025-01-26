@@ -221,7 +221,9 @@ impl MySimulationController {
                 PacketType::FloodRequest(_) => None,
                 _ => packet.routing_header.current_hop(),
             } {
-                if self.network.edges.contains_key(&(id, dst)) {
+                if self.network.edges.contains_key(&(id, dst))
+                    || self.network.edges.contains_key(&(dst, id))
+                {
                     self.network.add_edge(
                         id,
                         dst,
@@ -330,7 +332,9 @@ impl MySimulationController {
                 PacketType::FloodRequest(_) => None,
                 _ => packet.routing_header.current_hop(),
             } {
-                if self.network.edges.contains_key(&(id, dst)) {
+                if self.network.edges.contains_key(&(id, dst))
+                    || self.network.edges.contains_key(&(dst, id))
+                {
                     self.network.add_edge(
                         id,
                         dst,
