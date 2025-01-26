@@ -18,7 +18,7 @@ use crate::network::Network;
 use crossbeam_channel::{select, select_biased, unbounded, Receiver, Sender};
 use log::{debug, error, info, trace, warn};
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
-use rand::random;
+use rand::{random, seq::IndexedRandom};
 use ratatui::{
     widgets::{ListState, TableState},
     DefaultTerminal,
@@ -218,7 +218,17 @@ impl MySimulationController {
 
         if let NodeEvent::PacketSent(packet) = &event {
             if let Some(dst) = match &packet.pack_type {
-                PacketType::FloodRequest(_) => None,
+                PacketType::FloodRequest(f) => {
+                    if let Some(idx) = f.path_trace.len().checked_sub(2) {
+                        if let Some((x, _)) = f.path_trace.get(idx) {
+                            Some(*x)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
                 _ => packet.routing_header.current_hop(),
             } {
                 if self.network.edges.contains_key(&(id, dst))
@@ -329,7 +339,17 @@ impl MySimulationController {
 
         if let DroneEvent::PacketSent(_) = event {
             if let Some(dst) = match &packet.pack_type {
-                PacketType::FloodRequest(_) => None,
+                PacketType::FloodRequest(f) => {
+                    if let Some(idx) = f.path_trace.len().checked_sub(2) {
+                        if let Some((x, _)) = f.path_trace.get(idx) {
+                            Some(*x)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                }
                 _ => packet.routing_header.current_hop(),
             } {
                 if self.network.edges.contains_key(&(id, dst))
