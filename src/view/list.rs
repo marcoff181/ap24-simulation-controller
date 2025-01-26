@@ -26,7 +26,7 @@ pub fn render_list(
     let items = network
         .nodes
         .iter()
-        .map(|x| format!("{}", x))
+        .map(|x| x.thread_name.to_string())
         .collect::<Vec<String>>();
     //let items = ["Drone  #12321","Drone  #12321","Drone  #12321","Drone  #12321", "Client #22343", "Server #32342"];
     let list = List::new(items)
