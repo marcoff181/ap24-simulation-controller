@@ -146,12 +146,19 @@ impl DrawGraphOptions {
 
         let front_color = match screen.window {
             Window::AddConnection { origin } => ADD_EDGE_COLOR,
-            Window::ChangePdr { pdr } => todo!(),
-            Window::Detail { tab } => todo!(),
-            Window::Error { message } => todo!(),
+            Window::ChangePdr { pdr } => unreachable!(),
+            Window::Detail { tab } => unreachable!(),
+            Window::Error { message } => unreachable!(),
             Window::Main => HIGHLIGHT_COLOR,
             Window::Move => ADD_EDGE_COLOR,
         };
+
+        // add one single line between nodes that are being connected
+        if let Window::AddConnection { origin } = screen.window {
+            if origin != screen.focus {
+                lines_front.insert((screen.focus, origin));
+            }
+        }
 
         for (from, to) in network.edges.iter() {
             if *from == id || *to == id {
@@ -159,12 +166,8 @@ impl DrawGraphOptions {
                     Window::Main | Window::Move => {
                         lines_front.insert((*from, *to));
                     }
-                    Window::AddConnection { origin } => {
-                        if origin == *from || origin == *to {
-                            lines_front.insert((*from, *to));
-                        } else {
-                            lines_back.insert((*from, *to));
-                        }
+                    Window::AddConnection { .. } => {
+                        lines_back.insert((*from, *to));
                     }
                     _ => unreachable!(),
                 }
@@ -197,6 +200,7 @@ impl DrawGraphOptions {
                         style = style.bold();
                     } else if selected_index == n.id {
                         style = style.bg(Color::Green);
+                        style = style.fg(TEXT_COLOR);
                         style = style.bold();
                     } else {
                         style = style.bg(n.color());

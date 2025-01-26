@@ -79,7 +79,6 @@ pub fn paint_edges(ctx: &mut Context, opt: &DrawGraphOptions) {
         };
         ctx.draw(&line);
     }
-    ctx.layer();
 }
 
 // TODO this could consume instead of take ref
