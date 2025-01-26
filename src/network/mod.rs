@@ -26,37 +26,31 @@ impl Network {
         for d in cfg.drone.iter() {
             model.nodes.push(NodeRepresentation::new_from_cfgdrone(d));
             for to in d.connected_node_ids.iter() {
-                model.add_edge(d.id, *to);
+                model.add_edge(d.id, *to, None);
             }
         }
         for s in cfg.server.iter() {
             model.nodes.push(NodeRepresentation::new_from_cfgserver(s));
             for to in s.connected_drone_ids.iter() {
-                model.add_edge(s.id, *to);
+                model.add_edge(s.id, *to, None);
             }
         }
         for c in cfg.client.iter() {
             model.nodes.push(NodeRepresentation::new_from_cfgclient(c));
             for to in c.connected_drone_ids.iter() {
-                model.add_edge(c.id, *to);
+                model.add_edge(c.id, *to, None);
             }
         }
         model
     }
 
-    ///// adds a default node to the model and selects it
-    //pub fn spawn_default_node(&mut self) {
-    //    // todo find a way to not risk it being a duplicate id
-    //    self.nodes.push(NodeRepresentation::default());
-    //}
-
-    pub fn add_edge(&mut self, from: NodeId, to: NodeId) {
+    pub fn add_edge(&mut self, from: NodeId, to: NodeId, thing: Option<(PacketType, Instant)>) {
         match from.cmp(&to) {
             std::cmp::Ordering::Less => {
-                self.edges.insert((from, to), None);
+                self.edges.insert((from, to), thing);
             }
             std::cmp::Ordering::Greater => {
-                self.edges.insert((to, from), None);
+                self.edges.insert((to, from), thing);
             }
             // node can't have edge that points to itself
             std::cmp::Ordering::Equal => {}

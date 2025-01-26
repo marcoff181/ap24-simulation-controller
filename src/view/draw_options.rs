@@ -61,7 +61,7 @@ fn active_edge_color(x: &Option<(PacketType, Instant)>) -> Color {
 }
 impl DrawGraphOptions {
     pub fn from_noderepr(n: &NodeRepresentation) -> Self {
-        let mut lines_front = HashSet::new();
+        let mut lines_front = HashMap::new();
         let mut nodes: HashMap<u8, DrawNodeOptions> = HashMap::new();
         nodes.insert(
             n.id,
@@ -88,13 +88,13 @@ impl DrawGraphOptions {
                     label: format!("(#{k})"),
                 },
             );
-            lines_front.insert((n.id, *k));
+            lines_front.insert((n.id, *k), TEXT_COLOR);
         }
 
         DrawGraphOptions {
             padding: 30.0,
             lines_back: HashMap::new(),
-            lines_front: HashMap::new(),
+            lines_front,
             back_color: TEXT_COLOR,
             front_color: TEXT_COLOR,
             nodes,

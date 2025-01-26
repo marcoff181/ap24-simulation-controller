@@ -216,18 +216,19 @@ impl MySimulationController {
             .source()
             .expect("routing header does not have previous hop");
 
-        if let Some((Some(dst), pack_type)) = match &event {
-            NodeEvent::PacketSent(packet) => Some((
-                packet.routing_header.current_hop(),
-                packet.pack_type.clone(),
-            )),
-            _ => None,
-        } {
-            if self.network.edges.contains_key(&(id, dst)) {
-                self.network
-                    .edges
-                    .insert((id, dst), Some((pack_type, Instant::now())));
-            }
+        if let NodeEvent::PacketSent(packet) = &event {
+            if let Some(dst) = match &packet.pack_type {
+                PacketType::FloodRequest(_) => None,
+                _ => packet.routing_header.current_hop(),
+            } {
+                if self.network.edges.contains_key(&(id, dst)) {
+                    self.network.add_edge(
+                        id,
+                        dst,
+                        Some((packet.pack_type.clone(), Instant::now())),
+                    );
+                }
+            };
         };
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {
@@ -324,16 +325,19 @@ impl MySimulationController {
             }),
         };
 
-        if let Some(dst) = match (&packet.pack_type, &event) {
-            (PacketType::FloodRequest(flood_request), _) => None,
-            (_, DroneEvent::PacketDropped(_)) => packet.routing_header.next_hop(),
-            _ => packet.routing_header.current_hop(),
-        } {
-            if self.network.edges.contains_key(&(id, dst)) {
-                self.network
-                    .edges
-                    .insert((id, dst), Some((packet.pack_type.clone(), Instant::now())));
-            }
+        if let DroneEvent::PacketSent(_) = event {
+            if let Some(dst) = match &packet.pack_type {
+                PacketType::FloodRequest(_) => None,
+                _ => packet.routing_header.current_hop(),
+            } {
+                if self.network.edges.contains_key(&(id, dst)) {
+                    self.network.add_edge(
+                        id,
+                        dst,
+                        Some((packet.pack_type.clone(), Instant::now())),
+                    );
+                }
+            };
         };
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {
@@ -697,7 +701,7 @@ impl MySimulationController {
                     let res = self.add_connection(origin, id);
                     match res {
                         Ok(_) => {
-                            self.network.add_edge(origin, id);
+                            self.network.add_edge(origin, id, None);
                             self.reset_list();
                             self.screen.window = Window::Main;
                             info!("connection added succesfully, switched back to Window::Main");
