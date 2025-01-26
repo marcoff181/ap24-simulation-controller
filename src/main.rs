@@ -98,7 +98,7 @@ fn main() {
                         pack_type: random_packet(),
                         routing_header: wg_2024::network::SourceRoutingHeader {
                             hop_index: 3,
-                            hops: vec![2, 3, id, 4],
+                            hops: vec![2, 3, id, rand::random_range(1..=6)],
                         },
                         session_id: sid,
                     }));
@@ -111,7 +111,7 @@ fn main() {
                         }),
                         routing_header: wg_2024::network::SourceRoutingHeader {
                             hop_index: 3,
-                            hops: vec![2, 3, id, 4],
+                            hops: vec![2, 3, id, rand::random_range(1..=6)],
                         },
                         session_id: sid,
                     }));
@@ -121,7 +121,7 @@ fn main() {
                         pack_type: random_packet(),
                         routing_header: wg_2024::network::SourceRoutingHeader {
                             hop_index: 3,
-                            hops: vec![2, 3, id, 4],
+                            hops: vec![2, 3, id, rand::random_range(1..=6)],
                         },
                         session_id: sid,
                     }));

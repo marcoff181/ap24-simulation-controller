@@ -11,6 +11,7 @@ use core::{f32, panic};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     thread::{Builder, JoinHandle},
+    time::Instant,
 };
 
 use crate::network::Network;
@@ -215,6 +216,20 @@ impl MySimulationController {
             .source()
             .expect("routing header does not have previous hop");
 
+        if let Some((Some(dst), pack_type)) = match &event {
+            NodeEvent::PacketSent(packet) => Some((
+                packet.routing_header.current_hop(),
+                packet.pack_type.clone(),
+            )),
+            _ => None,
+        } {
+            if self.network.edges.contains_key(&(id, dst)) {
+                self.network
+                    .edges
+                    .insert((id, dst), Some((pack_type, Instant::now())));
+            }
+        };
+
         if let Some(node) = self.network.get_mut_node_from_id(id) {
             // fix scrolling pushdown on certain tabs
             if id == self.screen.focus {
@@ -307,6 +322,18 @@ impl MySimulationController {
                     event
                 )
             }),
+        };
+
+        if let Some(dst) = match (&packet.pack_type, &event) {
+            (PacketType::FloodRequest(flood_request), _) => None,
+            (_, DroneEvent::PacketDropped(_)) => packet.routing_header.next_hop(),
+            _ => packet.routing_header.current_hop(),
+        } {
+            if self.network.edges.contains_key(&(id, dst)) {
+                self.network
+                    .edges
+                    .insert((id, dst), Some((packet.pack_type.clone(), Instant::now())));
+            }
         };
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {

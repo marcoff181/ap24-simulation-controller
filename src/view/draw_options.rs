@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::format,
     hash::Hash,
+    time::Instant,
 };
 
 use messages::node_event::EventNetworkGraph;
@@ -16,7 +17,7 @@ use ratatui::{
         Block, Borders, Padding, Widget,
     },
 };
-use wg_2024::network::NodeId;
+use wg_2024::{network::NodeId, packet::PacketType};
 
 use crate::{
     network::{node_kind::NodeKind, node_representation::NodeRepresentation},
@@ -27,8 +28,8 @@ use crate::{
 
 pub struct DrawGraphOptions {
     pub padding: f64,
-    pub lines_back: HashSet<(NodeId, NodeId)>,
-    pub lines_front: HashSet<(NodeId, NodeId)>,
+    pub lines_back: HashMap<(NodeId, NodeId), Color>,
+    pub lines_front: HashMap<(NodeId, NodeId), Color>,
     pub back_color: Color,
     pub front_color: Color,
     pub nodes: HashMap<NodeId, DrawNodeOptions>,
@@ -39,6 +40,24 @@ pub struct DrawNodeOptions {
     pub y: f64,
     pub style: Style,
     pub label: String,
+}
+fn active_edge_color(x: &Option<(PacketType, Instant)>) -> Color {
+    if let Some((t, inst)) = x {
+        let d = Instant::now().saturating_duration_since(*inst);
+        if d.as_secs() < 3 {
+            match t {
+                PacketType::MsgFragment(fragment) => PACKET_FRAGMENT_COLOR,
+                PacketType::Ack(ack) => PACKET_ACK_COLOR,
+                PacketType::Nack(nack) => PACKET_NACK_COLOR,
+                PacketType::FloodRequest(flood_request) => PACKET_FLOOD_REQUEST_COLOR,
+                PacketType::FloodResponse(flood_response) => PACKET_FLOOD_RESPONSE_COLOR,
+            }
+        } else {
+            TEXT_COLOR
+        }
+    } else {
+        TEXT_COLOR
+    }
 }
 impl DrawGraphOptions {
     pub fn from_noderepr(n: &NodeRepresentation) -> Self {
@@ -74,16 +93,16 @@ impl DrawGraphOptions {
 
         DrawGraphOptions {
             padding: 30.0,
-            lines_back: HashSet::new(),
-            lines_front,
+            lines_back: HashMap::new(),
+            lines_front: HashMap::new(),
             back_color: TEXT_COLOR,
             front_color: TEXT_COLOR,
             nodes,
         }
     }
     pub fn from_topology(top: &EventNetworkGraph) -> Self {
-        let lines_back = HashSet::new();
-        let mut lines_front = HashSet::new();
+        let lines_back = HashMap::new();
+        let mut lines_front = HashMap::new();
         let back_color = TEXT_COLOR;
         let front_color = TEXT_COLOR;
         let mut nodes = HashMap::new();
@@ -122,7 +141,7 @@ impl DrawGraphOptions {
             x += 10.0;
 
             for nghb in n.neighbors.iter() {
-                lines_front.insert((id, *nghb));
+                lines_front.insert((id, *nghb), front_color);
             }
         }
 
@@ -137,8 +156,8 @@ impl DrawGraphOptions {
     }
 
     pub fn from_network(network: &Network, screen: &Screen) -> Self {
-        let mut lines_back: HashSet<(NodeId, NodeId)> = HashSet::new();
-        let mut lines_front: HashSet<(NodeId, NodeId)> = HashSet::new();
+        let mut lines_back = HashMap::new();
+        let mut lines_front = HashMap::new();
         let back_color = TEXT_COLOR;
         let mut nodes: HashMap<NodeId, DrawNodeOptions> = HashMap::new();
 
@@ -149,30 +168,30 @@ impl DrawGraphOptions {
             Window::ChangePdr { pdr } => unreachable!(),
             Window::Detail { tab } => unreachable!(),
             Window::Error { message } => unreachable!(),
-            Window::Main => HIGHLIGHT_COLOR,
+            Window::Main => TEXT_COLOR,
             Window::Move => ADD_EDGE_COLOR,
         };
 
         // add one single line between nodes that are being connected
         if let Window::AddConnection { origin } = screen.window {
             if origin != screen.focus {
-                lines_front.insert((screen.focus, origin));
+                lines_front.insert((screen.focus, origin), front_color);
             }
         }
 
-        for (from, to) in network.edges.iter() {
+        for ((from, to), x) in network.edges.iter() {
             if *from == id || *to == id {
                 match screen.window {
                     Window::Main | Window::Move => {
-                        lines_front.insert((*from, *to));
+                        lines_front.insert((*from, *to), active_edge_color(x));
                     }
                     Window::AddConnection { .. } => {
-                        lines_back.insert((*from, *to));
+                        lines_back.insert((*from, *to), active_edge_color(x));
                     }
                     _ => unreachable!(),
                 }
             } else {
-                lines_back.insert((*from, *to));
+                lines_back.insert((*from, *to), active_edge_color(x));
             };
         }
         for n in network.nodes.iter() {

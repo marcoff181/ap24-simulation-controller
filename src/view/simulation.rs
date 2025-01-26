@@ -54,28 +54,28 @@ pub fn render_simulation(opt: DrawGraphOptions, area: Rect, buf: &mut Buffer) {
 }
 
 pub fn paint_edges(ctx: &mut Context, opt: &DrawGraphOptions) {
-    for (from, to) in opt.lines_back.iter() {
-        let nfrom = opt.nodes.get(&from).unwrap();
-        let nto = opt.nodes.get(&to).unwrap();
+    for ((from, to), color) in opt.lines_back.iter() {
+        let nfrom = opt.nodes.get(from).unwrap();
+        let nto = opt.nodes.get(to).unwrap();
         let line = ratatui::widgets::canvas::Line {
             x1: nfrom.x,
             y1: nfrom.y,
             x2: nto.x,
             y2: nto.y,
-            color: opt.back_color,
+            color: *color,
         };
         ctx.draw(&line);
     }
     ctx.layer();
-    for (from, to) in opt.lines_front.iter() {
-        let nfrom = opt.nodes.get(&from).unwrap();
-        let nto = opt.nodes.get(&to).unwrap();
+    for ((from, to), color) in opt.lines_front.iter() {
+        let nfrom = opt.nodes.get(from).unwrap();
+        let nto = opt.nodes.get(to).unwrap();
         let line = ratatui::widgets::canvas::Line {
             x1: nfrom.x,
             y1: nfrom.y,
             x2: nto.x,
             y2: nto.y,
-            color: opt.front_color,
+            color: *color,
         };
         ctx.draw(&line);
     }

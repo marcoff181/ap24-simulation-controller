@@ -1,8 +1,11 @@
-use std::collections::HashSet;
+use std::{
+    collections::{HashMap, HashSet},
+    time::Instant,
+};
 
 use node_kind::NodeKind;
 use node_representation::NodeRepresentation;
-use wg_2024::{config::Config, network::NodeId};
+use wg_2024::{config::Config, network::NodeId, packet::PacketType};
 
 pub mod node_kind;
 pub mod node_representation;
@@ -11,12 +14,12 @@ pub mod node_representation;
 pub struct Network {
     //todo: some of these don't need to be public
     pub nodes: Vec<NodeRepresentation>,
-    pub edges: HashSet<(NodeId, NodeId)>,
+    pub edges: HashMap<(NodeId, NodeId), Option<(PacketType, Instant)>>,
 }
 impl Network {
     pub fn new(cfg: &Config) -> Self {
         let nodes: Vec<NodeRepresentation> = Vec::new();
-        let edges: HashSet<(NodeId, NodeId)> = HashSet::new();
+        let edges = HashMap::new();
 
         let mut model = Self { nodes, edges };
 
@@ -50,10 +53,10 @@ impl Network {
     pub fn add_edge(&mut self, from: NodeId, to: NodeId) {
         match from.cmp(&to) {
             std::cmp::Ordering::Less => {
-                self.edges.insert((from, to));
+                self.edges.insert((from, to), None);
             }
             std::cmp::Ordering::Greater => {
-                self.edges.insert((to, from));
+                self.edges.insert((to, from), None);
             }
             // node can't have edge that points to itself
             std::cmp::Ordering::Equal => {}
@@ -135,7 +138,7 @@ impl Network {
             }
         }
 
-        self.edges.retain(|(from, to)| *from != id && *to != id);
+        self.edges.retain(|(from, to), _| *from != id && *to != id);
     }
 
     ///// selects the node with the given 'id' (if there is one)
