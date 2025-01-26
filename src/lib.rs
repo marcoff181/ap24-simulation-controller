@@ -63,6 +63,15 @@ pub struct MySimulationController {
 impl MySimulationController {
     pub fn new(opt: SimControllerOptions) -> Self {
         info!("created SC");
+        let mut network = Network::new(&opt.config);
+        for (id, handle) in opt.node_handles.iter() {
+            if let Some(nrepr) = network.get_mut_node_from_id(*id) {
+                if let Some(t) = handle.thread().name() {
+                    nrepr.thread_name = t.to_string();
+                };
+            }
+        }
+
         MySimulationController {
             command_send: opt.command_send,
             droneevent_recv: opt.droneevent_recv,
@@ -71,7 +80,7 @@ impl MySimulationController {
             nodeevent_recv: opt.nodeevent_recv,
             packet_send: opt.packet_send,
             node_handles: opt.node_handles,
-            network: Network::new(&opt.config),
+            network,
             node_list_state: ListState::default().with_selected(Some(0)),
             packet_table_state: TableState::default().with_selected(0),
             screen: Screen {

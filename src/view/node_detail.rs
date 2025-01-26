@@ -24,12 +24,14 @@ use super::simulation::render_simulation;
 pub fn node_detail(node: &NodeRepresentation, area: Rect, frame: &mut Frame) {
     let [left, right] = Layout::horizontal([Constraint::Fill(1), Constraint::Fill(1)]).areas(area);
     let mut header = Line::default();
+    let nameline = Line::from(format!("Thread name: {}", node.thread_name));
     let mut content = Text::default();
     match node.kind {
         NodeKind::Drone { pdr, crashed } => {
             header.push_span(Span::from("Drone").style(Style::default().bg(DRONE_COLOR)));
             header.push_span(Span::from(format!(" #{}", node.id)));
             content.push_line(header);
+            content.push_line(nameline);
             content.push_line(format!("crashed:{crashed}"));
             content.push_line(format!("config pdr:{pdr}"));
             content.push_line(format!(
@@ -45,11 +47,13 @@ pub fn node_detail(node: &NodeRepresentation, area: Rect, frame: &mut Frame) {
             header.push_span(Span::from("Client").style(Style::default().bg(CLIENT_COLOR)));
             header.push_span(Span::from(format!(" #{}", node.id)));
             content.push_line(header);
+            content.push_line(nameline);
         }
         NodeKind::Server => {
             header.push_span(Span::from("Server").style(Style::default().bg(SERVER_COLOR)));
             header.push_span(Span::from(format!(" #{}", node.id)));
             content.push_line(header);
+            content.push_line(nameline);
         }
     }
 

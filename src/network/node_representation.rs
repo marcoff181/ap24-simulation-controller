@@ -27,6 +27,7 @@ pub struct NodeRepresentation {
     // all nodes
     pub sent: VecDeque<Packet>,
     pub n_frags_sent: u64,
+    pub thread_name: String,
     // drone
     pub dropped: VecDeque<Packet>,
     pub n_frags_dropped: u64,
@@ -86,6 +87,7 @@ impl NodeRepresentation {
             y,
             kind,
             adj,
+            thread_name: String::default(),
             sent: VecDeque::new(),
             n_frags_sent: 0,
             dropped: VecDeque::new(),
