@@ -26,8 +26,10 @@ pub struct NodeRepresentation {
     pub adj: HashSet<NodeId>,
     // all nodes
     pub sent: VecDeque<Packet>,
+    pub n_frags_sent: u64,
     // drone
     pub dropped: VecDeque<Packet>,
+    pub n_frags_dropped: u64,
     pub shortcutted: VecDeque<Packet>,
     // client and server
     pub msent: IndexMap<u64, (Message, bool)>,
@@ -85,7 +87,9 @@ impl NodeRepresentation {
             kind,
             adj,
             sent: VecDeque::new(),
+            n_frags_sent: 0,
             dropped: VecDeque::new(),
+            n_frags_dropped: 0,
             shortcutted: VecDeque::new(),
             msent: IndexMap::new(),
             mreceived: VecDeque::new(),

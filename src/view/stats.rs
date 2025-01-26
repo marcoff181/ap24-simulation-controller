@@ -12,25 +12,16 @@ use crate::{network::node_kind::NodeKind, screen::Screen, utilities::theme::*, N
 use super::packet_formatter::{message_table_row, packet_table_row};
 
 pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut Frame) {
-    let [r1, r2, r3, r4] = Layout::horizontal([
-        Constraint::Fill(1),
+    let [r2, r3, r4] = Layout::horizontal([
         Constraint::Fill(3),
         Constraint::Fill(3),
         Constraint::Fill(3),
     ])
     .areas(area);
 
-    let border_set1 = symbols::border::Set {
+    let border_set2 = symbols::border::Set {
         top_left: symbols::line::NORMAL.vertical_right,
         top_right: symbols::line::NORMAL.horizontal_down,
-        bottom_right: symbols::line::NORMAL.horizontal_up,
-        ..symbols::border::PLAIN
-    };
-
-    let border_set2 = symbols::border::Set {
-        top_left: symbols::line::NORMAL.horizontal_down,
-        top_right: symbols::line::NORMAL.horizontal_down,
-        bottom_left: symbols::line::NORMAL.horizontal_up,
         bottom_right: symbols::line::NORMAL.horizontal_up,
         ..symbols::border::PLAIN
     };
@@ -54,16 +45,9 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
         _ => ("Messages Sent", "Messages Received"),
     };
 
-    let b1 = Block::new()
-        .border_set(border_set1)
-        .borders(Borders::all())
-        .title("Stats")
-        .bg(BG_COLOR)
-        .fg(TEXT_COLOR);
-
     let b2 = Block::new()
         .border_set(border_set2)
-        .borders(Borders::BOTTOM | Borders::RIGHT | Borders::TOP)
+        .borders(Borders::ALL)
         .title("Packets Sent")
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
@@ -82,20 +66,7 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
         .bg(BG_COLOR)
         .fg(TEXT_COLOR);
 
-    // Stats
     let n = network.get_node_from_id(screen.focus).unwrap();
-    let mut spans: Vec<Line> = vec![];
-    match n.kind {
-        NodeKind::Client | NodeKind::Server => {}
-        NodeKind::Drone { pdr, crashed } => {
-            spans.push(Line::from(format!("Pdr:{}", pdr)));
-            spans.push(Line::from(format!("Crashed:{}", crashed)));
-        }
-    }
-    spans.push(Line::from(format!("adj:{:?}", n.adj)));
-    Paragraph::new(Text::from(spans))
-        .block(b1)
-        .render(r1, frame.buffer_mut());
     let widths = [
         Constraint::Length(3),
         Constraint::Length(3),

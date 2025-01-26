@@ -293,10 +293,15 @@ impl MySimulationController {
             match event {
                 DroneEvent::PacketSent(ref packet) => {
                     trace!("Drone {id} sent event PacketSent with packet {packet}");
+                    if let PacketType::MsgFragment(_) = packet.pack_type {
+                        node.n_frags_sent = node.n_frags_sent.saturating_add(1);
+                    }
                     node.sent.push_front(packet.clone());
                 }
                 DroneEvent::PacketDropped(ref packet) => {
                     trace!("Drone {id} sent event PacketDropped with packet {packet}");
+                    node.n_frags_dropped = node.n_frags_dropped.saturating_add(1);
+                    node.n_frags_sent = node.n_frags_sent.saturating_add(1);
                     node.dropped.push_front(packet.clone())
                 }
                 DroneEvent::ControllerShortcut(ref packet) => {
