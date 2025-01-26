@@ -292,10 +292,12 @@ impl MySimulationController {
                     .unwrap_or_else(|| panic!("path trace is empty, got {packet}"))
                     .0
             }
-            _ => packet
-                .routing_header
-                .previous_hop()
-                .unwrap_or_else(|| panic!("could not find previous hop in packet {packet}")),
+            _ => packet.routing_header.previous_hop().unwrap_or_else(|| {
+                panic!(
+                    "could not find previous hop in packet {packet} for event {:?}",
+                    event
+                )
+            }),
         };
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {
