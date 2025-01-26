@@ -214,39 +214,37 @@ pub fn packet_table_row(packet: &Packet) -> Row {
 
     let src: Span;
     let dest: Span;
-    match (
-        packet.routing_header.previous_hop(),
-        packet.routing_header.current_hop(),
-        &packet.pack_type,
-    ) {
-        (
-            _,
-            _,
-            PacketType::FloodRequest(FloodRequest {
-                flood_id,
-                initiator_id,
-                path_trace,
-            }),
-        ) => {
-            if path_trace.is_empty() {
-                src = Span::styled("Err".to_string(), Style::new());
-                dest = Span::styled("Err".to_string(), Style::new());
+    match &packet.pack_type {
+        PacketType::FloodRequest(floodrequest) => {
+            if floodrequest.path_trace.is_empty() {
+                src = Span::styled("X".to_string(), Style::new());
+                dest = Span::styled("X".to_string(), Style::new());
             } else {
-                src = Span::styled(format!("{}", path_trace.last().unwrap().0), Style::new());
-                if let Some(dst) = packet.routing_header.current_hop() {
-                    dest = Span::styled(format!("{dst}"), Style::new());
-                } else {
-                    dest = Span::styled("X".to_string(), Style::new());
-                }
+                src = Span::styled(
+                    format!("{}", floodrequest.path_trace.last().unwrap().0),
+                    Style::new(),
+                );
+                // there really should not be any way to know the destination, using the routing
+                // header is inconsistent
+                //if let Some(dst) = packet.routing_header.current_hop() {
+                //    dest = Span::styled(format!("{dst}"), Style::new());
+                //} else {
+                dest = Span::styled("X".to_string(), Style::new());
+                //}
             }
         }
-        (Some(s), Some(d), _) => {
-            src = Span::styled(format!("{}", s), Style::new());
-            dest = Span::styled(format!("{}", d), Style::new());
-        }
-        (_, _, _) => {
-            src = Span::styled("Err".to_string(), Style::new());
-            dest = Span::styled("Err".to_string(), Style::new());
+        _ => {
+            let h = &packet.routing_header.hops;
+            let hi = packet.routing_header.hop_index;
+            if h.len() > 1 && hi < h.len() && hi > 1 {
+                let s = h[hi - 1];
+                let d = h[hi];
+                src = Span::styled(format!("{}", s), Style::new());
+                dest = Span::styled(format!("{}", d), Style::new());
+            } else {
+                src = Span::styled("X".to_string(), Style::new());
+                dest = Span::styled("X".to_string(), Style::new());
+            }
         }
     }
 
