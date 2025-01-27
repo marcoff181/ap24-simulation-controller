@@ -234,11 +234,8 @@ impl MySimulationController {
                 if self.network.edges.contains_key(&(id, dst))
                     || self.network.edges.contains_key(&(dst, id))
                 {
-                    self.network.add_edge(
-                        id,
-                        dst,
-                        Some((packet.pack_type.clone(), Instant::now())),
-                    );
+                    self.network
+                        .update_edge_activity(id, dst, packet.pack_type.clone());
                 }
             };
         };
@@ -355,11 +352,8 @@ impl MySimulationController {
                 if self.network.edges.contains_key(&(id, dst))
                     || self.network.edges.contains_key(&(dst, id))
                 {
-                    self.network.add_edge(
-                        id,
-                        dst,
-                        Some((packet.pack_type.clone(), Instant::now())),
-                    );
+                    self.network
+                        .update_edge_activity(id, dst, packet.pack_type.clone());
                 }
             };
         };
@@ -725,7 +719,7 @@ impl MySimulationController {
                     let res = self.add_connection(origin, id);
                     match res {
                         Ok(_) => {
-                            self.network.add_edge(origin, id, None);
+                            self.network.add_edge(origin, id);
                             self.reset_list();
                             self.screen.window = Window::Main;
                             info!("connection added succesfully, switched back to Window::Main");

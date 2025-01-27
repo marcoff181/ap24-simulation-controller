@@ -42,14 +42,3 @@ pub fn render_image(area: Rect, buf: &mut Buffer, path: &str, transparent_color:
         // text.push('\n');
     }
 }
-
-pub fn random_color() -> Color {
-    let mut rng = rand::thread_rng();
-    let r = rng.gen_range(0..=255);
-    let g = rng.gen_range(0..=255);
-    let b = rng.gen_range(0..=255);
-
-    // Combine into a u32 in the format 0x00RRGGBB
-    let color_value = (r << 16) | (g << 8) | b; // 0x00RRGGBB
-    Color::from_u32(color_value)
-}
