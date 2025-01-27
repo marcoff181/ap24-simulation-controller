@@ -70,10 +70,22 @@ impl Network {
 
     /// updates existing edge, with the last packet that has traveled on it
     pub fn update_edge_activity(&mut self, from: NodeId, to: NodeId, packet_passed: PacketType) {
-        if self.edges.contains_key(&(from, to)) {
-            self.edges
-                .insert((from, to), Some((packet_passed, Instant::now())));
-        }
+        match from.cmp(&to) {
+            std::cmp::Ordering::Less => {
+                if self.edges.contains_key(&(from, to)) {
+                    self.edges
+                        .insert((from, to), Some((packet_passed, Instant::now())));
+                }
+            }
+            std::cmp::Ordering::Greater => {
+                if self.edges.contains_key(&(to, from)) {
+                    self.edges
+                        .insert((to, from), Some((packet_passed, Instant::now())));
+                }
+            }
+            // node can't have edge that points to itself
+            std::cmp::Ordering::Equal => {}
+        };
     }
 
     /// if present returns immutable reference to the drone at the given `idx` of the nodes vector
