@@ -6,17 +6,29 @@ use crate::utilities::app_message::AppMessage;
 use crossterm::event::KeyCode;
 use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 
-pub fn handle_crossterm_events(screen: &Screen) -> std::io::Result<Option<AppMessage>> {
-    if event::poll(Duration::from_millis(100))? {
-        match event::read()? {
+#[cfg(not(feature = "appmessage_through_crossbeam"))]
+pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
+    if event::poll(Duration::from_millis(100)).expect("error polling for keypresses") {
+        match event::read().expect("error reading key event") {
             // check KeyEventKind::Press to avoid handling key release events
-            Event::Key(key) if key.kind == KeyEventKind::Press => Ok(handle_keypress(screen, &key)),
+            Event::Key(key) if key.kind == KeyEventKind::Press => handle_keypress(screen, &key),
             // Event::Mouse(_) => Ok(None),
             // Event::Resize(_, _) => Ok(None),
-            _ => Ok(None),
+            _ => None,
         }
     } else {
-        Ok(None)
+        None
+    }
+}
+
+#[cfg(feature = "appmessage_through_crossbeam")]
+use crossbeam_channel::Receiver;
+#[cfg(feature = "appmessage_through_crossbeam")]
+pub fn handle_keypress_from_recv(screen: &Screen, rcv: &Receiver<KeyEvent>) -> Option<AppMessage> {
+    if let Ok(message) = rcv.try_recv() {
+        handle_keypress(screen, &message)
+    } else {
+        None
     }
 }
 

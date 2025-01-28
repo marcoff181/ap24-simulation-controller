@@ -3,6 +3,7 @@ mod network;
 mod screen;
 mod utilities;
 mod view;
+use crossterm::event::{KeyCode, KeyEvent};
 use messages::node_event::NodeEvent;
 use messages::Message;
 
@@ -13,6 +14,7 @@ use std::{
     thread::{Builder, JoinHandle},
     time::Instant,
 };
+use test_log::test;
 
 use crate::network::Network;
 use crossbeam_channel::{select, select_biased, unbounded, Receiver, Sender};
@@ -20,11 +22,18 @@ use log::{debug, error, info, trace, warn};
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
 use rand::{random, seq::IndexedRandom};
 use ratatui::{
+    backend::TestBackend,
     widgets::{ListState, TableState},
-    DefaultTerminal,
+    DefaultTerminal, Terminal,
 };
 use screen::Window;
+
+#[cfg(feature = "appmessage_through_crossbeam")]
+pub use utilities::app_message::AppMessage;
+
+#[cfg(not(feature = "appmessage_through_crossbeam"))]
 use utilities::app_message::AppMessage;
+
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, DroneEvent},
@@ -45,6 +54,7 @@ pub struct SimControllerOptions {
 }
 
 pub struct MySimulationController {
+    keyevent_recv: Option<Receiver<KeyEvent>>,
     // external comms
     packet_send: HashMap<NodeId, Sender<Packet>>,
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
@@ -74,6 +84,7 @@ impl MySimulationController {
         }
 
         MySimulationController {
+            keyevent_recv: None,
             command_send: opt.command_send,
             droneevent_recv: opt.droneevent_recv,
             droneevent_send: opt.droneevent_send,
@@ -103,13 +114,26 @@ impl MySimulationController {
         let _result = self.start(terminal);
         ratatui::restore();
     }
+
+    #[cfg(feature = "custom_terminal_backend")]
+    pub fn run_with_terminal(&mut self, terminal: Terminal<TestBackend>) {
+        let _ = self.start(terminal);
+    }
+
+    #[cfg(feature = "appmessage_through_crossbeam")]
+    pub fn set_keyevent_recv(&mut self, rcv: Receiver<KeyEvent>) {
+        self.keyevent_recv = Some(rcv);
+    }
 }
 
 impl MySimulationController {
     /// runs the main loop of the sc
     /// Panics
     /// panics if a node thread exits and the node was not a crashing drone
-    fn start(&mut self, mut terminal: DefaultTerminal) -> Result<(), std::io::Error> {
+    fn start<B: ratatui::backend::Backend>(
+        &mut self,
+        mut terminal: Terminal<B>,
+    ) -> Result<(), std::io::Error> {
         info!("started SC");
         let mut finished: Vec<NodeId> = Vec::new();
         while self.running {
@@ -129,7 +153,21 @@ impl MySimulationController {
             // ---------------------------------------------------------------------------
             // listen for keypresses
             // ---------------------------------------------------------------------------
-            if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen)? {
+            #[cfg(feature = "appmessage_through_crossbeam")]
+            if let Some(rcv) = &self.keyevent_recv {
+                if let Some(message) =
+                    keypress_handler::handle_keypress_from_recv(&self.screen, rcv)
+                {
+                    debug!(
+                        "received AppMessage through crossbeam channel: {:?}",
+                        message
+                    );
+                    self.transition(message);
+                };
+            }
+
+            #[cfg(not(feature = "appmessage_through_crossbeam"))]
+            if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen) {
                 debug!("received AppMessage: {:?}", message);
                 self.transition(message);
             };

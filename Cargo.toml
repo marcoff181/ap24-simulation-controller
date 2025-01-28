@@ -3,6 +3,12 @@ name = "ap24-simulation-controller"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default  = ["integration_tests"]
+integration_tests = ["custom_terminal_backend","appmessage_through_crossbeam"]
+custom_terminal_backend = []
+appmessage_through_crossbeam = []
+
 [dependencies]
 ratatui = "0.29.0"
 tui-big-text = "0.7.0"
@@ -17,3 +23,4 @@ simplelog = "0.12.2"
 null-pointer-drone = { git = "https://github.com/The-Null-Pointer-Patrol/null-pointer-drone.git"}
 messages = { git = "https://github.com/The-Null-Pointer-Patrol/messages.git"}
 indexmap = "2.7.1"
+test-log = "0.2.17"
