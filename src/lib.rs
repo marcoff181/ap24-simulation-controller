@@ -581,7 +581,10 @@ impl MySimulationController {
             pdr: 0.05,
             crashed: false,
         };
-        let n = NodeRepresentation::new(self.random_unique_id(), 0, 0, kind, HashSet::new());
+        let id = self.random_unique_id();
+        let name = format!("NullPointer#{}", id);
+        let mut n = NodeRepresentation::new(id, 0, 0, kind, HashSet::new());
+        n.thread_name = name.clone();
 
         let event_send = self.droneevent_send.clone();
         let (command_send, command_recv) = unbounded::<DroneCommand>();
@@ -591,7 +594,7 @@ impl MySimulationController {
         self.packet_send.insert(n.id, packet_send);
 
         let handle = Builder::new()
-            .name(format!("NullPointer#{}", n.id))
+            .name(name)
             .spawn(move || {
                 null_pointer_drone::MyDrone::new(
                     n.id,
