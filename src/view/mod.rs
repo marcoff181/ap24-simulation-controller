@@ -187,7 +187,7 @@ fn render_detail(
                 if let Some((_, (m, _))) = node.msent.get_index(
                     node.msent
                         .len()
-                        .saturating_sub(table_state.selected().unwrap_or(usize::MAX) + 1),
+                        .saturating_sub(table_state.selected().unwrap_or(usize::MAX - 1) + 1),
                 ) {
                     packet_formatter::message_detail(m)
                 } else {

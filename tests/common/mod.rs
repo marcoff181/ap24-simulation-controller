@@ -93,3 +93,51 @@ pub fn start_dummy_sc_from_cfg(
         command_receivers,
     )
 }
+
+pub fn expect_command_(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {
+    match rcv.try_recv() {
+        Ok(c) => {
+            if c != *command {
+                panic!("received command: {:?} was expecting {:?}", c, command)
+            }
+        }
+        Err(e) => {
+            panic!("got {e}, was expecting {:?}", command)
+        }
+    }
+}
+
+pub fn expect_no_command_(rcv: &Receiver<DroneCommand>) {
+    match rcv.try_recv() {
+        Ok(c) => {
+            panic!("received command: {:?} was expecting nothing", c)
+        }
+        Err(e) => {}
+    }
+}
+
+pub fn expect_just_command_hmap(
+    rcv: &HashMap<u8, Receiver<DroneCommand>>,
+    id: u8,
+    command: &DroneCommand,
+) {
+    for (n, r) in rcv {
+        if *n == id {
+            expect_command_(r, command);
+        } else {
+            expect_no_command_(r);
+        }
+    }
+}
+
+pub fn expect_command_hmap(
+    rcv: &HashMap<u8, Receiver<DroneCommand>>,
+    id: u8,
+    command: &DroneCommand,
+) {
+    for (n, r) in rcv {
+        if *n == id {
+            expect_command_(r, command);
+        }
+    }
+}
