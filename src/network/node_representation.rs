@@ -69,15 +69,6 @@ impl Default for NodeRepresentation {
     }
 }
 
-impl Display for NodeRepresentation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.kind {
-            NodeKind::Drone { pdr: _, crashed: _ } => write!(f, "{}  #{}", self.kind, self.id),
-            NodeKind::Server | NodeKind::Client => write!(f, "{} #{}", self.kind, self.id),
-        }
-    }
-}
-
 impl NodeRepresentation {
     pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: HashSet<NodeId>) -> Self {
         //let s = format!("{:?} #{}", kind, id);

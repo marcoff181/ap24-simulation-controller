@@ -463,14 +463,14 @@ impl MySimulationController {
                     },
                 ) => {
                     warn!(
-                        "Cannot connect {} and {}, one or both of them are a crashed drone",
+                        "Cannot connect {:?} and {:?}, one or both of them are a crashed drone",
                         nfrom.kind, nto.kind
                     );
                     return Err("Cannot connect to a crashed drone");
                 }
                 (NodeKind::Client | NodeKind::Server, NodeKind::Client | NodeKind::Server) => {
                     warn!(
-                        "Cannot connect {} and {}, at least one should be a drone",
+                        "Cannot connect {:?} and {:?}, at least one should be a drone",
                         nfrom.kind, nto.kind
                     );
                     return Err("trying to connect two Clients/Servers");
