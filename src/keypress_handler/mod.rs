@@ -51,7 +51,6 @@ pub fn handle_keypress_error(key: &KeyEvent) -> Option<AppMessage> {
     }
 }
 
-//TODO
 pub fn handle_keypress_changepdr(key: &KeyEvent) -> Option<AppMessage> {
     match (key.modifiers, key.code) {
         (_, KeyCode::Up) => Some(AppMessage::ScrollUp),

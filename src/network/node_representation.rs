@@ -18,7 +18,6 @@ use super::node_kind::NodeKind;
 
 #[derive(Debug, Clone)]
 pub struct NodeRepresentation {
-    //TODO: do they all need to be pub?
     pub id: NodeId,
     pub x: u32,
     pub y: u32,

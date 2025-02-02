@@ -31,7 +31,7 @@ pub fn render_simulation(opt: DrawGraphOptions, area: Rect, buf: &mut Buffer) {
         Text::from("No nodes in graph").render(area, buf);
         return;
     }
-    //TODO redo to avoid panic
+
     let max_x = opt.nodes.values().map(|n| n.x).reduce(f64::max).unwrap();
     let max_y = opt.nodes.values().map(|n| n.y).reduce(f64::max).unwrap();
     let min_x = opt.nodes.values().map(|n| n.x).reduce(f64::min).unwrap();
@@ -81,16 +81,11 @@ pub fn paint_edges(ctx: &mut Context, opt: &DrawGraphOptions) {
     }
 }
 
-// TODO this could consume instead of take ref
 pub fn print_labels(ctx: &mut Context, opt: &DrawGraphOptions) {
-    for (id, n) in opt.nodes.iter() {
+    for (_, n) in opt.nodes.iter() {
         let tx = n.x;
         let ty = n.y;
 
-        let mut s = Style::new().fg(TEXT_COLOR);
-        //let c: char;
-        //let bl: char;
-        //let br: char;
         let label = n.label.clone();
 
         let line = ratatui::text::Line::styled(label, n.style);

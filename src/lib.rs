@@ -96,8 +96,9 @@ impl MySimulationController {
             node_list_state: ListState::default().with_selected(Some(0)),
             packet_table_state: TableState::default().with_selected(0),
             screen: Screen {
+                // there must be at least a drone, and it is guaranteed that a drone will be the
+                // first of the list
                 focus: opt.config.drone[0].id,
-                //TODO: fix
                 kind: NodeKind::Drone {
                     pdr: opt.config.drone[0].pdr,
                     crashed: false,
@@ -696,7 +697,6 @@ impl MySimulationController {
                             // mark the drone as crashed in the network
                             self.network.crash_drone(id);
                             self.screen.window = Window::Main;
-                            // TODO at some point check that the drone's thread actually returns
                         }
                         Err(message) => {
                             debug!("error crashing drone, switching to Window::Error");
@@ -753,9 +753,7 @@ impl MySimulationController {
             }
             AppMessage::WindowDetail => {
                 if let Window::Main = self.screen.window {
-                    // TODO: decide if you need to check if there is one item in the needed
-                    // vecdeque
-                    self.packet_table_state.select(Some(0));
+                    self.packet_table_state.select_first();
                     self.screen.window = Window::Detail { tab: 0 }
                 }
             }

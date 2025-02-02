@@ -13,7 +13,6 @@ pub mod node_representation;
 
 #[derive(Debug, Default)]
 pub struct Network {
-    //todo: some of these don't need to be public
     pub nodes: Vec<NodeRepresentation>,
     pub edges: HashMap<(NodeId, NodeId), Option<(PacketType, Instant)>>,
 }
@@ -58,7 +57,6 @@ impl Network {
             std::cmp::Ordering::Equal => {}
         };
 
-        // todo: decide if there is need to keep this logic related to adj
         if let Some(nodefrom_id) = self.get_mut_node_from_id(from) {
             nodefrom_id.adj.insert(to as NodeId);
         }
