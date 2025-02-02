@@ -7,9 +7,9 @@ use crate::{
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{Color, Style, Stylize},
+    style::{Color, Style},
     text::{Line, Span},
-    widgets::{StatefulWidget, Widget},
+    widgets::Widget,
 };
 
 use crate::{network::node_kind::NodeKind, Network};

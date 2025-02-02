@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    time::Instant,
-};
+use std::{collections::HashMap, time::Instant};
 
 use messages::node_event::EventNetworkGraph;
 use rand::random_range;
@@ -19,8 +16,6 @@ pub struct DrawGraphOptions {
     pub padding: f64,
     pub lines_back: HashMap<(NodeId, NodeId), Color>,
     pub lines_front: HashMap<(NodeId, NodeId), Color>,
-    pub back_color: Color,
-    pub front_color: Color,
     pub nodes: HashMap<NodeId, DrawNodeOptions>,
 }
 
@@ -35,11 +30,11 @@ fn active_edge_color(x: &Option<(PacketType, Instant)>) -> Color {
         let d = Instant::now().saturating_duration_since(*inst);
         if d.as_secs() < 3 {
             match t {
-                PacketType::MsgFragment(fragment) => PACKET_FRAGMENT_COLOR,
-                PacketType::Ack(ack) => PACKET_ACK_COLOR,
-                PacketType::Nack(nack) => PACKET_NACK_COLOR,
-                PacketType::FloodRequest(flood_request) => PACKET_FLOOD_REQUEST_COLOR,
-                PacketType::FloodResponse(flood_response) => PACKET_FLOOD_RESPONSE_COLOR,
+                PacketType::MsgFragment(_) => PACKET_FRAGMENT_COLOR,
+                PacketType::Ack(_) => PACKET_ACK_COLOR,
+                PacketType::Nack(_) => PACKET_NACK_COLOR,
+                PacketType::FloodRequest(_) => PACKET_FLOOD_REQUEST_COLOR,
+                PacketType::FloodResponse(_) => PACKET_FLOOD_RESPONSE_COLOR,
             }
         } else {
             TEXT_COLOR
@@ -84,16 +79,12 @@ impl DrawGraphOptions {
             padding: 30.0,
             lines_back: HashMap::new(),
             lines_front,
-            back_color: TEXT_COLOR,
-            front_color: TEXT_COLOR,
             nodes,
         }
     }
     pub fn from_topology(top: &EventNetworkGraph) -> Self {
         let lines_back = HashMap::new();
         let mut lines_front = HashMap::new();
-        let back_color = TEXT_COLOR;
-        let front_color = TEXT_COLOR;
         let mut nodes = HashMap::new();
 
         let mut x = 0.0;
@@ -130,7 +121,7 @@ impl DrawGraphOptions {
             x += 10.0;
 
             for nghb in n.neighbors.iter() {
-                lines_front.insert((id, *nghb), front_color);
+                lines_front.insert((id, *nghb), TEXT_COLOR);
             }
         }
 
@@ -138,8 +129,6 @@ impl DrawGraphOptions {
             padding: 0.0,
             lines_front,
             lines_back,
-            back_color,
-            front_color,
             nodes,
         }
     }
@@ -147,18 +136,15 @@ impl DrawGraphOptions {
     pub fn from_network(network: &Network, screen: &Screen) -> Self {
         let mut lines_back = HashMap::new();
         let mut lines_front = HashMap::new();
-        let back_color = TEXT_COLOR;
         let mut nodes: HashMap<NodeId, DrawNodeOptions> = HashMap::new();
 
         let id = screen.focus;
 
         let front_color = match screen.window {
-            Window::AddConnection { origin } => ADD_EDGE_COLOR,
-            Window::ChangePdr { pdr } => unreachable!(),
-            Window::Detail { tab } => unreachable!(),
-            Window::Error { message } => unreachable!(),
+            Window::AddConnection { .. } => ADD_EDGE_COLOR,
             Window::Main => TEXT_COLOR,
             Window::Move => ADD_EDGE_COLOR,
+            _ => unreachable!(),
         };
 
         // add one single line between nodes that are being connected
@@ -232,8 +218,6 @@ impl DrawGraphOptions {
             padding: 0.0,
             lines_front,
             lines_back,
-            back_color,
-            front_color,
             nodes,
         }
     }

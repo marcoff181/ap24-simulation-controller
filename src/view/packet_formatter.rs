@@ -1,5 +1,4 @@
 use messages::Message;
-use rand::seq::IndexedRandom;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
 use ratatui::text::Line;
@@ -65,10 +64,10 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
             mtype = Span::styled("ERR", ptype_style.bg(MESSAGE_ERROR_COLOR));
             debug = Span::from(format!("{:?}", error_type));
             match error_type {
-                messages::ErrorType::Unsupported(request_type) => {
+                messages::ErrorType::Unsupported(_) => {
                     rtype = Span::from("UNS".to_string()).bg(UNSUPPORTED_MSG);
                 }
-                messages::ErrorType::Unexpected(response_type) => {
+                messages::ErrorType::Unexpected(_) => {
                     rtype = Span::from("UNX".to_string()).bg(UNEXPECTED_MSG);
                 }
             }

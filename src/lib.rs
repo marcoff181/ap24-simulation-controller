@@ -3,25 +3,28 @@ mod network;
 mod screen;
 mod utilities;
 mod view;
-use crossterm::event::KeyEvent;
-use messages::node_event::NodeEvent;
 
+#[cfg(feature = "custom_terminal_backend")]
+use ratatui::backend::TestBackend;
+
+use crate::network::Network;
 use crate::screen::Screen;
 use core::{f32, panic};
+use crossbeam_channel::{select, unbounded, Receiver, Sender};
+use crossterm::event::KeyEvent;
+use log::{debug, error, info, trace, warn};
+use messages::node_event::NodeEvent;
+use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
+use rand::random;
+use ratatui::{
+    widgets::{ListState, TableState},
+    Terminal,
+};
+use screen::Window;
 use std::{
     collections::{HashMap, HashSet},
     thread::{Builder, JoinHandle},
 };
-
-use crate::network::Network;
-use crossbeam_channel::{select, unbounded, Receiver, Sender};
-use log::{debug, error, info, trace, warn};
-use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
-use rand::{random, seq::IndexedRandom};
-use ratatui::{
-    widgets::{ListState, TableState}, Terminal,
-};
-use screen::Window;
 
 #[cfg(feature = "appmessage_through_crossbeam")]
 pub use utilities::app_message::AppMessage;
@@ -53,7 +56,7 @@ pub struct MySimulationController {
     // external comms
     packet_send: HashMap<NodeId, Sender<Packet>>,
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
-    nodeevent_send: Sender<NodeEvent>,
+    //nodeevent_send: Sender<NodeEvent>,
     nodeevent_recv: Receiver<NodeEvent>,
     droneevent_send: Sender<DroneEvent>,
     droneevent_recv: Receiver<DroneEvent>,
@@ -83,7 +86,7 @@ impl MySimulationController {
             command_send: opt.command_send,
             droneevent_recv: opt.droneevent_recv,
             droneevent_send: opt.droneevent_send,
-            nodeevent_send: opt.nodeevent_send,
+            //nodeevent_send: opt.nodeevent_send,
             nodeevent_recv: opt.nodeevent_recv,
             packet_send: opt.packet_send,
             node_handles: opt.node_handles,
@@ -158,14 +161,14 @@ impl MySimulationController {
                         "received AppMessage through crossbeam channel: {:?}",
                         message
                     );
-                    self.transition(message);
+                    self.transition(&message);
                 };
             }
 
             #[cfg(not(feature = "appmessage_through_crossbeam"))]
             if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen) {
                 debug!("received AppMessage: {:?}", message);
-                self.transition(message);
+                self.transition(&message);
             };
 
             // ---------------------------------------------------------------------------
@@ -677,18 +680,18 @@ impl MySimulationController {
 }
 
 impl MySimulationController {
-    fn transition(&mut self, message: AppMessage) {
+    fn transition(&mut self, message: &AppMessage) {
         let kind = self.screen.kind;
         let id = self.screen.focus;
         match message {
             AppMessage::Quit => {
                 info!("received AppMessage::Quit, exiting...");
-                self.running = false
+                self.running = false;
             }
             AppMessage::Crash => match self.screen.window {
                 Window::Detail { tab: _ } if matches!(kind, NodeKind::Drone { .. }) => {
                     match self.crash(id) {
-                        Ok(_) => {
+                        Ok(()) => {
                             // mark the drone as crashed in the network
                             self.network.crash_drone(id);
                             self.screen.window = Window::Main;
@@ -721,7 +724,7 @@ impl MySimulationController {
             // spawn drone
             AppMessage::SpawnDrone => {
                 if let Window::Main = self.screen.window {
-                    self.spawn_drone()
+                    self.spawn_drone();
                 }
             }
             // Window changes
@@ -743,7 +746,7 @@ impl MySimulationController {
             }
             AppMessage::WindowMove => {
                 if let Window::Main = self.screen.window {
-                    self.screen.window = Window::Move
+                    self.screen.window = Window::Move;
                 }
             }
             AppMessage::WindowDetail => {
@@ -763,7 +766,7 @@ impl MySimulationController {
                     info!("received AppMessage::Done, current window is AddConnection, adding connection...");
                     let res = self.add_connection(origin, id);
                     match res {
-                        Ok(_) => {
+                        Ok(()) => {
                             self.network.add_edge(origin, id);
                             self.reset_list();
                             self.screen.window = Window::Main;
@@ -785,13 +788,13 @@ impl MySimulationController {
                 Window::Main | Window::AddConnection { .. } => {
                     self.scroll_list(true);
                 }
-                Window::Detail { tab } => {
+                Window::Detail { .. } => {
                     self.packet_table_state.scroll_up_by(1);
                 }
                 Window::ChangePdr { ref mut pdr } => {
                     *pdr += 0.01;
                     if *pdr > 1.0 {
-                        *pdr = 1.0
+                        *pdr = 1.0;
                     }
                 }
                 _ => {}
@@ -800,13 +803,13 @@ impl MySimulationController {
                 Window::Main | Window::AddConnection { .. } => {
                     self.scroll_list(false);
                 }
-                Window::Detail { tab } => {
+                Window::Detail { .. } => {
                     self.packet_table_state.scroll_down_by(1);
                 }
                 Window::ChangePdr { ref mut pdr } => {
                     *pdr -= 0.01;
                     if *pdr < 0.0 {
-                        *pdr = 0.0
+                        *pdr = 0.0;
                     }
                 }
                 _ => {}
@@ -814,15 +817,15 @@ impl MySimulationController {
             // Node movement
             AppMessage::MoveNode { x, y } => {
                 let node = self.network.get_mut_node_from_id(id).unwrap();
-                if x > 0 {
-                    node.shiftr(x as u32);
+                if *x > 0 {
+                    node.shiftr(u32::from(x.unsigned_abs()));
                 } else {
-                    node.shiftl(x.unsigned_abs() as u32);
+                    node.shiftl(u32::from(x.unsigned_abs()));
                 }
-                if y > 0 {
-                    node.shiftu(y as u32);
+                if *y > 0 {
+                    node.shiftu(u32::from(y.unsigned_abs()));
                 } else {
-                    node.shiftd(y.unsigned_abs() as u32);
+                    node.shiftd(u32::from(y.unsigned_abs()));
                 }
             }
         }

@@ -2,15 +2,23 @@ pub mod common;
 
 const WAITING_TIME: u64 = 300;
 
-
 #[cfg(feature = "integration_tests")]
 use common::start_dummy_sc_from_cfg;
 
-#[cfg(feature = "integration_tests")]
-use ap24_simulation_controller::AppMessage;
-
-#[cfg(feature = "integration_tests")]
+use common::expect_command_hmap;
+use common::expect_just_command_hmap;
+use common::expect_just_packet_hmap;
+use common::{all_the_message_types, all_the_packet_types};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use messages::{
+    node_event::{EventNetworkGraph, EventNetworkNode, NodeEvent},
+    Message,
+};
+use messages::{MessageType, RequestType, TextRequest};
+use std::{thread, time::Duration};
+use wg_2024::controller::DroneCommand;
+use wg_2024::packet::{Fragment, NodeType, PacketType};
+use wg_2024::{controller::DroneEvent, packet::Packet};
 
 #[test]
 #[cfg(feature = "integration_tests")]
@@ -84,9 +92,7 @@ fn spawn() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn changepdr() {
-    use core::panic;
-
-    use common::{expect_command_hmap, expect_just_command_hmap};
+    use wg_2024::controller::DroneCommand;
 
     let (
         keyevent_send,
@@ -120,11 +126,6 @@ fn changepdr() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn shortcut() {
-    use core::panic;
-
-    use common::{expect_command_hmap, expect_just_command_hmap, expect_just_packet_hmap};
-    use wg_2024::{controller::DroneEvent, packet::Packet};
-
     let (
         keyevent_send,
         sc_handle,
@@ -158,8 +159,6 @@ fn shortcut() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn crash() {
-    use common::{expect_command_hmap, expect_just_command_hmap};
-
     let (
         keyevent_send,
         sc_handle,
@@ -255,9 +254,6 @@ fn move_node() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn msent_before_startingtransmission() {
-    use common::all_the_message_types;
-    use messages::{node_event::NodeEvent, Message, MessageType, RequestType, TextRequest};
-
     let (
         keyevent_send,
         sc_handle,
@@ -301,16 +297,6 @@ fn msent_before_startingtransmission() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn view_packet_events() {
-    use common::{all_the_message_types, all_the_packet_types, random_packet};
-    use messages::{
-        node_event::{EventNetworkGraph, EventNetworkNode, NodeEvent},
-        Message,
-    };
-    use wg_2024::{
-        controller::DroneEvent,
-        packet::{Fragment, NodeType, Packet, PacketType},
-    };
-
     let (
         keyevent_send,
         sc_handle,

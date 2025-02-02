@@ -1,7 +1,7 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Rect},
-    style::{Modifier, Style, Stylize},
+    style::{Modifier, Style},
     widgets::{Row, Table, TableState, Tabs, Widget},
     Frame,
 };
@@ -16,7 +16,7 @@ use super::packet_formatter::{message_table_row, packet_table_row};
 
 pub fn render_tabs(tab: usize, kind: &NodeKind, area: Rect, buf: &mut Buffer) {
     let titles = match kind {
-        NodeKind::Drone { pdr, crashed } => {
+        NodeKind::Drone { .. } => {
             vec!["Sent", "Dropped", "Shortcutted"]
         }
         NodeKind::Client | NodeKind::Server => {

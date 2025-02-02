@@ -1,12 +1,11 @@
-
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::Styled,
-    symbols::{Marker},
+    symbols::Marker,
     text::Text,
     widgets::{
-        canvas::{Canvas, Context}, Widget,
+        canvas::{Canvas, Context},
+        Widget,
     },
 };
 
@@ -32,10 +31,7 @@ pub fn render_simulation(opt: DrawGraphOptions, area: Rect, buf: &mut Buffer) {
             print_labels(ctx, &opt);
         })
         .background_color(BG_COLOR)
-        .x_bounds([
-            min_x - opt.padding,
-            max_x + (0.01) * max_x + opt.padding,
-        ])
+        .x_bounds([min_x - opt.padding, max_x + (0.01) * max_x + opt.padding])
         .y_bounds([min_y - opt.padding, max_y + opt.padding]);
 
     canvas.render(area, buf);

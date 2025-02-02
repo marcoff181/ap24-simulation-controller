@@ -1,12 +1,9 @@
-
 use ratatui::prelude::*;
 //use wg_2024::config::{Client, Drone, Server};
 
 use crate::network::node_kind::NodeKind;
 use crate::network::node_representation::NodeRepresentation;
-use crate::utilities::theme::{
-    CLIENT_COLOR, DRONE_COLOR, SERVER_COLOR,
-};
+use crate::utilities::theme::{CLIENT_COLOR, DRONE_COLOR, SERVER_COLOR};
 
 use super::draw_options::DrawGraphOptions;
 use super::simulation::render_simulation;
@@ -50,7 +47,7 @@ pub fn node_detail(node: &NodeRepresentation, area: Rect, frame: &mut Frame) {
     content.render(left, frame.buffer_mut());
 
     match node.kind {
-        NodeKind::Drone { pdr, crashed } => {
+        NodeKind::Drone { .. } => {
             render_simulation(
                 DrawGraphOptions::from_noderepr(node),
                 right,

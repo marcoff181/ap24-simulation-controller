@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
+# default = ["integration_tests"]
 integration_tests = ["custom_terminal_backend","appmessage_through_crossbeam"]
 custom_terminal_backend = []
 appmessage_through_crossbeam = []

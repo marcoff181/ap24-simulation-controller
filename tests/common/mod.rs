@@ -1,10 +1,17 @@
-use std::collections::HashMap;
-
+use crossbeam_channel::unbounded;
+use crossbeam_channel::Sender;
 use crossbeam_channel::{self, Receiver};
+use messages::node_event::NodeEvent;
 use messages::{
-    ChatRequest, ChatResponse, ErrorType, MediaRequest, MediaResponse,
-    MessageType, RequestType, ResponseType, ServerType, TextRequest, TextResponse,
+    ChatRequest, ChatResponse, ErrorType, MediaRequest, MediaResponse, MessageType, RequestType,
+    ResponseType, ServerType, TextRequest, TextResponse,
 };
+use ratatui::{backend::TestBackend, Terminal};
+use std::collections::HashMap;
+use std::thread;
+use std::thread::JoinHandle;
+use wg_2024::config::Config;
+use wg_2024::controller::DroneEvent;
 use wg_2024::{
     controller::DroneCommand,
     network::NodeId,
@@ -13,8 +20,9 @@ use wg_2024::{
     },
 };
 
-#[cfg(feature = "integration_tests")]
+use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
 use crossterm::event::KeyEvent;
+use std::time::Duration;
 
 #[cfg(feature = "integration_tests")]
 pub fn start_dummy_sc_from_cfg(
@@ -43,9 +51,6 @@ pub fn start_dummy_sc_from_cfg_with_handles(
     HashMap<NodeId, Receiver<Packet>>,
 ) {
     let add_handles = node_handles.is_empty();
-    use std::time::Duration;
-
-    use ap24_simulation_controller::{AppMessage, MySimulationController, SimControllerOptions};
 
     let config_data = std::fs::read_to_string(config).expect("Unable to read config file");
     let config: Config = toml::from_str(&config_data).expect("Unable to parse TOML");
@@ -209,11 +214,8 @@ pub fn expect_command(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {
 }
 
 pub fn expect_no_command(rcv: &Receiver<DroneCommand>) {
-    match rcv.try_recv() {
-        Ok(c) => {
-            panic!("received command: {:?} was expecting nothing", c)
-        }
-        Err(e) => {}
+    if let Ok(c) = rcv.try_recv() {
+        panic!("received command: {:?} was expecting nothing", c)
     }
 }
 
@@ -257,11 +259,8 @@ pub fn expect_packet(rcv: &Receiver<Packet>, packet: &Packet) {
 }
 
 pub fn expect_no_packet(rcv: &Receiver<Packet>) {
-    match rcv.try_recv() {
-        Ok(c) => {
-            panic!("received packet: {:?} was expecting nothing", c)
-        }
-        Err(e) => {}
+    if let Ok(c) = rcv.try_recv() {
+        panic!("received packet: {:?} was expecting nothing", c)
     }
 }
 
