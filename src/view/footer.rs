@@ -22,8 +22,8 @@ pub fn render_footer(_network: &Network, screen: &Screen, area: Rect, buf: &mut 
         Window::ChangePdr { pdr: _ } => &PDR_KEYS,
         Window::Detail { tab: _ } => match screen.kind {
             NodeKind::Drone { pdr: _, crashed: _ } => &DETAIL_KEYS_DRONE,
-            NodeKind::Client => &DETAIL_KEYS_CLIENT,
-            NodeKind::Server => &DETAIL_KEYS_SERVER,
+            NodeKind::Client => &DETAIL_KEYS_NOTDRONE,
+            NodeKind::Server => &DETAIL_KEYS_NOTDRONE,
         },
         Window::Error { message: _ } => &ERROR_KEYS,
     };

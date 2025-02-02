@@ -18,7 +18,7 @@ use wg_2024::packet::PacketType;
 use crate::utilities::theme::*;
 
 pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
-    let source: Span = Span::styled(format!("{}", message.source_id), Style::new());
+    let source: Span = Span::styled(format!("{}", message.source), Style::new());
     let sess_id: Span = Span::styled(format!("{}", message.session_id), Style::new());
 
     let mut mtype: Span;
@@ -64,6 +64,18 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
                 }
             }
         }
+        messages::MessageType::Error(error_type) => {
+            mtype = Span::styled("ERR", ptype_style.bg(MESSAGE_ERROR_COLOR));
+            debug = Span::from(format!("{:?}", error_type));
+            match error_type {
+                messages::ErrorType::Unsupported(request_type) => {
+                    rtype = Span::from("UNS".to_string()).bg(UNSUPPORTED_MSG);
+                }
+                messages::ErrorType::Unexpected(response_type) => {
+                    rtype = Span::from("UNX".to_string()).bg(UNEXPECTED_MSG);
+                }
+            }
+        }
     }
 
     if !finished_sending {
@@ -75,7 +87,7 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
 pub fn message_detail(message: &Message) -> Paragraph {
     let routing = Line::from(format!(
         "SID: {} source: {}",
-        message.session_id, message.source_id
+        message.session_id, message.source
     ));
     let mtype: Span;
     let rtype: Span;
@@ -184,17 +196,30 @@ pub fn message_detail(message: &Message) -> Paragraph {
                 messages::ResponseType::DiscoveryResponse(server_type) => {
                     rtype = Span::styled("Discovery", Style::new().bg(DISCOVERY_MSG));
                     match server_type {
-                        messages::ServerType::TextServer => {
+                        messages::ServerType::ContentServer => {
                             h2 = Line::from(
-                                "Discovery Response: server is of Text type".to_string(),
+                                "Discovery Response: server is of Content type".to_string(),
                             );
                         }
-                        messages::ServerType::MediaServer => {
+                        messages::ServerType::CommunicationServer => {
                             h2 = Line::from(
-                                "Discovery Response: server is of Media type".to_string(),
+                                "Discovery Response: server is of Communication type".to_string(),
                             );
                         }
                     }
+                }
+            }
+        }
+        messages::MessageType::Error(error_type) => {
+            mtype = Span::styled("Response", Style::new().bg(MESSAGE_ERROR_COLOR));
+            match error_type {
+                messages::ErrorType::Unsupported(request_type) => {
+                    rtype = Span::styled("Unsupported", Style::new().bg(TEXT_MSG));
+                    h2 = Line::from(format!("request type: {:?}", request_type));
+                }
+                messages::ErrorType::Unexpected(response_type) => {
+                    rtype = Span::styled("Unexpected", Style::new().bg(TEXT_MSG));
+                    h2 = Line::from(format!("response type: {:?}", response_type));
                 }
             }
         }

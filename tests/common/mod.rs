@@ -17,9 +17,24 @@ use wg_2024::{
 
 #[cfg(feature = "integration_tests")]
 use crossterm::event::KeyEvent;
+
 #[cfg(feature = "integration_tests")]
 pub fn start_dummy_sc_from_cfg(
     config: &str,
+) -> (
+    Sender<KeyEvent>,
+    JoinHandle<()>,
+    Sender<DroneEvent>,
+    Sender<NodeEvent>,
+    HashMap<NodeId, Receiver<DroneCommand>>,
+) {
+    start_dummy_sc_from_cfg_with_handles(config, HashMap::new())
+}
+
+#[cfg(feature = "integration_tests")]
+pub fn start_dummy_sc_from_cfg_with_handles(
+    config: &str,
+    node_handles: HashMap<u8, JoinHandle<()>>,
 ) -> (
     Sender<KeyEvent>,
     JoinHandle<()>,
@@ -76,7 +91,7 @@ pub fn start_dummy_sc_from_cfg(
         nodeevent_send: nodeevent_send.clone(),
         packet_send: packet_senders,
         config,
-        node_handles: HashMap::new(),
+        node_handles,
     };
 
     let terminal = Terminal::new(TestBackend::new(50, 50)).unwrap();
@@ -92,6 +107,60 @@ pub fn start_dummy_sc_from_cfg(
         nodeevent_send,
         command_receivers,
     )
+}
+
+pub fn random_packet() -> PacketType {
+    match rand::random_range(1..=5u64) {
+        1 => PacketType::Nack(wg_2024::packet::Nack {
+            fragment_index: 34,
+            nack_type: NackType::Dropped,
+        }),
+        2 => PacketType::Ack(Ack {
+            fragment_index: rand::random_range(1..3456),
+        }),
+        3 => PacketType::MsgFragment(Fragment {
+            fragment_index: rand::random_range(1..256),
+            total_n_fragments: rand::random_range(1..345),
+            length: rand::random_range(1..128),
+            data: [0; 128],
+        }),
+        4 => PacketType::FloodRequest(FloodRequest {
+            flood_id: 3,
+            initiator_id: 9,
+            path_trace: vec![(rand::random_range(1..=10), NodeType::Drone)],
+        }),
+        _ => PacketType::FloodResponse(FloodResponse {
+            flood_id: 2,
+            path_trace: vec![],
+        }),
+    }
+}
+
+pub fn random_mtype() -> MessageType {
+    match rand::random_range(1..=9u64) {
+        1 => messages::MessageType::Request(messages::RequestType::DiscoveryRequest(())),
+        2 => messages::MessageType::Request(messages::RequestType::MediaRequest(
+            MediaRequest::MediaList,
+        )),
+        3 => messages::MessageType::Request(messages::RequestType::ChatRequest(
+            messages::ChatRequest::ClientList,
+        )),
+        4 => messages::MessageType::Request(messages::RequestType::TextRequest(
+            messages::TextRequest::TextList,
+        )),
+        5 => messages::MessageType::Response(messages::ResponseType::TextResponse(
+            messages::TextResponse::NotFound,
+        )),
+        7 => messages::MessageType::Response(messages::ResponseType::ChatResponse(
+            messages::ChatResponse::MessageSent,
+        )),
+        8 => messages::MessageType::Response(messages::ResponseType::MediaResponse(
+            messages::MediaResponse::MediaList(vec![]),
+        )),
+        _ => messages::MessageType::Response(messages::ResponseType::DiscoveryResponse(
+            ServerType::ContentServer,
+        )),
+    }
 }
 
 pub fn expect_command_(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {

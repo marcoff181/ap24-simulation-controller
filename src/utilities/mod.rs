@@ -23,12 +23,11 @@ pub fn render_image(area: Rect, buf: &mut Buffer, path: &str, transparent_color:
         for y in 0..height {
             let rgba = img.get_pixel(x as u32, y as u32).0;
 
-            let c;
-            if rgba[3] == 0 {
-                c = transparent_color;
+            let c = if rgba[3] == 0 {
+                transparent_color
             } else {
-                c = Color::Rgb(rgba[0], rgba[1], rgba[2]);
-            }
+                Color::Rgb(rgba[0], rgba[1], rgba[2])
+            };
 
             if y % 2 == 0 {
                 cell = &mut buf[(x + origin_x, y / 2 + origin_y)];

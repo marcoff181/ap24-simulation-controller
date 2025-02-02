@@ -19,8 +19,11 @@ pub const PACKET_FLOOD_RESPONSE_COLOR: Color = Color::LightMagenta;
 
 pub const MESSAGE_REQUEST_COLOR: Color = Color::LightBlue;
 pub const MESSAGE_RESPONSE_COLOR: Color = Color::Green;
+pub const MESSAGE_ERROR_COLOR: Color = Color::Red;
 
 pub const TEXT_MSG: Color = Color::Cyan;
 pub const MEDIA_MSG: Color = Color::Yellow;
-pub const CHAT_MSG: Color = Color::Red;
+pub const CHAT_MSG: Color = Color::LightGreen;
 pub const DISCOVERY_MSG: Color = Color::LightMagenta;
+pub const UNSUPPORTED_MSG: Color = Color::Red;
+pub const UNEXPECTED_MSG: Color = Color::LightRed;

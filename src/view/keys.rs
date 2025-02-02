@@ -32,17 +32,9 @@ pub const PDR_KEYS: [(&str, &str); 3] = [
     ("q", "Quit"),
 ];
 
-pub const DETAIL_KEYS_SERVER: [(&str, &str); 4] = [
+pub const DETAIL_KEYS_NOTDRONE: [(&str, &str); 4] = [
     ("↑/↓", "Scroll list"),
     ("tab", "Next list"),
-    ("Enter", "Done"),
-    ("q", "Quit"),
-];
-
-pub const DETAIL_KEYS_CLIENT: [(&str, &str); 5] = [
-    ("↑/↓", "Scroll list"),
-    ("tab", "Next list"),
-    ("m", "Send Message?"),
     ("Enter", "Done"),
     ("q", "Quit"),
 ];
