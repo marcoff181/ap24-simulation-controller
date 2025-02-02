@@ -66,34 +66,43 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
         .fg(TEXT_COLOR);
 
     let n = network.get_node_from_id(screen.focus).unwrap();
-    let widths = [
+    let pwidths = [
         Constraint::Length(3),
         Constraint::Length(3),
         Constraint::Length(3),
-        Constraint::Length(4),
+        Constraint::Length(3),
         Constraint::Min(10),
     ];
-    let pheader = Row::new(vec!["typ", "sid", "src", "dest", "about"]);
-    let mheader = Row::new(vec!["typ", "←/→", "src", "sid", "about"]);
+
+    let mwidths = [
+        Constraint::Length(3),
+        Constraint::Length(3),
+        Constraint::Length(3),
+        Constraint::Length(3),
+        Constraint::Length(3),
+        Constraint::Min(10),
+    ];
+    let pheader = Row::new(vec!["typ", "sid", "src", "dst", "about"]);
+    let mheader = Row::new(vec!["typ", "←/→", "src", "dst", "sid", "about"]);
 
     match screen.kind {
         NodeKind::Drone { .. } => {
             let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, widths)
+            let table = Table::new(rows, pwidths)
                 .column_spacing(1)
                 .header(pheader.clone())
                 .block(b2);
             frame.render_widget(table, r2);
 
             let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, widths)
+            let table = Table::new(rows, pwidths)
                 .column_spacing(1)
                 .header(pheader.clone())
                 .block(b3);
             frame.render_widget(table, r3);
 
             let rows: Vec<Row<'_>> = n.shortcutted.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, widths)
+            let table = Table::new(rows, pwidths)
                 .column_spacing(1)
                 .header(pheader)
                 .block(b4);
@@ -101,7 +110,7 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
         }
         _ => {
             let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, widths)
+            let table = Table::new(rows, pwidths)
                 .column_spacing(1)
                 .style(Style::new().red())
                 .header(pheader.clone())
@@ -114,7 +123,7 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
                 .rev()
                 .map(|p| message_table_row(&p.0, p.1))
                 .collect();
-            let table = Table::new(rows, widths)
+            let table = Table::new(rows, mwidths)
                 .column_spacing(1)
                 .header(mheader.clone())
                 .block(b3);
@@ -125,7 +134,7 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
                 .iter()
                 .map(|p| message_table_row(p, true))
                 .collect();
-            let table = Table::new(rows, widths)
+            let table = Table::new(rows, mwidths)
                 .column_spacing(1)
                 .header(mheader)
                 .block(b4);

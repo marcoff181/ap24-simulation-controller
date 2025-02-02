@@ -44,14 +44,15 @@ pub fn render_tab_content(
         (1..=2, NodeKind::Client | NodeKind::Server) => {
             let widths = [
                 Constraint::Length(3),
-                Constraint::Length(6),
-                Constraint::Length(6),
+                Constraint::Length(3),
+                Constraint::Length(3),
+                Constraint::Length(3),
                 Constraint::Length(10),
             ];
             let selected_row_style = Style::default()
                 .add_modifier(Modifier::REVERSED)
                 .fg(TEXT_COLOR);
-            let header = Row::new(vec!["typ", "←/→", "src", "sid"]);
+            let header = Row::new(vec!["typ", "←/→", "src", "dst", "sid"]);
             let rows: Vec<Row<'_>> = match tab {
                 2 => {
                     let mdeque = node.mreceived.iter();

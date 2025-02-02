@@ -11,9 +11,7 @@ mod tabs;
 use footer::render_footer;
 use list::render_list;
 use ratatui::prelude::*;
-use ratatui::widgets::{
-    Block, Borders, Gauge, ListState, Padding, Paragraph, TableState, Wrap,
-};
+use ratatui::widgets::{Block, Borders, Gauge, ListState, Padding, Paragraph, TableState, Wrap};
 use simulation::render_simulation;
 use stats::render_stats;
 //use wg_2024::config::{Client, Drone, Server};
@@ -108,7 +106,7 @@ fn render_detail(
     frame: &mut Frame,
 ) {
     let [tabs, area] = Layout::vertical([Constraint::Max(1), Constraint::Fill(1)]).areas(area);
-    let [left, right] = Layout::horizontal([Constraint::Max(16), Constraint::Fill(1)]).areas(area);
+    let [left, right] = Layout::horizontal([Constraint::Max(20), Constraint::Fill(1)]).areas(area);
 
     let [top, bottom] = Layout::vertical([Constraint::Fill(3), Constraint::Fill(1)]).areas(right);
 

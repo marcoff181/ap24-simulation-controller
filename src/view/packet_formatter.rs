@@ -15,6 +15,7 @@ use crate::utilities::theme::*;
 
 pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
     let source: Span = Span::styled(format!("{}", message.source), Style::new());
+    let destination: Span = Span::styled(format!("{}", message.destination), Style::new());
     let sess_id: Span = Span::styled(format!("{}", message.session_id), Style::new());
 
     let mut mtype: Span;
@@ -77,7 +78,7 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
     if !finished_sending {
         mtype = mtype.bg(BG_COLOR).slow_blink();
     }
-    Row::new(vec![rtype, mtype, source, sess_id, debug])
+    Row::new(vec![rtype, mtype, source, destination, sess_id, debug])
 }
 
 pub fn message_detail(message: &Message) -> Paragraph {
