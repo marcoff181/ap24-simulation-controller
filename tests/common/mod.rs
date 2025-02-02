@@ -347,7 +347,7 @@ pub fn all_the_packet_types(from: u8) -> Vec<PacketType> {
 
     let flood_id = 0;
     let initiator_id = 0;
-    let path_trace = vec![(from, NodeType::Drone)];
+    let path_trace = vec![(from - 1, NodeType::Drone), (from, NodeType::Drone)];
     vec![
         PacketType::Ack(Ack { fragment_index }),
         PacketType::Nack(Nack {

@@ -259,6 +259,9 @@ impl MySimulationController {
 
         if let NodeEvent::PacketSent(packet) = &event {
             if let Some(dst) = match &packet.pack_type {
+                // when you send a flood request there is no information about who you sent it to,
+                // so just to extract a bit of information we look at the last edge it traveled
+                // across, and use that
                 PacketType::FloodRequest(f) => {
                     if let Some(idx) = f.path_trace.len().checked_sub(2) {
                         if let Some((x, _)) = f.path_trace.get(idx) {
@@ -543,7 +546,7 @@ impl MySimulationController {
                 .get_node_from_id(id)
                 .expect("could not find noderepresentation for drone {id}");
             if !matches!(node.kind, NodeKind::Drone { .. }) {
-                panic!("trying to crash non-drone node #{id}")
+                unreachable!("trying to crash non-drone node #{id}")
             }
             let nodes = node.adj.clone();
             for n in nodes {
@@ -644,7 +647,7 @@ impl MySimulationController {
                     .expect("could not find command sender for drone");
                 let _ = command_send.send(DroneCommand::SetPacketDropRate(newpdr));
             }
-            _ => panic!("either not drone or crashed"),
+            _ => unreachable!("either not drone or crashed"),
         }
     }
 
