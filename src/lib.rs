@@ -709,6 +709,10 @@ impl MySimulationController {
                     *tab = tab.saturating_add(1);
                     self.packet_table_state.select(Some(0));
                     *tab %= 3;
+                    trace!(
+                        "On window Detail of #{}, switched to tab {tab}",
+                        self.screen.focus
+                    );
                     //if let NodeKind::Drone { .. } = kind {
                     //    *tab %= 3;
                     //} else {

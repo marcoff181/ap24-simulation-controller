@@ -5,14 +5,19 @@ use std::{
 
 use crossbeam_channel::{self, unbounded, Receiver, Sender};
 use log::LevelFilter;
-use messages::{node_event::NodeEvent, MediaRequest, MessageType, ServerType};
+use messages::{
+    node_event::NodeEvent, ChatRequest, ChatResponse, ErrorType, MediaRequest, MediaResponse,
+    MessageType, RequestType, ResponseType, ServerType, TextRequest, TextResponse,
+};
 use ratatui::{backend::TestBackend, Terminal};
 use simplelog::{format_description, ConfigBuilder, ThreadLogMode, ThreadPadding, WriteLogger};
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, DroneEvent},
     network::NodeId,
-    packet::{Ack, FloodRequest, FloodResponse, Fragment, NackType, NodeType, Packet, PacketType},
+    packet::{
+        Ack, FloodRequest, FloodResponse, Fragment, Nack, NackType, NodeType, Packet, PacketType,
+    },
 };
 
 #[cfg(feature = "integration_tests")]
@@ -130,6 +135,7 @@ pub fn start_dummy_sc_from_cfg_with_handles(
     let mut simcontr = MySimulationController::new(opt);
     simcontr.set_keyevent_recv(keyevent_recv);
     let join_handle = thread::spawn(move || {
+        //simcontr.run();
         simcontr.run_with_terminal(terminal);
     });
     (
@@ -282,4 +288,98 @@ pub fn expect_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, packet: &
             expect_packet(r, packet);
         }
     }
+}
+
+pub fn all_the_message_types() -> Vec<MessageType> {
+    vec![
+        MessageType::Request(RequestType::TextRequest(TextRequest::TextList)),
+        MessageType::Request(RequestType::TextRequest(TextRequest::Text(42))),
+        MessageType::Request(RequestType::MediaRequest(MediaRequest::MediaList)),
+        MessageType::Request(RequestType::MediaRequest(MediaRequest::Media(42))),
+        MessageType::Request(RequestType::ChatRequest(ChatRequest::ClientList)),
+        MessageType::Request(RequestType::ChatRequest(ChatRequest::Register(
+            NodeId::default(),
+        ))),
+        MessageType::Request(RequestType::ChatRequest(ChatRequest::SendMessage {
+            from: NodeId::default(),
+            to: NodeId::default(),
+            message: "Hello".to_string(),
+        })),
+        MessageType::Request(RequestType::DiscoveryRequest(())),
+        MessageType::Response(ResponseType::TextResponse(TextResponse::TextList(vec![
+            1, 2, 3,
+        ]))),
+        MessageType::Response(ResponseType::TextResponse(TextResponse::Text(
+            "Hello".to_string(),
+        ))),
+        MessageType::Response(ResponseType::TextResponse(TextResponse::NotFound)),
+        MessageType::Response(ResponseType::MediaResponse(MediaResponse::MediaList(vec![
+            1, 2, 3,
+        ]))),
+        MessageType::Response(ResponseType::MediaResponse(MediaResponse::Media(vec![
+            1, 2, 3,
+        ]))),
+        MessageType::Response(ResponseType::ChatResponse(ChatResponse::ClientList(vec![
+            NodeId::default(),
+        ]))),
+        MessageType::Response(ResponseType::ChatResponse(ChatResponse::MessageFrom {
+            from: NodeId::default(),
+            message: vec![72, 101, 108, 108, 111],
+        })),
+        MessageType::Response(ResponseType::ChatResponse(ChatResponse::MessageSent)),
+        MessageType::Response(ResponseType::DiscoveryResponse(
+            ServerType::CommunicationServer,
+        )),
+        MessageType::Response(ResponseType::DiscoveryResponse(ServerType::ContentServer)),
+        MessageType::Error(ErrorType::Unsupported(RequestType::TextRequest(
+            TextRequest::TextList,
+        ))),
+        MessageType::Error(ErrorType::Unexpected(ResponseType::TextResponse(
+            TextResponse::NotFound,
+        ))),
+    ]
+}
+
+pub fn all_the_packet_types(from: u8) -> Vec<PacketType> {
+    let fragment_index = 0;
+    let src = from;
+    let total_n_fragments = 1;
+
+    let flood_id = 0;
+    let initiator_id = 0;
+    let path_trace = vec![(from, NodeType::Drone)];
+    vec![
+        PacketType::Ack(Ack { fragment_index }),
+        PacketType::Nack(Nack {
+            fragment_index,
+            nack_type: NackType::Dropped,
+        }),
+        PacketType::Nack(Nack {
+            fragment_index,
+            nack_type: NackType::DestinationIsDrone,
+        }),
+        PacketType::Nack(Nack {
+            fragment_index,
+            nack_type: NackType::ErrorInRouting(src),
+        }),
+        PacketType::Nack(Nack {
+            fragment_index,
+            nack_type: NackType::UnexpectedRecipient(src),
+        }),
+        PacketType::MsgFragment(Fragment {
+            fragment_index,
+            total_n_fragments,
+            length: 128,
+            data: [0; 128],
+        }),
+        PacketType::FloodRequest(FloodRequest {
+            flood_id,
+            initiator_id,
+            path_trace: path_trace.clone(),
+        }),
+        PacketType::FloodResponse(FloodResponse {
+            flood_id,
+            path_trace,
+        }),
+    ]
 }

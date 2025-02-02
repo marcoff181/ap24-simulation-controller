@@ -1,5 +1,7 @@
 pub mod common;
 
+const WAITING_TIME: u64 = 300;
+
 use wg_2024::controller::DroneCommand;
 
 #[cfg(feature = "integration_tests")]
@@ -25,7 +27,7 @@ fn quit() {
         _packet_receivers,
     ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
-    thread::sleep(Duration::from_millis(100));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
     if !sc_handle.is_finished() {
         panic!("sc is not finished 100ms after quit mesage");
     }
@@ -49,7 +51,7 @@ fn unexpected_thread_exit() {
         command_receivers,
         _packet_receivers,
     ) = start_dummy_sc_from_cfg_with_handles("./tests/config_files/line.toml", h);
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
     if sc_handle.is_finished() {
         match sc_handle.join() {
             Ok(_) => panic!("sim controller thread exited succesfully"),
@@ -76,7 +78,7 @@ fn spawn() {
         _packet_receivers,
     ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('+'), KeyModifiers::NONE));
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
     if sc_handle.is_finished() {
         panic!("sc should still be running");
     }
@@ -109,7 +111,7 @@ fn changepdr() {
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
 
     expect_just_command_hmap(
         &command_receivers,
@@ -149,7 +151,7 @@ fn shortcut() {
 
     let _ = dronevent_send.send(DroneEvent::ControllerShortcut(packet.clone()));
 
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
 
     packet.routing_header.increase_hop_index();
 
@@ -174,7 +176,7 @@ fn crash() {
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
 
     expect_command_hmap(&command_receivers, 1, &DroneCommand::RemoveSender(2));
     expect_command_hmap(&command_receivers, 2, &DroneCommand::Crash);
@@ -192,18 +194,37 @@ fn add_connection() {
         command_receivers,
         _packet_receivers,
     ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    // try to connect already connected nodes
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+
+    let rcv1 = command_receivers.get(&1).unwrap();
+    let rcv3 = command_receivers.get(&3).unwrap();
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    if let Ok(command) = rcv1.try_recv() {
+        panic!("unexpected command : {:?}", command);
+    };
+    if let Ok(command) = rcv3.try_recv() {
+        panic!("unexpected command : {:?}", command);
+    };
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    //exit from error screen
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+    // try to connect not already connected nodes
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
-    thread::sleep(Duration::from_millis(200));
-    let rcv = command_receivers.get(&1).unwrap();
-    let command = rcv.try_recv().unwrap();
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let command = rcv1.try_recv().unwrap();
     if !matches!(command, DroneCommand::AddSender(3, _)) {
         panic!("unexpected command : {:?}", command);
     }
-    let rcv = command_receivers.get(&3).unwrap();
-    let command = rcv.try_recv().unwrap();
+    let command = rcv3.try_recv().unwrap();
     if !matches!(command, DroneCommand::AddSender(1, _)) {
         panic!("unexpected command : {:?}", command);
     }
@@ -229,7 +250,7 @@ fn move_node() {
         let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
         let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     }
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
     if sc_handle.is_finished() {
         panic!("sc should be still running");
     }
@@ -238,7 +259,8 @@ fn move_node() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn view_packet_events() {
-    use common::random_packet;
+    use common::{all_the_message_types, all_the_packet_types, random_packet};
+    use messages::{node_event::NodeEvent, Message};
     use wg_2024::{
         controller::DroneEvent,
         packet::{Fragment, Packet, PacketType},
@@ -253,76 +275,95 @@ fn view_packet_events() {
         _packet_receivers,
     ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
 
-    let _ = droneevent_send.send(DroneEvent::PacketSent(Packet {
-        pack_type: random_packet(),
-        routing_header: wg_2024::network::SourceRoutingHeader {
-            hop_index: 1,
-            hops: vec![1, 2, 3],
-        },
-        session_id: 0,
-    }));
-    let _ = droneevent_send.send(DroneEvent::PacketDropped(Packet {
-        pack_type: PacketType::MsgFragment(Fragment {
-            fragment_index: rand::random_range(1..256),
-            total_n_fragments: rand::random_range(1..345),
-            length: rand::random_range(1..128),
-            data: [35; 128],
-        }),
-        routing_header: wg_2024::network::SourceRoutingHeader {
-            hop_index: 1,
-            hops: vec![1, 2, 3],
-        },
-        session_id: 0,
-    }));
+    //go through all the tabs when there is nothing inside
+    for x in 1..=6 {
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        thread::sleep(Duration::from_millis(100));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    }
 
-    thread::sleep(Duration::from_millis(100));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
-    thread::sleep(Duration::from_millis(100));
+    for x in 1..=4 {
+        for ptype in all_the_packet_types(x) {
+            let _ = droneevent_send.send(DroneEvent::PacketSent(Packet {
+                pack_type: ptype.clone(),
+                routing_header: wg_2024::network::SourceRoutingHeader {
+                    hop_index: 1,
+                    hops: vec![x, x + 1],
+                },
+                session_id: 0,
+            }));
+        }
+
+        let _ = droneevent_send.send(DroneEvent::PacketDropped(Packet {
+            pack_type: PacketType::MsgFragment(Fragment {
+                fragment_index: 0,
+                total_n_fragments: 1,
+                length: 128,
+                data: [35; 128],
+            }),
+            routing_header: wg_2024::network::SourceRoutingHeader {
+                hop_index: 1,
+                hops: vec![x, x + 1],
+            },
+            session_id: 0,
+        }));
+    }
+
+    for x in 5..=6 {
+        for ptype in all_the_packet_types(x) {
+            let _ = nodeevent_send.send(NodeEvent::PacketSent(Packet {
+                pack_type: ptype,
+                routing_header: wg_2024::network::SourceRoutingHeader {
+                    hop_index: 1,
+                    hops: vec![x, x + 1],
+                },
+                session_id: 0,
+            }));
+        }
+
+        for (session_id, mtype) in all_the_message_types().into_iter().enumerate() {
+            let _ = nodeevent_send.send(NodeEvent::StartingMessageTransmission(Message {
+                source: x,
+                destination: x + 1,
+                session_id: session_id as u64,
+                content: mtype.clone(),
+            }));
+
+            let _ = nodeevent_send.send(NodeEvent::MessageSentSuccessfully(Message {
+                source: x,
+                destination: x + 1,
+                session_id: session_id as u64,
+                content: mtype.clone(),
+            }));
+
+            let _ = nodeevent_send.send(NodeEvent::MessageReceived(Message {
+                source: x,
+                destination: x + 1,
+                session_id: session_id as u64,
+                content: mtype,
+            }));
+        }
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    //go through all the tabs after packets and messages have been sent
+    for _ in 1..=6 {
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
-    thread::sleep(Duration::from_millis(100));
+    thread::sleep(Duration::from_millis(1000));
     if !sc_handle.is_finished() {
         panic!("sc is not finished 100ms after quit mesage");
     }
 }
-
-//                let send = nodeevent_send.send(NodeEvent::PacketSent(Packet {
-//                    pack_type: random_packet(),
-//                    routing_header: wg_2024::network::SourceRoutingHeader {
-//                        hop_index: 3,
-//                        hops: vec![2, 3, id, rand::random_range(1..=6)],
-//                    },
-//                    session_id: sid,
-//                }));
-//                if rand::random_bool(0.4) {
-//                    let send = nodeevent_send.send(NodeEvent::StartingMessageTransmission(
-//                        messages::Message {
-//                            source_id: id,
-//                            session_id: sid,
-//                            content: random_mtype(),
-//                        },
-//                    ));
-//                    sent_sid.insert((id, sid));
-//                }
-//                if rand::random_bool(0.3) {
-//                    if let Some(&element) = sent_sid.iter().next() {
-//                        let (id, sid) = sent_sid.take(&element).unwrap();
-//
-//                        let send = nodeevent_send.send(NodeEvent::MessageSentSuccessfully(
-//                            messages::Message {
-//                                source_id: id,
-//                                session_id: sid,
-//                                content: random_mtype(),
-//                            },
-//                        ));
-//                    }
-//                }
-//
-//                let send = nodeevent_send.send(NodeEvent::MessageReceived(messages::Message {
-//                    source_id: id,
-//                    session_id: sid,
-//                    content: random_mtype(),
-//                }));
