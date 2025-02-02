@@ -53,22 +53,6 @@ impl std::hash::Hash for NodeRepresentation {
     }
 }
 
-impl Default for NodeRepresentation {
-    fn default() -> Self {
-        NodeRepresentation::new(
-            // TODO: check if there is a node with same id
-            rand::random_range(0..=255),
-            0,
-            0,
-            NodeKind::Drone {
-                pdr: 0.0,
-                crashed: false,
-            },
-            HashSet::new(),
-        )
-    }
-}
-
 impl NodeRepresentation {
     pub fn new(id: NodeId, x: u32, y: u32, kind: NodeKind, adj: HashSet<NodeId>) -> Self {
         //let s = format!("{:?} #{}", kind, id);
@@ -164,5 +148,43 @@ impl NodeRepresentation {
 
     pub fn shiftd(&mut self, offset: u32) {
         self.y = self.y.saturating_sub(offset);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::hash::{DefaultHasher, Hash, Hasher};
+
+    use super::*;
+
+    #[test]
+    fn test_partial_eq() {
+        let node1 = NodeRepresentation::new(1, 10, 20, NodeKind::Client, HashSet::new());
+        let node2 = NodeRepresentation::new(1, 30, 40, NodeKind::Server, HashSet::new());
+        let node3 = NodeRepresentation::new(2, 10, 20, NodeKind::Client, HashSet::new());
+
+        assert_eq!(node1, node2); // Same ID, should be equal
+        assert_ne!(node1, node3); // Different ID, should not be equal
+    }
+
+    #[test]
+    fn test_hash() {
+        let node1 = NodeRepresentation::new(1, 10, 20, NodeKind::Client, HashSet::new());
+        let node2 = NodeRepresentation::new(1, 30, 40, NodeKind::Server, HashSet::new());
+        let node3 = NodeRepresentation::new(2, 10, 20, NodeKind::Client, HashSet::new());
+        let mut hasher1 = DefaultHasher::new();
+        node1.hash(&mut hasher1);
+        let hash1 = hasher1.finish();
+
+        let mut hasher2 = DefaultHasher::new();
+        node2.hash(&mut hasher2);
+        let hash2 = hasher2.finish();
+
+        let mut hasher3 = DefaultHasher::new();
+        node3.hash(&mut hasher3);
+        let hash3 = hasher3.finish();
+
+        assert_eq!(hash1, hash2); // Same ID, should have the same hash
+        assert_ne!(hash1, hash3); // Different ID, should have different hashes
     }
 }

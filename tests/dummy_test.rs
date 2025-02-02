@@ -98,6 +98,8 @@ fn crash() {
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(200));
 
     expect_command_hmap(&command_receivers, 1, &DroneCommand::RemoveSender(2));
