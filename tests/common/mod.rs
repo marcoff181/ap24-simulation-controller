@@ -1,19 +1,12 @@
-use std::{
-    collections::HashMap,
-    thread::{self, JoinHandle},
-};
+use std::collections::HashMap;
 
-use crossbeam_channel::{self, unbounded, Receiver, Sender};
-use log::LevelFilter;
+use crossbeam_channel::{self, Receiver};
 use messages::{
-    node_event::NodeEvent, ChatRequest, ChatResponse, ErrorType, MediaRequest, MediaResponse,
+    ChatRequest, ChatResponse, ErrorType, MediaRequest, MediaResponse,
     MessageType, RequestType, ResponseType, ServerType, TextRequest, TextResponse,
 };
-use ratatui::{backend::TestBackend, Terminal};
-use simplelog::{format_description, ConfigBuilder, ThreadLogMode, ThreadPadding, WriteLogger};
 use wg_2024::{
-    config::Config,
-    controller::{DroneCommand, DroneEvent},
+    controller::DroneCommand,
     network::NodeId,
     packet::{
         Ack, FloodRequest, FloodResponse, Fragment, Nack, NackType, NodeType, Packet, PacketType,

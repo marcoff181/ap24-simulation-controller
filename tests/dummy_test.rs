@@ -2,12 +2,9 @@ pub mod common;
 
 const WAITING_TIME: u64 = 300;
 
-use wg_2024::controller::DroneCommand;
 
 #[cfg(feature = "integration_tests")]
 use common::start_dummy_sc_from_cfg;
-use std::{thread, time::Duration};
-use test_log::test;
 
 #[cfg(feature = "integration_tests")]
 use ap24_simulation_controller::AppMessage;

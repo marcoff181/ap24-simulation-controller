@@ -1,22 +1,12 @@
-use std::collections::HashSet;
 
-use messages::node_event::{EventNetworkGraph, EventNetworkNode};
 use ratatui::prelude::*;
-use ratatui::widgets::canvas::Canvas;
-use ratatui::widgets::{
-    Block, Borders, Clear, Gauge, ListState, Padding, Paragraph, TableState, Wrap,
-};
-use symbols::Marker;
 //use wg_2024::config::{Client, Drone, Server};
 
 use crate::network::node_kind::NodeKind;
 use crate::network::node_representation::NodeRepresentation;
-use crate::network::Network;
-use crate::screen::Window;
 use crate::utilities::theme::{
-    BG_COLOR, CLIENT_COLOR, CRASH_COLOR, DRONE_COLOR, HIGHLIGHT_COLOR, SERVER_COLOR, TEXT_COLOR,
+    CLIENT_COLOR, DRONE_COLOR, SERVER_COLOR,
 };
-use crate::Screen;
 
 use super::draw_options::DrawGraphOptions;
 use super::simulation::render_simulation;

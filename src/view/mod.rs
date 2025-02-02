@@ -9,11 +9,10 @@ mod stats;
 mod tabs;
 
 use footer::render_footer;
-use layout::Flex;
 use list::render_list;
 use ratatui::prelude::*;
 use ratatui::widgets::{
-    Block, Borders, Clear, Gauge, ListState, Padding, Paragraph, TableState, Wrap,
+    Block, Borders, Gauge, ListState, Padding, Paragraph, TableState, Wrap,
 };
 use simulation::render_simulation;
 use stats::render_stats;

@@ -1,28 +1,16 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::format,
-    hash::Hash,
-};
 
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{Color, Style, Styled, Stylize},
-    symbols::{self, Marker},
+    style::Styled,
+    symbols::{Marker},
     text::Text,
     widgets::{
-        canvas::{Canvas, Context, Line},
-        Block, Borders, Padding, Widget,
+        canvas::{Canvas, Context}, Widget,
     },
 };
-use wg_2024::network::NodeId;
 
-use crate::{
-    network::{node_kind::NodeKind, node_representation::NodeRepresentation},
-    screen::{Screen, Window},
-    utilities::theme::*,
-    Network,
-};
+use crate::utilities::theme::*;
 
 use super::draw_options::DrawGraphOptions;
 
@@ -45,10 +33,10 @@ pub fn render_simulation(opt: DrawGraphOptions, area: Rect, buf: &mut Buffer) {
         })
         .background_color(BG_COLOR)
         .x_bounds([
-            min_x as f64 - opt.padding,
-            max_x as f64 + (0.01) * (max_x as f64) + opt.padding,
+            min_x - opt.padding,
+            max_x + (0.01) * max_x + opt.padding,
         ])
-        .y_bounds([min_y as f64 - opt.padding, max_y as f64 + opt.padding]);
+        .y_bounds([min_y - opt.padding, max_y + opt.padding]);
 
     canvas.render(area, buf);
 }

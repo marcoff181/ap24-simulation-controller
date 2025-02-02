@@ -3,28 +3,23 @@ mod network;
 mod screen;
 mod utilities;
 mod view;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::KeyEvent;
 use messages::node_event::NodeEvent;
-use messages::Message;
 
 use crate::screen::Screen;
 use core::{f32, panic};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashMap, HashSet},
     thread::{Builder, JoinHandle},
-    time::Instant,
 };
-use test_log::test;
 
 use crate::network::Network;
-use crossbeam_channel::{select, select_biased, unbounded, Receiver, Sender};
+use crossbeam_channel::{select, unbounded, Receiver, Sender};
 use log::{debug, error, info, trace, warn};
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
 use rand::{random, seq::IndexedRandom};
 use ratatui::{
-    backend::TestBackend,
-    widgets::{ListState, TableState},
-    DefaultTerminal, Terminal,
+    widgets::{ListState, TableState}, Terminal,
 };
 use screen::Window;
 

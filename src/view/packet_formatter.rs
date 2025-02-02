@@ -1,5 +1,4 @@
 use messages::Message;
-use messages::ResponseType;
 use rand::seq::IndexedRandom;
 use ratatui::style::Style;
 use ratatui::style::Stylize;
@@ -9,8 +8,6 @@ use ratatui::text::Text;
 use ratatui::widgets::Paragraph;
 use ratatui::widgets::Row;
 use ratatui::widgets::Wrap;
-use wg_2024::packet::FloodRequest;
-use wg_2024::packet::Nack;
 use wg_2024::packet::NackType;
 use wg_2024::packet::Packet;
 use wg_2024::packet::PacketType;

@@ -1,26 +1,15 @@
 use std::{
-    collections::{HashMap, HashSet},
-    fmt::format,
-    hash::Hash,
+    collections::HashMap,
     time::Instant,
 };
 
 use messages::node_event::EventNetworkGraph;
 use rand::random_range;
-use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::{Color, Style, Styled, Stylize},
-    symbols::{self, Marker},
-    widgets::{
-        canvas::{Canvas, Context, Line},
-        Block, Borders, Padding, Widget,
-    },
-};
+use ratatui::style::{Color, Style, Stylize};
 use wg_2024::{network::NodeId, packet::PacketType};
 
 use crate::{
-    network::{node_kind::NodeKind, node_representation::NodeRepresentation},
+    network::node_representation::NodeRepresentation,
     screen::{Screen, Window},
     utilities::theme::*,
     Network,

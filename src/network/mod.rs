@@ -1,9 +1,8 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     time::Instant,
 };
 
-use messages::node::Node;
 use node_kind::NodeKind;
 use node_representation::NodeRepresentation;
 use wg_2024::{config::Config, network::NodeId, packet::PacketType};

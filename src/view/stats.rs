@@ -2,8 +2,7 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Style, Stylize},
     symbols::{self},
-    text::{Line, Text},
-    widgets::{Block, Borders, Paragraph, Row, StatefulWidget, Table, Widget},
+    widgets::{Block, Borders, Row, Table},
     Frame,
 };
 

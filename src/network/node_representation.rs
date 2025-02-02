@@ -1,11 +1,7 @@
 // use std::hash::Hash;
 
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    fmt::Display,
-};
+use std::collections::{HashSet, VecDeque};
 
-use crossterm::style::Color;
 use indexmap::IndexMap;
 use messages::{node_event::EventNetworkGraph, Message};
 use wg_2024::{
