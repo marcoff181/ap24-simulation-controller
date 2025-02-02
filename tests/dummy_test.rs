@@ -16,8 +16,14 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 #[test]
 #[cfg(feature = "integration_tests")]
 fn quit() {
-    let (keyevent_send, sc_handle, dronevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(100));
     if !sc_handle.is_finished() {
@@ -35,8 +41,14 @@ fn unexpected_thread_exit() {
     let failed_thread = thread::spawn(move || ());
     let h = HashMap::from([(1, failed_thread)]);
 
-    let (keyevent_send, sc_handle, dronevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg_with_handles("./tests/config_files/line.toml", h);
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg_with_handles("./tests/config_files/line.toml", h);
     thread::sleep(Duration::from_millis(200));
     if sc_handle.is_finished() {
         match sc_handle.join() {
@@ -55,8 +67,14 @@ fn unexpected_thread_exit() {
 fn spawn() {
     use core::panic;
 
-    let (keyevent_send, sc_handle, dronevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('+'), KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(200));
     if sc_handle.is_finished() {
@@ -71,12 +89,24 @@ fn changepdr() {
 
     use common::{expect_command_hmap, expect_just_command_hmap};
 
-    let (keyevent_send, sc_handle, dronevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(200));
@@ -90,11 +120,55 @@ fn changepdr() {
 
 #[test]
 #[cfg(feature = "integration_tests")]
+fn shortcut() {
+    use core::panic;
+
+    use common::{expect_command_hmap, expect_just_command_hmap, expect_just_packet_hmap};
+    use wg_2024::{controller::DroneEvent, packet::Packet};
+
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let mut packet = Packet {
+        pack_type: wg_2024::packet::PacketType::Nack(wg_2024::packet::Nack {
+            fragment_index: 0,
+            nack_type: wg_2024::packet::NackType::Dropped,
+        }),
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 1,
+            hops: vec![1, 2, 3],
+        },
+        session_id: 0,
+    };
+
+    let _ = dronevent_send.send(DroneEvent::ControllerShortcut(packet.clone()));
+
+    thread::sleep(Duration::from_millis(200));
+
+    packet.routing_header.increase_hop_index();
+
+    expect_just_packet_hmap(&packet_receivers, 3, &packet);
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
 fn crash() {
     use common::{expect_command_hmap, expect_just_command_hmap};
 
-    let (keyevent_send, sc_handle, dronevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE));
@@ -110,8 +184,14 @@ fn crash() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn add_connection() {
-    let (keyevent_send, sc_handle, dronevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
@@ -132,8 +212,14 @@ fn add_connection() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn move_node() {
-    let (keyevent_send, sc_handle, dronevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let (
+        keyevent_send,
+        sc_handle,
+        dronevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     for x in 1..=6 {
         let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('m'), KeyModifiers::NONE));
         let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
@@ -158,8 +244,14 @@ fn view_packet_events() {
         packet::{Fragment, Packet, PacketType},
     };
 
-    let (keyevent_send, sc_handle, droneevent_send, nodeevent_send, command_receivers) =
-        start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
 
     let _ = droneevent_send.send(DroneEvent::PacketSent(Packet {
         pack_type: random_packet(),

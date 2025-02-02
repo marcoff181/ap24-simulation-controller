@@ -236,11 +236,14 @@ impl MySimulationController {
     /// Panics
     /// - when the packet has no destination
     /// - if there is no packet sender for the destination node
-    fn shortcut_packet(&mut self, packet: Packet) {
+    fn shortcut_packet(&mut self, mut packet: Packet) {
         let dst = packet
             .routing_header
             .destination()
             .unwrap_or_else(|| panic!("Destination for packet {packet} not found"));
+        if !packet.routing_header.hops.is_empty() {
+            packet.routing_header.hop_index = packet.routing_header.hops.len() - 1;
+        }
         let sender = self
             .packet_send
             .get(&dst)
@@ -705,11 +708,12 @@ impl MySimulationController {
                 if let Window::Detail { ref mut tab } = self.screen.window {
                     *tab = tab.saturating_add(1);
                     self.packet_table_state.select(Some(0));
-                    if let NodeKind::Drone { .. } = kind {
-                        *tab %= 3;
-                    } else {
-                        *tab %= 3;
-                    }
+                    *tab %= 3;
+                    //if let NodeKind::Drone { .. } = kind {
+                    //    *tab %= 3;
+                    //} else {
+                    //    *tab %= 3;
+                    //}
                 }
             }
             // spawn drone

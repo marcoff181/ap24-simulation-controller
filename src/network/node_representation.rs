@@ -172,6 +172,7 @@ mod tests {
         let node1 = NodeRepresentation::new(1, 10, 20, NodeKind::Client, HashSet::new());
         let node2 = NodeRepresentation::new(1, 30, 40, NodeKind::Server, HashSet::new());
         let node3 = NodeRepresentation::new(2, 10, 20, NodeKind::Client, HashSet::new());
+
         let mut hasher1 = DefaultHasher::new();
         node1.hash(&mut hasher1);
         let hash1 = hasher1.finish();

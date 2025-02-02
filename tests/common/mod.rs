@@ -27,6 +27,7 @@ pub fn start_dummy_sc_from_cfg(
     Sender<DroneEvent>,
     Sender<NodeEvent>,
     HashMap<NodeId, Receiver<DroneCommand>>,
+    HashMap<NodeId, Receiver<Packet>>,
 ) {
     start_dummy_sc_from_cfg_with_handles(config, HashMap::new())
 }
@@ -34,14 +35,18 @@ pub fn start_dummy_sc_from_cfg(
 #[cfg(feature = "integration_tests")]
 pub fn start_dummy_sc_from_cfg_with_handles(
     config: &str,
-    node_handles: HashMap<u8, JoinHandle<()>>,
+    mut node_handles: HashMap<u8, JoinHandle<()>>,
 ) -> (
     Sender<KeyEvent>,
     JoinHandle<()>,
     Sender<DroneEvent>,
     Sender<NodeEvent>,
     HashMap<NodeId, Receiver<DroneCommand>>,
+    HashMap<NodeId, Receiver<Packet>>,
 ) {
+    let add_handles = node_handles.is_empty();
+    use std::time::Duration;
+
     use ap24_simulation_controller::{AppMessage, MySimulationController, SimControllerOptions};
 
     let config_data = std::fs::read_to_string(config).expect("Unable to read config file");
@@ -63,6 +68,15 @@ pub fn start_dummy_sc_from_cfg_with_handles(
         let (ps, pr) = unbounded::<Packet>();
         packet_receivers.insert(n.id, pr);
         packet_senders.insert(n.id, ps);
+        if add_handles {
+            let handle = thread::Builder::new()
+                .name(format!("drone#{}", n.id))
+                .spawn(move || loop {
+                    thread::sleep(Duration::from_secs(1));
+                })
+                .expect("could not create thread");
+            node_handles.insert(n.id, handle);
+        }
     }
 
     for n in config.server.iter() {
@@ -72,6 +86,15 @@ pub fn start_dummy_sc_from_cfg_with_handles(
         let (ps, pr) = unbounded::<Packet>();
         packet_receivers.insert(n.id, pr);
         packet_senders.insert(n.id, ps);
+        if add_handles {
+            let handle = thread::Builder::new()
+                .name(format!("server#{}", n.id))
+                .spawn(move || loop {
+                    thread::sleep(Duration::from_secs(1));
+                })
+                .expect("could not create thread");
+            node_handles.insert(n.id, handle);
+        }
     }
 
     for n in config.client.iter() {
@@ -81,6 +104,15 @@ pub fn start_dummy_sc_from_cfg_with_handles(
         let (ps, pr) = unbounded::<Packet>();
         packet_receivers.insert(n.id, pr);
         packet_senders.insert(n.id, ps);
+        if add_handles {
+            let handle = thread::Builder::new()
+                .name(format!("client#{}", n.id))
+                .spawn(move || loop {
+                    thread::sleep(Duration::from_secs(1));
+                })
+                .expect("could not create thread");
+            node_handles.insert(n.id, handle);
+        }
     }
 
     let opt = SimControllerOptions {
@@ -106,6 +138,7 @@ pub fn start_dummy_sc_from_cfg_with_handles(
         droneevent_send,
         nodeevent_send,
         command_receivers,
+        packet_receivers,
     )
 }
 
@@ -163,7 +196,7 @@ pub fn random_mtype() -> MessageType {
     }
 }
 
-pub fn expect_command_(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {
+pub fn expect_command(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {
     match rcv.try_recv() {
         Ok(c) => {
             if c != *command {
@@ -176,7 +209,7 @@ pub fn expect_command_(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {
     }
 }
 
-pub fn expect_no_command_(rcv: &Receiver<DroneCommand>) {
+pub fn expect_no_command(rcv: &Receiver<DroneCommand>) {
     match rcv.try_recv() {
         Ok(c) => {
             panic!("received command: {:?} was expecting nothing", c)
@@ -192,9 +225,9 @@ pub fn expect_just_command_hmap(
 ) {
     for (n, r) in rcv {
         if *n == id {
-            expect_command_(r, command);
+            expect_command(r, command);
         } else {
-            expect_no_command_(r);
+            expect_no_command(r);
         }
     }
 }
@@ -206,7 +239,47 @@ pub fn expect_command_hmap(
 ) {
     for (n, r) in rcv {
         if *n == id {
-            expect_command_(r, command);
+            expect_command(r, command);
+        }
+    }
+}
+
+pub fn expect_packet(rcv: &Receiver<Packet>, packet: &Packet) {
+    match rcv.try_recv() {
+        Ok(c) => {
+            if c != *packet {
+                panic!("received packet: {:?} was expecting {:?}", c, packet)
+            }
+        }
+        Err(e) => {
+            panic!("got {e}, was expecting {:?}", packet)
+        }
+    }
+}
+
+pub fn expect_no_packet(rcv: &Receiver<Packet>) {
+    match rcv.try_recv() {
+        Ok(c) => {
+            panic!("received packet: {:?} was expecting nothing", c)
+        }
+        Err(e) => {}
+    }
+}
+
+pub fn expect_just_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, packet: &Packet) {
+    for (n, r) in rcv {
+        if *n == id {
+            expect_packet(r, packet);
+        } else {
+            expect_no_packet(r);
+        }
+    }
+}
+
+pub fn expect_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, packet: &Packet) {
+    for (n, r) in rcv {
+        if *n == id {
+            expect_packet(r, packet);
         }
     }
 }
