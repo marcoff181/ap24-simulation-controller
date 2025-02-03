@@ -40,7 +40,6 @@ pub struct SimControllerOptions {
     pub command_send: HashMap<NodeId, Sender<DroneCommand>>,
     pub droneevent_send: Sender<DroneEvent>,
     pub droneevent_recv: Receiver<DroneEvent>,
-    pub nodeevent_send: Sender<NodeEvent>,
     pub nodeevent_recv: Receiver<NodeEvent>,
     pub node_handles: HashMap<NodeId, JoinHandle<()>>,
     pub config: Config,
@@ -51,7 +50,6 @@ pub struct MySimulationController {
     // external comms
     packet_send: HashMap<NodeId, Sender<Packet>>,
     command_send: HashMap<NodeId, Sender<DroneCommand>>,
-    //nodeevent_send: Sender<NodeEvent>,
     nodeevent_recv: Receiver<NodeEvent>,
     droneevent_send: Sender<DroneEvent>,
     droneevent_recv: Receiver<DroneEvent>,
@@ -81,7 +79,6 @@ impl MySimulationController {
             command_send: opt.command_send,
             droneevent_recv: opt.droneevent_recv,
             droneevent_send: opt.droneevent_send,
-            //nodeevent_send: opt.nodeevent_send,
             nodeevent_recv: opt.nodeevent_recv,
             packet_send: opt.packet_send,
             node_handles: opt.node_handles,
