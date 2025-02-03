@@ -6,7 +6,7 @@ use crate::utilities::app_message::AppMessage;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 
 pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
-    if event::poll(Duration::from_millis(100)).expect("error polling for keypresses") {
+    if let Ok(true) = event::poll(Duration::from_millis(100)) {
         match event::read().expect("error reading key event") {
             // check KeyEventKind::Press to avoid handling key release events
             Event::Key(key) if key.kind == KeyEventKind::Press => handle_keypress(screen, &key),
