@@ -103,10 +103,6 @@ fn changepdr() {
         _packet_receivers,
     ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
@@ -116,6 +112,9 @@ fn changepdr() {
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(WAITING_TIME));
 
+    if sc_handle.is_finished() {
+        panic!("sc should still be running");
+    }
     expect_just_command_hmap(
         &command_receivers,
         1,

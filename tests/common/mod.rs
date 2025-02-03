@@ -123,7 +123,6 @@ pub fn start_dummy_sc_from_cfg_with_handles(
         droneevent_recv,
         droneevent_send: droneevent_send.clone(),
         nodeevent_recv,
-        nodeevent_send: nodeevent_send.clone(),
         packet_send: packet_senders,
         config,
         node_handles,
@@ -231,13 +230,15 @@ pub fn expect_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, packet: &
 pub fn all_the_message_types() -> Vec<MessageType> {
     vec![
         MessageType::Request(RequestType::TextRequest(TextRequest::TextList)),
-        MessageType::Request(RequestType::TextRequest(TextRequest::Text(42))),
-        MessageType::Request(RequestType::MediaRequest(MediaRequest::MediaList)),
-        MessageType::Request(RequestType::MediaRequest(MediaRequest::Media(42))),
-        MessageType::Request(RequestType::ChatRequest(ChatRequest::ClientList)),
-        MessageType::Request(RequestType::ChatRequest(ChatRequest::Register(
-            NodeId::default(),
+        MessageType::Request(RequestType::TextRequest(TextRequest::Text(
+            "dfs".to_string(),
         ))),
+        MessageType::Request(RequestType::MediaRequest(MediaRequest::MediaList)),
+        MessageType::Request(RequestType::MediaRequest(MediaRequest::Media(
+            "dfs".to_string(),
+        ))),
+        MessageType::Request(RequestType::ChatRequest(ChatRequest::ClientList)),
+        MessageType::Request(RequestType::ChatRequest(ChatRequest::Register)),
         MessageType::Request(RequestType::ChatRequest(ChatRequest::SendMessage {
             from: NodeId::default(),
             to: NodeId::default(),
@@ -245,14 +246,20 @@ pub fn all_the_message_types() -> Vec<MessageType> {
         })),
         MessageType::Request(RequestType::DiscoveryRequest(())),
         MessageType::Response(ResponseType::TextResponse(TextResponse::TextList(vec![
-            1, 2, 3,
+            "dfs".to_string(),
+            "dfs".to_string(),
+            "dfs".to_string(),
         ]))),
         MessageType::Response(ResponseType::TextResponse(TextResponse::Text(
             "Hello".to_string(),
         ))),
-        MessageType::Response(ResponseType::TextResponse(TextResponse::NotFound)),
+        MessageType::Response(ResponseType::TextResponse(TextResponse::NotFound(
+            "sdf".to_string(),
+        ))),
         MessageType::Response(ResponseType::MediaResponse(MediaResponse::MediaList(vec![
-            1, 2, 3,
+            "dfs".to_string(),
+            "dfs".to_string(),
+            "dfs".to_string(),
         ]))),
         MessageType::Response(ResponseType::MediaResponse(MediaResponse::Media(vec![
             1, 2, 3,
@@ -273,7 +280,7 @@ pub fn all_the_message_types() -> Vec<MessageType> {
             TextRequest::TextList,
         ))),
         MessageType::Error(ErrorType::Unexpected(ResponseType::TextResponse(
-            TextResponse::NotFound,
+            TextResponse::NotFound("dfs".to_string()),
         ))),
     ]
 }

@@ -27,3 +27,4 @@ pub const CHAT_MSG: Color = Color::LightGreen;
 pub const DISCOVERY_MSG: Color = Color::LightMagenta;
 pub const UNSUPPORTED_MSG: Color = Color::Red;
 pub const UNEXPECTED_MSG: Color = Color::LightRed;
+pub const UNREGISTERED_MSG: Color = Color::Blue;

@@ -158,6 +158,7 @@ impl MySimulationController {
                 };
             };
 
+            #[cfg(not(feature = "appmessage_through_crossbeam"))]
             if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen) {
                 debug!("received AppMessage: {:?}", message);
                 self.transition(&message);

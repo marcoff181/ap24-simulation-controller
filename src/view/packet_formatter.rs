@@ -71,6 +71,9 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
                 messages::ErrorType::Unexpected(_) => {
                     rtype = Span::from("UNX".to_string()).bg(UNEXPECTED_MSG);
                 }
+                messages::ErrorType::Unregistered(_) => {
+                    rtype = Span::from("UNR".to_string()).bg(UNREGISTERED_MSG);
+                }
             }
         }
     }
@@ -125,8 +128,8 @@ pub fn message_detail(message: &Message) -> Paragraph {
                         messages::ChatRequest::ClientList => {
                             h2 = Line::from("Requesting Client List".to_string())
                         }
-                        messages::ChatRequest::Register(n) => {
-                            h2 = Line::from(format!("Requesting to register to chat #{n}"))
+                        messages::ChatRequest::Register => {
+                            h2 = Line::from(format!("Requesting to register to chat"))
                         }
                         messages::ChatRequest::SendMessage { from, to, message } => {
                             h2 = Line::from(format!("Sending from #{from} to #{to} message: "));
@@ -156,8 +159,8 @@ pub fn message_detail(message: &Message) -> Paragraph {
                             h2 = Line::from("Returning TextResponse:".to_string());
                             opt = Line::from(text.as_str());
                         }
-                        messages::TextResponse::NotFound => {
-                            h2 = Line::from("TextResponse::NotFound".to_string());
+                        messages::TextResponse::NotFound(s) => {
+                            h2 = Line::from(format!("TextResponse::NotFound: {}", s));
                         }
                     }
                 }
@@ -171,6 +174,10 @@ pub fn message_detail(message: &Message) -> Paragraph {
                         messages::MediaResponse::Media(vec) => {
                             h2 = Line::from("Returning Media:".to_string());
                             opt = Line::from(format!("{:?}", vec));
+                        }
+                        messages::MediaResponse::NotFound(s) => {
+                            h2 = Line::from("Media not found:".to_string());
+                            opt = Line::from(format!("{:?}", s));
                         }
                     }
                 }
@@ -217,6 +224,10 @@ pub fn message_detail(message: &Message) -> Paragraph {
                 messages::ErrorType::Unexpected(response_type) => {
                     rtype = Span::styled("Unexpected", Style::new().bg(TEXT_MSG));
                     h2 = Line::from(format!("response type: {:?}", response_type));
+                }
+                messages::ErrorType::Unregistered(n) => {
+                    rtype = Span::styled("Unregistered", Style::new().bg(TEXT_MSG));
+                    h2 = Line::from(format!("#{n}"));
                 }
             }
         }
