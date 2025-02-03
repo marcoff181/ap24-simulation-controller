@@ -17,7 +17,7 @@ use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
 use rand::random;
 use ratatui::{
     widgets::{ListState, TableState},
-    Terminal,
+    DefaultTerminal, Terminal,
 };
 use screen::Window;
 use std::{
@@ -125,10 +125,7 @@ impl MySimulationController {
     /// runs the main loop of the sc
     /// Panics
     /// panics if a node thread exits and the node was not a crashing drone
-    fn start<B: ratatui::backend::Backend>(
-        &mut self,
-        mut terminal: Terminal<B>,
-    ) -> Result<(), std::io::Error> {
+    fn start(&mut self, mut terminal: DefaultTerminal) -> Result<(), std::io::Error> {
         info!("started SC");
         let mut finished: Vec<NodeId> = Vec::new();
         while self.running {
