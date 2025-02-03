@@ -9,7 +9,6 @@ use ratatui::backend::TestBackend;
 
 use crate::network::Network;
 use crate::screen::Screen;
-use core::{f32, panic};
 use crossbeam_channel::{select, unbounded, Receiver, Sender};
 use crossterm::event::KeyEvent;
 use log::{debug, error, info, trace, warn};
@@ -26,10 +25,6 @@ use std::{
     thread::{Builder, JoinHandle},
 };
 
-#[cfg(feature = "appmessage_through_crossbeam")]
-pub use utilities::app_message::AppMessage;
-
-#[cfg(not(feature = "appmessage_through_crossbeam"))]
 use utilities::app_message::AppMessage;
 
 use wg_2024::{
@@ -165,7 +160,6 @@ impl MySimulationController {
                 };
             }
 
-            #[cfg(not(feature = "appmessage_through_crossbeam"))]
             if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen) {
                 debug!("received AppMessage: {:?}", message);
                 self.transition(&message);
