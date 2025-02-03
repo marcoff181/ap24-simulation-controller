@@ -105,7 +105,8 @@ impl MySimulationController {
     // could return Result and then thread handler in network intializer handles the Error
     pub fn run(&mut self) {
         let terminal = ratatui::init();
-        let _result = self.start(terminal);
+        let result = self.start(terminal);
+        info!("start function exited with result {:?}", result);
         ratatui::restore();
     }
 
@@ -158,7 +159,7 @@ impl MySimulationController {
                     );
                     self.transition(&message);
                 };
-            }
+            };
 
             if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen) {
                 debug!("received AppMessage: {:?}", message);
