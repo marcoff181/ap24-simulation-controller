@@ -6,7 +6,6 @@ use crate::utilities::app_message::AppMessage;
 use crossterm::event::KeyCode;
 use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
 
-#[cfg(not(feature = "appmessage_through_crossbeam"))]
 pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
     if event::poll(Duration::from_millis(100)).expect("error polling for keypresses") {
         match event::read().expect("error reading key event") {
