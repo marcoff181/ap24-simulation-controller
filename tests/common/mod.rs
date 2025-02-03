@@ -131,10 +131,10 @@ pub fn start_dummy_sc_from_cfg_with_handles(
 
     let terminal = Terminal::new(TestBackend::new(50, 50)).unwrap();
     let mut simcontr = MySimulationController::new(opt);
-    simcontr.set_keyevent_recv(keyevent_recv);
+    //simcontr.set_keyevent_recv(keyevent_recv);
     let join_handle = thread::spawn(move || {
-        //simcontr.run();
-        simcontr.run_with_terminal(terminal);
+        simcontr.run();
+        //simcontr.run_with_terminal(terminal);
     });
     (
         appmess_send,

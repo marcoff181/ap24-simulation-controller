@@ -9,7 +9,10 @@ pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
     if let Ok(true) = event::poll(Duration::from_millis(100)) {
         match event::read().expect("error reading key event") {
             // check KeyEventKind::Press to avoid handling key release events
-            Event::Key(key) if key.kind == KeyEventKind::Press => handle_keypress(screen, &key),
+            Event::Key(key) if key.kind == KeyEventKind::Press => {
+                debug!("{:?}", key);
+                handle_keypress(screen, &key)
+            }
             // Event::Mouse(_) => Ok(None),
             // Event::Resize(_, _) => Ok(None),
             _ => None,
@@ -21,6 +24,7 @@ pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
 
 #[cfg(feature = "appmessage_through_crossbeam")]
 use crossbeam_channel::Receiver;
+use log::debug;
 #[cfg(feature = "appmessage_through_crossbeam")]
 pub fn handle_keypress_from_recv(screen: &Screen, rcv: &Receiver<KeyEvent>) -> Option<AppMessage> {
     if let Ok(message) = rcv.try_recv() {
