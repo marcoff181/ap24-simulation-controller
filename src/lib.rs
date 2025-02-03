@@ -203,23 +203,36 @@ impl MySimulationController {
             // ---------------------------------------------------------------------------
             loop {
                 select! {
-                    recv(self.droneevent_recv)->res =>{
-                        if let Ok(event) = res{
-                            if let DroneEvent::ControllerShortcut(ref packet) = event {
-                                self.shortcut_packet(packet.clone());
-                            }
-                            self.save_droneevent(event);
-                        }
+                                    recv(self.droneevent_recv)->res =>{
+                                        match res{
+                    Ok(event) => {
+
+                                            if let DroneEvent::ControllerShortcut(ref packet) = event {
+                                                self.shortcut_packet(packet.clone());
+                                            }
+                                            self.save_droneevent(event);
                     },
-                    recv(self.nodeevent_recv)-> res =>{
-                        if let Ok(event) = res{
-                            self.save_nodeevent(event);
-                        }
+                    Err(err) => {
 
-                    }
-
-                    default => break,
+                                            panic!("error for nodevent receiver: {:?}",err);
+                    },
                 }
+                                    },
+                                    recv(self.nodeevent_recv)-> res =>{
+                                        match res{
+                    Ok(event) => {
+
+                                            self.save_nodeevent(event);
+                    },
+                    Err(err) => {
+
+                                            panic!("error for nodevent receiver: {:?}",err);
+                    },
+                }
+
+                                    }
+                                    default => break,
+                                }
             }
         }
 
