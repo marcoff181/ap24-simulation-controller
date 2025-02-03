@@ -3,11 +3,9 @@ use std::time::Duration;
 use crate::network::node_kind::NodeKind;
 use crate::screen::{Screen, Window};
 use crate::utilities::app_message::AppMessage;
-use crossterm::event::KeyCode;
-use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 
 pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
-    log::debug!("polling for keyevents");
     if event::poll(Duration::from_millis(100)).expect("error polling for keypresses") {
         match event::read().expect("error reading key event") {
             // check KeyEventKind::Press to avoid handling key release events

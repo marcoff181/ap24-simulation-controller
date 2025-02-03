@@ -262,7 +262,7 @@ pub fn all_the_message_types() -> Vec<MessageType> {
         ]))),
         MessageType::Response(ResponseType::ChatResponse(ChatResponse::MessageFrom {
             from: NodeId::default(),
-            message: vec![72, 101, 108, 108, 111],
+            message: "ciao".to_string(),
         })),
         MessageType::Response(ResponseType::ChatResponse(ChatResponse::MessageSent)),
         MessageType::Response(ResponseType::DiscoveryResponse(
