@@ -4,6 +4,7 @@ use crate::network::node_kind::NodeKind;
 use crate::screen::{Screen, Window};
 use crate::utilities::app_message::AppMessage;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use log::debug;
 
 pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
     if let Ok(true) = event::poll(Duration::from_millis(100)) {
@@ -24,7 +25,6 @@ pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
 
 #[cfg(feature = "appmessage_through_crossbeam")]
 use crossbeam_channel::Receiver;
-use log::debug;
 #[cfg(feature = "appmessage_through_crossbeam")]
 pub fn handle_keypress_from_recv(screen: &Screen, rcv: &Receiver<KeyEvent>) -> Option<AppMessage> {
     if let Ok(message) = rcv.try_recv() {
