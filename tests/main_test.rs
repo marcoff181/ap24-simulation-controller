@@ -158,22 +158,39 @@ fn shortcut() {
 #[test]
 #[cfg(feature = "integration_tests")]
 fn crash() {
+    use common::{expect_no_command, expect_no_commands};
+
     let (
         keyevent_send,
         sc_handle,
         dronevent_send,
         nodeevent_send,
-        command_receivers,
-        _packet_receivers,
+        mut command_receivers,
+        mut packet_receivers,
     ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    expect_no_commands(&command_receivers);
+
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(WAITING_TIME));
 
     expect_command_hmap(&command_receivers, 2, &DroneCommand::RemoveSender(1));
-    expect_command_hmap(&command_receivers, 1, &DroneCommand::Crash);
+    expect_just_command_hmap(&command_receivers, 1, &DroneCommand::Crash);
+
+    packet_receivers.remove(&1);
+    command_receivers.remove(&1);
+
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    expect_no_commands(&command_receivers);
 }
 
 #[test]

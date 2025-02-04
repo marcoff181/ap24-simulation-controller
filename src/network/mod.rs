@@ -116,14 +116,14 @@ impl Network {
                     Client => {
                         // Rule 2 & 3: Clients can only connect to 1-2 drones, not clients or servers
                         if !drones.contains(&neighbor) {
-                            return Err("Client must connect to at least one and at most two drones, and cannot connect to other clients or servers");
+                            return Err("Client cannot connect to other clients or servers");
                         }
                         drone_count += 1;
                     }
                     Server => {
                         // Rule 4: Servers must connect to at least two drones, not clients or servers
                         if !drones.contains(&neighbor) {
-                            return Err("Server must connect to at least two drones, and cannot connect to other clients or servers");
+                            return Err("Server cannot connect to other clients or servers");
                         }
                         drone_count += 1;
                     }
@@ -317,12 +317,18 @@ impl Network {
         // borrow the drone to change it to crashed, and save how it was before
         // ---------------------------------------------------------------
         let Some(drone) = self.nodes.iter_mut().find(|node| node.id == id) else {
-            panic!("node to crash: #{id} not present in network")
+            unreachable!("node to crash: #{id} not present in network")
         };
         let oldkind = drone.kind;
         drone.kind = match drone.kind {
-            NodeKind::Drone { pdr, crashed: _ } => NodeKind::Drone { pdr, crashed: true },
-            _ => return Err("trying to crash a node that is not a drone"),
+            NodeKind::Drone {
+                pdr,
+                crashed: false,
+            } => NodeKind::Drone { pdr, crashed: true },
+            NodeKind::Drone { crashed: true, .. } => {
+                return Err("trying to crash already crashed drone")
+            }
+            _ => unreachable!("trying to crash a node that is not a drone"),
         };
 
         // ---------------------------------------------------------------

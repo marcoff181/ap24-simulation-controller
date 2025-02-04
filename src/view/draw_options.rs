@@ -87,8 +87,6 @@ impl DrawGraphOptions {
         let mut lines_front = HashMap::new();
         let mut nodes = HashMap::new();
 
-        let mut x = 0.0;
-
         for n in top.nodes.iter() {
             let style;
             let label;
@@ -112,13 +110,12 @@ impl DrawGraphOptions {
             nodes.insert(
                 id,
                 DrawNodeOptions {
-                    x,
-                    y: random_range(1..5) as f64,
+                    x: id as f64 / 3. * 5.,
+                    y: id as f64 % 3. * 5.,
                     style,
                     label,
                 },
             );
-            x += 10.0;
 
             for nghb in n.neighbors.iter() {
                 lines_front.insert((id, *nghb), TEXT_COLOR);

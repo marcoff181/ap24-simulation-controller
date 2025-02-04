@@ -164,6 +164,12 @@ pub fn expect_no_command(rcv: &Receiver<DroneCommand>) {
     }
 }
 
+pub fn expect_no_commands(rcvs: &HashMap<u8, Receiver<DroneCommand>>) {
+    for (_n, r) in rcvs.iter() {
+        expect_no_command(r);
+    }
+}
+
 pub fn expect_just_command_hmap(
     rcv: &HashMap<u8, Receiver<DroneCommand>>,
     id: u8,
