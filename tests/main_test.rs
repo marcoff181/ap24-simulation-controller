@@ -166,16 +166,14 @@ fn crash() {
         command_receivers,
         _packet_receivers,
     ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
-    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(WAITING_TIME));
 
-    expect_command_hmap(&command_receivers, 1, &DroneCommand::RemoveSender(2));
-    expect_command_hmap(&command_receivers, 2, &DroneCommand::Crash);
-    expect_just_command_hmap(&command_receivers, 3, &DroneCommand::RemoveSender(2));
+    expect_command_hmap(&command_receivers, 2, &DroneCommand::RemoveSender(1));
+    expect_command_hmap(&command_receivers, 1, &DroneCommand::Crash);
 }
 
 #[test]
@@ -196,10 +194,14 @@ fn add_connection() {
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
 
     let rcv1 = command_receivers.get(&1).unwrap();
+    let rcv2 = command_receivers.get(&2).unwrap();
     let rcv3 = command_receivers.get(&3).unwrap();
 
     thread::sleep(Duration::from_millis(WAITING_TIME));
     if let Ok(command) = rcv1.try_recv() {
+        panic!("unexpected command : {:?}", command);
+    };
+    if let Ok(command) = rcv2.try_recv() {
         panic!("unexpected command : {:?}", command);
     };
     if let Ok(command) = rcv3.try_recv() {

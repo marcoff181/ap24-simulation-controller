@@ -64,8 +64,11 @@ pub struct MySimulationController {
 
 impl MySimulationController {
     pub fn new(opt: SimControllerOptions) -> Self {
-        info!("created SC");
-        let mut network = Network::new(&opt.config);
+        info!("creating SC...");
+        let mut network = match Network::new(&opt.config) {
+            Ok(n) => n,
+            Err(s) => panic!("when converting cfg to network found error: {s}"),
+        };
         for (id, handle) in opt.node_handles.iter() {
             if let Some(nrepr) = network.get_mut_node_from_id(*id) {
                 if let Some(t) = handle.thread().name() {
@@ -452,86 +455,44 @@ impl MySimulationController {
     /// node,none of them crashed), then sends to the corresponding nodes in the simulation the command to add a
     /// neighbor, if unsuccessful returns an error with explanation, when the error is unexpected
     /// it panics
-    fn add_connection(&self, from: NodeId, to: NodeId) -> Result<(), &'static str> {
+    fn add_connection(&mut self, from: NodeId, to: NodeId) -> Result<(), &'static str> {
         debug!("checking if connection to be added is not between two client/server, not between same node, does not exist...");
-        if let (Some(nfrom), Some(nto)) = (
-            self.network.get_node_from_id(from),
-            self.network.get_node_from_id(to),
-        ) {
-            match (nfrom.kind, nto.kind) {
-                (
-                    NodeKind::Drone {
-                        pdr: _,
-                        crashed: true,
-                    },
-                    _,
-                )
-                | (
-                    _,
-                    NodeKind::Drone {
-                        pdr: _,
-                        crashed: true,
-                    },
-                ) => {
-                    warn!(
-                        "Cannot connect {:?} and {:?}, one or both of them are a crashed drone",
-                        nfrom.kind, nto.kind
-                    );
-                    return Err("Cannot connect to a crashed drone");
-                }
-                (NodeKind::Client | NodeKind::Server, NodeKind::Client | NodeKind::Server) => {
-                    warn!(
-                        "Cannot connect {:?} and {:?}, at least one should be a drone",
-                        nfrom.kind, nto.kind
-                    );
-                    return Err("trying to connect two Clients/Servers");
-                }
-                _ => {}
-            }
-            if nfrom.id == nto.id {
-                warn!(
-                    "Cannot connect {} and {}, they are the same node ",
-                    nfrom.id, nto.id
-                );
-                return Err("trying to connect a node with itself");
-            }
-            if nfrom.adj.contains(&to) || nto.adj.contains(&from) {
-                warn!(
-                    "Cannot connect {} and {}, they are already connected",
-                    nfrom.id, nto.id
-                );
-                return Err("trying to connect two already connected nodes");
-            }
-        } else {
-            panic!("nodes to connect not found: {from} and {to} are not present in the network representation");
-        }
 
-        // tell the real nodes via command channels to add edge
-        debug!("getting command and packet senders to tell nodes to add neighbor...");
-        if let (
-            Some(command_sender_from),
-            Some(command_sender_to),
-            Some(packet_sender_to),
-            Some(packet_sender_from),
-        ) = (
-            self.command_send.get(&from),
-            self.command_send.get(&to),
-            self.packet_send.get(&from),
-            self.packet_send.get(&to),
-        ) {
-            let _ = command_sender_from.send(DroneCommand::AddSender(to, packet_sender_to.clone()));
-            let _ =
-                command_sender_to.send(DroneCommand::AddSender(from, packet_sender_from.clone()));
+        match self.network.add_edge(from, to) {
+            Ok(_) => {
+                // tell the real nodes via command channels to add edge
+                debug!("getting command and packet senders to tell nodes to add neighbor...");
+                if let (
+                    Some(command_sender_from),
+                    Some(command_sender_to),
+                    Some(packet_sender_to),
+                    Some(packet_sender_from),
+                ) = (
+                    self.command_send.get(&from),
+                    self.command_send.get(&to),
+                    self.packet_send.get(&from),
+                    self.packet_send.get(&to),
+                ) {
+                    let _ = command_sender_from
+                        .send(DroneCommand::AddSender(to, packet_sender_to.clone()));
+                    let _ = command_sender_to
+                        .send(DroneCommand::AddSender(from, packet_sender_from.clone()));
 
-            Ok(())
-        } else {
-            error!(
+                    Ok(())
+                } else {
+                    error!(
                 "could not find command senders or packet senders for nodes with id {} and {}",
                 from, to
             );
-            error!("packet senders: {:?}", self.packet_send);
-            error!("command senders: {:?}", self.command_send);
-            panic!("could not create connection")
+                    error!("packet senders: {:?}", self.packet_send);
+                    error!("command senders: {:?}", self.command_send);
+                    panic!("could not create connection")
+                }
+            }
+            Err(s) => {
+                debug!("add_edge function returned error: {s}");
+                Err(s)
+            }
         }
     }
 
@@ -543,6 +504,9 @@ impl MySimulationController {
     /// - if there is no command sender for the drone or any of its neighbors
     /// - if there is no packet sender for the drone
     fn crash(&mut self, id: NodeId) -> Result<(), &'static str> {
+        // check that drone can be removed
+        self.network.crash_drone(id)?;
+
         if let Some(drone_command_sender) = self.command_send.get(&id) {
             // send command to corresponding drone to crash
             let _ = drone_command_sender.send(DroneCommand::Crash);
@@ -698,8 +662,6 @@ impl MySimulationController {
                 Window::Detail { tab: _ } if matches!(kind, NodeKind::Drone { .. }) => {
                     match self.crash(id) {
                         Ok(()) => {
-                            // mark the drone as crashed in the network
-                            self.network.crash_drone(id);
                             self.screen.window = Window::Main;
                         }
                         Err(message) => {
@@ -770,10 +732,8 @@ impl MySimulationController {
                 Window::Move | Window::Detail { tab: _ } => self.screen.window = Window::Main,
                 Window::AddConnection { origin } => {
                     info!("received AppMessage::Done, current window is AddConnection, adding connection...");
-                    let res = self.add_connection(origin, id);
-                    match res {
+                    match self.add_connection(origin, id) {
                         Ok(()) => {
-                            self.network.add_edge(origin, id);
                             self.reset_list();
                             self.screen.window = Window::Main;
                             info!("connection added succesfully, switched back to Window::Main");
