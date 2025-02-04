@@ -99,8 +99,8 @@ impl NodeRepresentation {
     pub fn new_from_cfgdrone(d: &Drone) -> Self {
         NodeRepresentation::new(
             d.id,
-            d.id as u32 * 10,
-            rand::random_range(0..=100),
+            d.id as u32 / 3,
+            d.id as u32 % 3,
             NodeKind::Drone {
                 pdr: d.pdr,
                 crashed: false,
