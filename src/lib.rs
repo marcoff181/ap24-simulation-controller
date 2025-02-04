@@ -544,11 +544,12 @@ impl MySimulationController {
 
     /// generates a random id for a node, different from any of the other nodes in the network
     fn random_unique_id(&self) -> NodeId {
+        let mut id = 1u8;
         loop {
-            let id = random::<u8>();
             if self.network.get_node_from_id(id).is_none() {
                 return id;
             }
+            id += 1;
         }
     }
 
