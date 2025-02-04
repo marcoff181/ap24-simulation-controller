@@ -261,9 +261,13 @@ impl MySimulationController {
     }
 
     fn save_nodeevent(&mut self, event: NodeEvent) {
-        let id = event
-            .source()
-            .expect("routing header does not have previous hop");
+        let id = match event.source() {
+            Some(id) => id,
+            None => {
+                error!("event has no source, caused by {:?}", event);
+                return;
+            }
+        };
 
         if let NodeEvent::PacketSent(packet) = &event {
             if let Some(dst) = match &packet.pack_type {
