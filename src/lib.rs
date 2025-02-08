@@ -10,11 +10,11 @@ use ratatui::backend::TestBackend;
 use crate::network::Network;
 use crate::screen::Screen;
 use crossbeam_channel::{select, unbounded, Receiver, Sender};
+#[cfg(feature = "appmessage_through_crossbeam")]
 use crossterm::event::KeyEvent;
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, trace};
 use messages::node_event::NodeEvent;
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
-use rand::random;
 use ratatui::{
     widgets::{ListState, TableState},
     Terminal,
@@ -46,6 +46,7 @@ pub struct SimControllerOptions {
 }
 
 pub struct MySimulationController {
+    #[cfg(feature = "appmessage_through_crossbeam")]
     keyevent_recv: Option<Receiver<KeyEvent>>,
     // external comms
     packet_send: HashMap<NodeId, Sender<Packet>>,
@@ -78,6 +79,7 @@ impl MySimulationController {
         }
 
         MySimulationController {
+            #[cfg(feature = "appmessage_through_crossbeam")]
             keyevent_recv: None,
             command_send: opt.command_send,
             droneevent_recv: opt.droneevent_recv,

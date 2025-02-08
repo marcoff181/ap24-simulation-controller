@@ -129,7 +129,7 @@ pub fn message_detail(message: &Message) -> Paragraph {
                             h2 = Line::from("Requesting Client List".to_string())
                         }
                         messages::ChatRequest::Register => {
-                            h2 = Line::from(format!("Requesting to register to chat"))
+                            h2 = Line::from("Requesting to register to chat".to_string())
                         }
                         messages::ChatRequest::SendMessage { from, to, message } => {
                             h2 = Line::from(format!("Sending from #{from} to #{to} message: "));

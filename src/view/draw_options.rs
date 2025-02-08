@@ -1,7 +1,6 @@
 use std::{collections::HashMap, time::Instant};
 
 use messages::node_event::EventNetworkGraph;
-use rand::random_range;
 use ratatui::style::{Color, Style, Stylize};
 use wg_2024::{network::NodeId, packet::PacketType};
 
@@ -25,6 +24,7 @@ pub struct DrawNodeOptions {
     pub style: Style,
     pub label: String,
 }
+
 fn active_edge_color(x: &Option<(PacketType, Instant)>) -> Color {
     if let Some((t, inst)) = x {
         let d = Instant::now().saturating_duration_since(*inst);
