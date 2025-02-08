@@ -1,4 +1,4 @@
-use crate::{screen::Screen, utilities::theme::*};
+use crate::{screen::Screen, utilities::theme::{BG_COLOR, HIGHLIGHT_COLOR, TEXT_COLOR}};
 
 use ratatui::{
     buffer::Buffer,

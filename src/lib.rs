@@ -64,13 +64,13 @@ pub struct MySimulationController {
 }
 
 impl MySimulationController {
-    pub fn new(opt: SimControllerOptions) -> Self {
+    #[must_use] pub fn new(opt: SimControllerOptions) -> Self {
         info!("creating SC...");
         let mut network = match Network::new(&opt.config) {
             Ok(n) => n,
             Err(s) => panic!("when converting cfg to network found error: {s}"),
         };
-        for (id, handle) in opt.node_handles.iter() {
+        for (id, handle) in &opt.node_handles {
             if let Some(nrepr) = network.get_mut_node_from_id(*id) {
                 if let Some(t) = handle.thread().name() {
                     nrepr.thread_name = t.to_string();
@@ -144,7 +144,7 @@ impl MySimulationController {
                     &mut self.node_list_state,
                     &mut self.packet_table_state,
                     frame,
-                )
+                );
             })?;
 
             // ---------------------------------------------------------------------------
@@ -172,7 +172,7 @@ impl MySimulationController {
             // ---------------------------------------------------------------------------
             // check if node threads exit
             // ---------------------------------------------------------------------------
-            for (id, h) in self.node_handles.iter_mut() {
+            for (id, h) in &mut self.node_handles {
                 if h.is_finished() {
                     finished.push(*id);
                 }
@@ -186,7 +186,7 @@ impl MySimulationController {
                 let res = h.join();
                 match (res, node.kind) {
                     (
-                        Ok(_),
+                        Ok(()),
                         NodeKind::Drone {
                             pdr: _,
                             crashed: true,
@@ -194,8 +194,7 @@ impl MySimulationController {
                     ) => info!("Crashed drone #{id} exited successfully"),
                     (res, _) => {
                         panic!(
-                            "Node #{id} unexpectedly exited thread, with result: {:?}",
-                            res
+                            "Node #{id} unexpectedly exited thread, with result: {res:?}"
                         )
                     }
                 }
@@ -217,7 +216,7 @@ impl MySimulationController {
                     },
                     Err(err) => {
 
-                                            panic!("error for nodevent receiver: {:?}",err);
+                                            panic!("error for nodevent receiver: {err:?}");
                     },
                 }
                                     },
@@ -229,7 +228,7 @@ impl MySimulationController {
                     },
                     Err(err) => {
 
-                                            panic!("error for nodevent receiver: {:?}",err);
+                                            panic!("error for nodevent receiver: {err:?}");
                     },
                 }
 
@@ -263,12 +262,9 @@ impl MySimulationController {
     }
 
     fn save_nodeevent(&mut self, event: NodeEvent) {
-        let id = match event.source() {
-            Some(id) => id,
-            None => {
-                error!("event has no source, caused by {:?}", event);
-                return;
-            }
+        let id = if let Some(id) = event.source() { id } else {
+            error!("event has no source, caused by {:?}", event);
+            return;
         };
 
         if let NodeEvent::PacketSent(packet) = &event {
@@ -304,13 +300,13 @@ impl MySimulationController {
                 if let Window::Detail { tab } = self.screen.window {
                     match event {
                         NodeEvent::PacketSent(_) if tab == 0 => {
-                            self.packet_table_state.scroll_down_by(1)
+                            self.packet_table_state.scroll_down_by(1);
                         }
                         NodeEvent::StartingMessageTransmission(_) if tab == 1 => {
-                            self.packet_table_state.scroll_down_by(1)
+                            self.packet_table_state.scroll_down_by(1);
                         }
                         NodeEvent::MessageReceived(_) if tab == 2 => {
-                            self.packet_table_state.scroll_down_by(1)
+                            self.packet_table_state.scroll_down_by(1);
                         }
                         _ => {}
                     }
@@ -358,7 +354,7 @@ impl MySimulationController {
         }
     }
 
-    /// saves inside the NodeRepresentation the events received on the sc channel, logs the event
+    /// saves inside the `NodeRepresentation` the events received on the sc channel, logs the event
     /// received, and in the case of the Detail window, it scrolls the table state to match the
     /// newly added packet
     fn save_droneevent(&mut self, event: DroneEvent) {
@@ -378,16 +374,14 @@ impl MySimulationController {
             (_, DroneEvent::PacketDropped(_)) => {
                 packet.routing_header.current_hop().unwrap_or_else(|| {
                     panic!(
-                        "could not find previous hop in packet {packet} for event {:?}",
-                        event
+                        "could not find previous hop in packet {packet} for event {event:?}"
                     )
                 })
             }
 
             _ => packet.routing_header.previous_hop().unwrap_or_else(|| {
                 panic!(
-                    "could not find previous hop in packet {packet} for event {:?}",
-                    event
+                    "could not find previous hop in packet {packet} for event {event:?}"
                 )
             }),
         };
@@ -429,11 +423,11 @@ impl MySimulationController {
                     trace!("Drone {id} sent event PacketDropped with packet {packet}");
                     node.n_frags_dropped = node.n_frags_dropped.saturating_add(1);
                     node.n_frags_sent = node.n_frags_sent.saturating_add(1);
-                    node.dropped.push_front(packet.clone())
+                    node.dropped.push_front(packet.clone());
                 }
                 DroneEvent::ControllerShortcut(ref packet) => {
                     debug!("Drone {id} sent event ControllerShortcut with packet {packet}");
-                    node.shortcutted.push_front(packet.clone())
+                    node.shortcutted.push_front(packet.clone());
                 }
             }
 
@@ -441,13 +435,13 @@ impl MySimulationController {
                 if let Window::Detail { tab } = self.screen.window {
                     match event {
                         DroneEvent::PacketSent(_) if tab == 0 => {
-                            self.packet_table_state.scroll_down_by(1)
+                            self.packet_table_state.scroll_down_by(1);
                         }
                         DroneEvent::PacketDropped(_) if tab == 1 => {
-                            self.packet_table_state.scroll_down_by(1)
+                            self.packet_table_state.scroll_down_by(1);
                         }
                         DroneEvent::ControllerShortcut(_) if tab == 2 => {
-                            self.packet_table_state.scroll_down_by(1)
+                            self.packet_table_state.scroll_down_by(1);
                         }
                         _ => {}
                     }
@@ -465,7 +459,7 @@ impl MySimulationController {
         debug!("checking if connection to be added is not between two client/server, not between same node, does not exist...");
 
         match self.network.add_edge(from, to) {
-            Ok(_) => {
+            Ok(()) => {
                 // tell the real nodes via command channels to add edge
                 debug!("getting command and packet senders to tell nodes to add neighbor...");
                 if let (
@@ -564,7 +558,7 @@ impl MySimulationController {
             crashed: false,
         };
         let id = self.random_unique_id();
-        let name = format!("NullPointer#{}", id);
+        let name = format!("NullPointer#{id}");
         let mut n = NodeRepresentation::new(id, 0, 0, kind, HashSet::new());
         n.thread_name = name.clone();
 
@@ -586,7 +580,7 @@ impl MySimulationController {
                     HashMap::new(),
                     0.05,
                 )
-                .run()
+                .run();
             })
             .expect("could not spawn drone thread");
 

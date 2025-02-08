@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::{network::node_kind::NodeKind, screen::Screen, utilities::theme::*, Network};
+use crate::{network::node_kind::NodeKind, screen::Screen, utilities::theme::{BG_COLOR, TEXT_COLOR}, Network};
 
 use super::packet_formatter::{message_table_row, packet_table_row};
 
@@ -85,60 +85,57 @@ pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut 
     let pheader = Row::new(vec!["typ", "sid", "src", "dst", "about"]);
     let mheader = Row::new(vec!["typ", "←/→", "src", "dst", "sid", "about"]);
 
-    match screen.kind {
-        NodeKind::Drone { .. } => {
-            let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, pwidths)
-                .column_spacing(1)
-                .header(pheader.clone())
-                .block(b2);
-            frame.render_widget(table, r2);
+    if let NodeKind::Drone { .. } = screen.kind {
+        let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
+        let table = Table::new(rows, pwidths)
+            .column_spacing(1)
+            .header(pheader.clone())
+            .block(b2);
+        frame.render_widget(table, r2);
 
-            let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, pwidths)
-                .column_spacing(1)
-                .header(pheader.clone())
-                .block(b3);
-            frame.render_widget(table, r3);
+        let rows: Vec<Row<'_>> = n.dropped.iter().map(|p| packet_table_row(p)).collect();
+        let table = Table::new(rows, pwidths)
+            .column_spacing(1)
+            .header(pheader.clone())
+            .block(b3);
+        frame.render_widget(table, r3);
 
-            let rows: Vec<Row<'_>> = n.shortcutted.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, pwidths)
-                .column_spacing(1)
-                .header(pheader)
-                .block(b4);
-            frame.render_widget(table, r4);
-        }
-        _ => {
-            let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
-            let table = Table::new(rows, pwidths)
-                .column_spacing(1)
-                .style(Style::new().red())
-                .header(pheader.clone())
-                .block(b2);
-            frame.render_widget(table, r2);
+        let rows: Vec<Row<'_>> = n.shortcutted.iter().map(|p| packet_table_row(p)).collect();
+        let table = Table::new(rows, pwidths)
+            .column_spacing(1)
+            .header(pheader)
+            .block(b4);
+        frame.render_widget(table, r4);
+    } else {
+        let rows: Vec<Row<'_>> = n.sent.iter().map(|p| packet_table_row(p)).collect();
+        let table = Table::new(rows, pwidths)
+            .column_spacing(1)
+            .style(Style::new().red())
+            .header(pheader.clone())
+            .block(b2);
+        frame.render_widget(table, r2);
 
-            let rows: Vec<Row<'_>> = n
-                .msent
-                .values()
-                .rev()
-                .map(|p| message_table_row(&p.0, p.1))
-                .collect();
-            let table = Table::new(rows, mwidths)
-                .column_spacing(1)
-                .header(mheader.clone())
-                .block(b3);
-            frame.render_widget(table, r3);
+        let rows: Vec<Row<'_>> = n
+            .msent
+            .values()
+            .rev()
+            .map(|p| message_table_row(&p.0, p.1))
+            .collect();
+        let table = Table::new(rows, mwidths)
+            .column_spacing(1)
+            .header(mheader.clone())
+            .block(b3);
+        frame.render_widget(table, r3);
 
-            let rows: Vec<Row<'_>> = n
-                .mreceived
-                .iter()
-                .map(|p| message_table_row(p, true))
-                .collect();
-            let table = Table::new(rows, mwidths)
-                .column_spacing(1)
-                .header(mheader)
-                .block(b4);
-            frame.render_widget(table, r4);
-        }
+        let rows: Vec<Row<'_>> = n
+            .mreceived
+            .iter()
+            .map(|p| message_table_row(p, true))
+            .collect();
+        let table = Table::new(rows, mwidths)
+            .column_spacing(1)
+            .header(mheader)
+            .block(b4);
+        frame.render_widget(table, r4);
     }
 }

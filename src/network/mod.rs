@@ -27,33 +27,33 @@ impl Network {
 
         let mut model = Self { nodes, edges };
 
-        for d in cfg.drone.iter() {
+        for d in &cfg.drone {
             model.nodes.push(NodeRepresentation::new_from_cfgdrone(d));
         }
-        for s in cfg.server.iter() {
+        for s in &cfg.server {
             model.nodes.push(NodeRepresentation::new_from_cfgserver(s));
         }
-        for c in cfg.client.iter() {
+        for c in &cfg.client {
             model.nodes.push(NodeRepresentation::new_from_cfgclient(c));
         }
 
-        for d in cfg.drone.iter() {
-            for to in d.connected_node_ids.iter() {
+        for d in &cfg.drone {
+            for to in &d.connected_node_ids {
                 let _ = model.add_edge_unchecked(d.id, *to);
             }
         }
-        for s in cfg.server.iter() {
-            for to in s.connected_drone_ids.iter() {
+        for s in &cfg.server {
+            for to in &s.connected_drone_ids {
                 let _ = model.add_edge_unchecked(s.id, *to);
             }
         }
-        for c in cfg.client.iter() {
-            for to in c.connected_drone_ids.iter() {
+        for c in &cfg.client {
+            for to in &c.connected_drone_ids {
                 let _ = model.add_edge_unchecked(c.id, *to);
             }
         }
         match model.is_valid() {
-            Ok(_) => Ok(model),
+            Ok(()) => Ok(model),
             Err(s) => Err(s),
         }
     }
@@ -61,7 +61,7 @@ impl Network {
     /// check that the current state of the network respects WG rules, if not, returns a
     /// descriptive error
     fn is_valid(&mut self) -> Result<(), &'static str> {
-        use NodeKind::*;
+        use NodeKind::{Client, Drone, Server};
 
         let mut node_ids = HashSet::new();
         let mut drones = HashSet::new();
@@ -103,7 +103,7 @@ impl Network {
                     node.adj
                         .iter()
                         .filter(|x| !crashed_drones.contains(x))
-                        .cloned(),
+                        .copied(),
                 ),
             );
         }
@@ -355,7 +355,7 @@ impl Network {
         // network is not valid after changes
         // ---------------------------------------------------------------
         match res {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(s) => {
                 let Some(drone) = self.nodes.iter_mut().find(|node| node.id == id) else {
                     unreachable!("node to crash: #{id} not present in network")

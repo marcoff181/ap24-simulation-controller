@@ -1,7 +1,7 @@
-use super::keys::*;
+use super::keys::{DETAIL_KEYS_DRONE, DETAIL_KEYS_NOTDRONE, ERROR_KEYS, MAIN_KEYS, MAIN_KEYS_ADD_CONNECTION, MOVE_KEYS, PDR_KEYS};
 use crate::{
     screen::{Screen, Window},
-    utilities::theme::*,
+    utilities::theme::{BOTTOMPANEL_BG, HIGHLIGHT_COLOR, INVERTED_TEXT_COLOR, TEXT_COLOR},
 };
 
 use ratatui::{

@@ -63,11 +63,11 @@ fn render_changepdr(pdr: f32, area: Rect, frame: &mut Frame) {
     let mut gauge = Gauge::default();
     if pdr == 1.0 {
         gauge = gauge.label(Span::from("🦆🦆🦆🦆🦆🦆🦆🦆🦆".to_string()));
-        gauge = gauge.gauge_style(CRASH_COLOR).ratio(pdr as f64);
+        gauge = gauge.gauge_style(CRASH_COLOR).ratio(f64::from(pdr));
         block = block.border_style(Style::default().fg(CRASH_COLOR));
     } else {
-        gauge = gauge.label(Span::from(format!("PDR: {:.2}", pdr)));
-        gauge = gauge.gauge_style(HIGHLIGHT_COLOR).ratio(pdr as f64);
+        gauge = gauge.label(Span::from(format!("PDR: {pdr:.2}")));
+        gauge = gauge.gauge_style(HIGHLIGHT_COLOR).ratio(f64::from(pdr));
         block = block.border_style(Style::default().fg(TEXT_COLOR));
     }
 

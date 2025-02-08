@@ -9,7 +9,7 @@ use ratatui::{
     },
 };
 
-use crate::utilities::theme::*;
+use crate::utilities::theme::BG_COLOR;
 
 use super::draw_options::DrawGraphOptions;
 
@@ -38,7 +38,7 @@ pub fn render_simulation(opt: DrawGraphOptions, area: Rect, buf: &mut Buffer) {
 }
 
 pub fn paint_edges(ctx: &mut Context, opt: &DrawGraphOptions) {
-    for ((from, to), color) in opt.lines_back.iter() {
+    for ((from, to), color) in &opt.lines_back {
         let nfrom = opt.nodes.get(from).unwrap();
         let nto = opt.nodes.get(to).unwrap();
         let line = ratatui::widgets::canvas::Line {
@@ -51,7 +51,7 @@ pub fn paint_edges(ctx: &mut Context, opt: &DrawGraphOptions) {
         ctx.draw(&line);
     }
     ctx.layer();
-    for ((from, to), color) in opt.lines_front.iter() {
+    for ((from, to), color) in &opt.lines_front {
         let nfrom = opt.nodes.get(from).unwrap();
         let nto = opt.nodes.get(to).unwrap();
         let line = ratatui::widgets::canvas::Line {
@@ -66,7 +66,7 @@ pub fn paint_edges(ctx: &mut Context, opt: &DrawGraphOptions) {
 }
 
 pub fn print_labels(ctx: &mut Context, opt: &DrawGraphOptions) {
-    for (_, n) in opt.nodes.iter() {
+    for n in opt.nodes.values() {
         let tx = n.x;
         let ty = n.y;
 

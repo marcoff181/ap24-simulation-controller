@@ -7,7 +7,7 @@ use wg_2024::{network::NodeId, packet::PacketType};
 use crate::{
     network::node_representation::NodeRepresentation,
     screen::{Screen, Window},
-    utilities::theme::*,
+    utilities::theme::{ADD_EDGE_COLOR, BG_COLOR, CLIENT_COLOR, DRONE_COLOR, HIGHLIGHT_COLOR, PACKET_ACK_COLOR, PACKET_FLOOD_REQUEST_COLOR, PACKET_FLOOD_RESPONSE_COLOR, PACKET_FRAGMENT_COLOR, PACKET_NACK_COLOR, SERVER_COLOR, TEXT_COLOR},
     Network,
 };
 
@@ -87,7 +87,7 @@ impl DrawGraphOptions {
         let mut lines_front = HashMap::new();
         let mut nodes = HashMap::new();
 
-        for n in top.nodes.iter() {
+        for n in &top.nodes {
             let style;
             let label;
 
@@ -110,14 +110,14 @@ impl DrawGraphOptions {
             nodes.insert(
                 id,
                 DrawNodeOptions {
-                    x: id as f64 / 3. * 5.,
-                    y: id as f64 % 3. * 5.,
+                    x: f64::from(id) / 3. * 5.,
+                    y: f64::from(id) % 3. * 5.,
                     style,
                     label,
                 },
             );
 
-            for nghb in n.neighbors.iter() {
+            for nghb in &n.neighbors {
                 lines_front.insert((id, *nghb), TEXT_COLOR);
             }
         }
@@ -151,7 +151,7 @@ impl DrawGraphOptions {
             }
         }
 
-        for ((from, to), x) in network.edges.iter() {
+        for ((from, to), x) in &network.edges {
             if *from == id || *to == id {
                 match screen.window {
                     Window::Main | Window::Move => {
@@ -166,7 +166,7 @@ impl DrawGraphOptions {
                 lines_back.insert((*from, *to), active_edge_color(x));
             };
         }
-        for n in network.nodes.iter() {
+        for n in &network.nodes {
             // special coloring
             let selected_index = screen.focus;
             let mut style = Style::default();
@@ -203,8 +203,8 @@ impl DrawGraphOptions {
             nodes.insert(
                 n.id,
                 DrawNodeOptions {
-                    x: n.x as f64,
-                    y: n.y as f64,
+                    x: f64::from(n.x),
+                    y: f64::from(n.y),
                     style,
                     label: n.short_label().to_string(),
                 },

@@ -11,7 +11,7 @@ use wg_2024::packet::NackType;
 use wg_2024::packet::Packet;
 use wg_2024::packet::PacketType;
 
-use crate::utilities::theme::*;
+use crate::utilities::theme::{BG_COLOR, CHAT_MSG, DISCOVERY_MSG, MEDIA_MSG, MESSAGE_ERROR_COLOR, MESSAGE_REQUEST_COLOR, MESSAGE_RESPONSE_COLOR, PACKET_ACK_COLOR, PACKET_FLOOD_REQUEST_COLOR, PACKET_FLOOD_RESPONSE_COLOR, PACKET_FRAGMENT_COLOR, PACKET_NACK_COLOR, TEXT_MSG, UNEXPECTED_MSG, UNREGISTERED_MSG, UNSUPPORTED_MSG};
 
 pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
     let source: Span = Span::styled(format!("{}", message.source), Style::new());
@@ -27,7 +27,7 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
     match &message.content {
         messages::MessageType::Request(request_type) => {
             mtype = Span::styled("RQS", ptype_style.bg(MESSAGE_REQUEST_COLOR));
-            debug = Span::from(format!("{:?}", request_type));
+            debug = Span::from(format!("{request_type:?}"));
             match request_type {
                 messages::RequestType::TextRequest(_) => {
                     rtype = Span::from("TXT".to_string()).bg(TEXT_MSG);
@@ -38,14 +38,14 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
                 messages::RequestType::ChatRequest(_) => {
                     rtype = Span::from("CHT".to_string()).bg(CHAT_MSG);
                 }
-                messages::RequestType::DiscoveryRequest(_) => {
+                messages::RequestType::DiscoveryRequest(()) => {
                     rtype = Span::from("DSC".to_string()).bg(DISCOVERY_MSG);
                 }
             }
         }
         messages::MessageType::Response(response_type) => {
             mtype = Span::styled("RSP", ptype_style.bg(MESSAGE_RESPONSE_COLOR));
-            debug = Span::from(format!("{:?}", response_type));
+            debug = Span::from(format!("{response_type:?}"));
             match response_type {
                 messages::ResponseType::TextResponse(_) => {
                     rtype = Span::from("TXT".to_string()).bg(TEXT_MSG);
@@ -63,7 +63,7 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
         }
         messages::MessageType::Error(error_type) => {
             mtype = Span::styled("ERR", ptype_style.bg(MESSAGE_ERROR_COLOR));
-            debug = Span::from(format!("{:?}", error_type));
+            debug = Span::from(format!("{error_type:?}"));
             match error_type {
                 messages::ErrorType::Unsupported(_) => {
                     rtype = Span::from("UNS".to_string()).bg(UNSUPPORTED_MSG);
@@ -103,7 +103,7 @@ pub fn message_detail(message: &Message) -> Paragraph {
                     rtype = Span::styled("Text", Style::new().bg(TEXT_MSG));
                     match text_request {
                         messages::TextRequest::TextList => {
-                            h2 = Line::from("Requesting Text List".to_string())
+                            h2 = Line::from("Requesting Text List".to_string());
                         }
 
                         messages::TextRequest::Text(n) => {
@@ -115,7 +115,7 @@ pub fn message_detail(message: &Message) -> Paragraph {
                     rtype = Span::styled("Media", Style::new().bg(MEDIA_MSG));
                     match media_request {
                         messages::MediaRequest::MediaList => {
-                            h2 = Line::from("Requesting Media List".to_string())
+                            h2 = Line::from("Requesting Media List".to_string());
                         }
                         messages::MediaRequest::Media(n) => {
                             h2 = Line::from(format!("Requesting Media #{n}"));
@@ -126,10 +126,10 @@ pub fn message_detail(message: &Message) -> Paragraph {
                     rtype = Span::styled("Chat", Style::new().bg(CHAT_MSG));
                     match chat_request {
                         messages::ChatRequest::ClientList => {
-                            h2 = Line::from("Requesting Client List".to_string())
+                            h2 = Line::from("Requesting Client List".to_string());
                         }
                         messages::ChatRequest::Register => {
-                            h2 = Line::from("Requesting to register to chat".to_string())
+                            h2 = Line::from("Requesting to register to chat".to_string());
                         }
                         messages::ChatRequest::SendMessage { from, to, message } => {
                             h2 = Line::from(format!("Sending from #{from} to #{to} message: "));
@@ -137,10 +137,10 @@ pub fn message_detail(message: &Message) -> Paragraph {
                         }
                     }
                 }
-                messages::RequestType::DiscoveryRequest(_) => {
+                messages::RequestType::DiscoveryRequest(()) => {
                     rtype = Span::styled("Discovery", Style::new().bg(DISCOVERY_MSG));
                     {
-                        h2 = Line::from("Sending Discovery.".to_string())
+                        h2 = Line::from("Sending Discovery.".to_string());
                     }
                 }
             }
@@ -153,14 +153,14 @@ pub fn message_detail(message: &Message) -> Paragraph {
                     match text_response {
                         messages::TextResponse::TextList(vec) => {
                             h2 = Line::from("Returning Text List:".to_string());
-                            opt = Line::from(format!("{:?}", vec));
+                            opt = Line::from(format!("{vec:?}"));
                         }
                         messages::TextResponse::Text(text) => {
                             h2 = Line::from("Returning TextResponse:".to_string());
                             opt = Line::from(text.as_str());
                         }
                         messages::TextResponse::NotFound(s) => {
-                            h2 = Line::from(format!("TextResponse::NotFound: {}", s));
+                            h2 = Line::from(format!("TextResponse::NotFound: {s}"));
                         }
                     }
                 }
@@ -169,15 +169,15 @@ pub fn message_detail(message: &Message) -> Paragraph {
                     match media_response {
                         messages::MediaResponse::MediaList(vec) => {
                             h2 = Line::from("Returning Media List:".to_string());
-                            opt = Line::from(format!("{:?}", vec));
+                            opt = Line::from(format!("{vec:?}"));
                         }
                         messages::MediaResponse::Media(vec) => {
                             h2 = Line::from("Returning Media:".to_string());
-                            opt = Line::from(format!("{:?}", vec));
+                            opt = Line::from(format!("{vec:?}"));
                         }
                         messages::MediaResponse::NotFound(s) => {
                             h2 = Line::from("Media not found:".to_string());
-                            opt = Line::from(format!("{:?}", s));
+                            opt = Line::from(format!("{s:?}"));
                         }
                     }
                 }
@@ -186,11 +186,11 @@ pub fn message_detail(message: &Message) -> Paragraph {
                     match chat_response {
                         messages::ChatResponse::ClientList(vec) => {
                             h2 = Line::from("Returning  List:".to_string());
-                            opt = Line::from(format!("{:?}", vec));
+                            opt = Line::from(format!("{vec:?}"));
                         }
                         messages::ChatResponse::MessageFrom { from, message } => {
                             h2 = Line::from(format!("Response from #{from}, message: "));
-                            opt = Line::from(format!("{:?}", message));
+                            opt = Line::from(format!("{message:?}"));
                         }
                         messages::ChatResponse::MessageSent => {
                             h2 = Line::from("Response: MessageSent".to_string());
@@ -219,11 +219,11 @@ pub fn message_detail(message: &Message) -> Paragraph {
             match error_type {
                 messages::ErrorType::Unsupported(request_type) => {
                     rtype = Span::styled("Unsupported", Style::new().bg(TEXT_MSG));
-                    h2 = Line::from(format!("request type: {:?}", request_type));
+                    h2 = Line::from(format!("request type: {request_type:?}"));
                 }
                 messages::ErrorType::Unexpected(response_type) => {
                     rtype = Span::styled("Unexpected", Style::new().bg(TEXT_MSG));
-                    h2 = Line::from(format!("response type: {:?}", response_type));
+                    h2 = Line::from(format!("response type: {response_type:?}"));
                 }
                 messages::ErrorType::Unregistered(n) => {
                     rtype = Span::styled("Unregistered", Style::new().bg(TEXT_MSG));
@@ -247,37 +247,34 @@ pub fn packet_table_row(packet: &Packet) -> Row {
 
     let src: Span;
     let dest: Span;
-    match &packet.pack_type {
-        PacketType::FloodRequest(floodrequest) => {
-            if floodrequest.path_trace.is_empty() {
-                src = Span::styled("X".to_string(), Style::new());
-                dest = Span::styled("X".to_string(), Style::new());
-            } else {
-                src = Span::styled(
-                    format!("{}", floodrequest.path_trace.last().unwrap().0),
-                    Style::new(),
-                );
-                // there really should not be any way to know the destination, using the routing
-                // header is inconsistent
-                //if let Some(dst) = packet.routing_header.current_hop() {
-                //    dest = Span::styled(format!("{dst}"), Style::new());
-                //} else {
-                dest = Span::styled("X".to_string(), Style::new());
-                //}
-            }
+    if let PacketType::FloodRequest(floodrequest) = &packet.pack_type {
+        if floodrequest.path_trace.is_empty() {
+            src = Span::styled("X".to_string(), Style::new());
+            dest = Span::styled("X".to_string(), Style::new());
+        } else {
+            src = Span::styled(
+                format!("{}", floodrequest.path_trace.last().unwrap().0),
+                Style::new(),
+            );
+            // there really should not be any way to know the destination, using the routing
+            // header is inconsistent
+            //if let Some(dst) = packet.routing_header.current_hop() {
+            //    dest = Span::styled(format!("{dst}"), Style::new());
+            //} else {
+            dest = Span::styled("X".to_string(), Style::new());
+            //}
         }
-        _ => {
-            let h = &packet.routing_header.hops;
-            let hi = packet.routing_header.hop_index;
-            if h.len() > 1 && hi < h.len() && hi > 1 {
-                let s = h[hi - 1];
-                let d = h[hi];
-                src = Span::styled(format!("{}", s), Style::new());
-                dest = Span::styled(format!("{}", d), Style::new());
-            } else {
-                src = Span::styled("X".to_string(), Style::new());
-                dest = Span::styled("X".to_string(), Style::new());
-            }
+    } else {
+        let h = &packet.routing_header.hops;
+        let hi = packet.routing_header.hop_index;
+        if h.len() > 1 && hi < h.len() && hi > 1 {
+            let s = h[hi - 1];
+            let d = h[hi];
+            src = Span::styled(format!("{s}"), Style::new());
+            dest = Span::styled(format!("{d}"), Style::new());
+        } else {
+            src = Span::styled("X".to_string(), Style::new());
+            dest = Span::styled("X".to_string(), Style::new());
         }
     }
 
@@ -297,15 +294,15 @@ pub fn packet_table_row(packet: &Packet) -> Row {
         PacketType::Nack(nack) => {
             ptype = Span::styled("NCK", ptype_style.bg(PACKET_NACK_COLOR));
             depends_on_type = Span::from(match nack.nack_type {
-                NackType::ErrorInRouting(id) => format!("ErrorInRouting: neigbor({})", id),
+                NackType::ErrorInRouting(id) => format!("ErrorInRouting: neigbor({id})"),
                 NackType::DestinationIsDrone => "DestinationIsDrone".to_string(),
                 NackType::Dropped => format!("Dropped({})", nack.fragment_index),
-                NackType::UnexpectedRecipient(id) => format!("UnexpectedRecipient({})", id),
+                NackType::UnexpectedRecipient(id) => format!("UnexpectedRecipient({id})"),
             });
         }
         PacketType::Ack(ack) => {
             ptype = Span::styled("ACK", ptype_style.bg(PACKET_ACK_COLOR));
-            depends_on_type = Span::from(format!("Fragment_idx({})", ack.fragment_index))
+            depends_on_type = Span::from(format!("Fragment_idx({})", ack.fragment_index));
         }
         PacketType::FloodRequest(flood_request) => {
             ptype = Span::styled("FRQ", ptype_style.bg(PACKET_FLOOD_REQUEST_COLOR));
@@ -349,11 +346,11 @@ pub fn packet_detail(packet: &Packet) -> Paragraph {
         PacketType::Nack(nack) => {
             theader = Line::styled("Nack", Style::new().bg(PACKET_NACK_COLOR));
             depends_on_type = Line::from(match nack.nack_type {
-                NackType::ErrorInRouting(id) => format!("Type: ErrorInRouting(id:{})", id),
+                NackType::ErrorInRouting(id) => format!("Type: ErrorInRouting(id:{id})"),
                 NackType::DestinationIsDrone => "Type: DestinationIsDrone".to_string(),
                 NackType::Dropped => format!("Type: Dropped(id:{})", nack.fragment_index),
                 NackType::UnexpectedRecipient(id) => {
-                    format!("Type: UnexpectedRecipient(id:{})", id)
+                    format!("Type: UnexpectedRecipient(id:{id})")
                 }
             });
             res.push_line(theader);

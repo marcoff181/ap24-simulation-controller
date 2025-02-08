@@ -34,7 +34,7 @@ pub fn handle_keypress_from_recv(screen: &Screen, rcv: &Receiver<KeyEvent>) -> O
     }
 }
 
-/// Handles the key events and returns an AppMessage defining the action that is requested
+/// Handles the key events and returns an `AppMessage` defining the action that is requested
 fn handle_keypress(screen: &Screen, key: &KeyEvent) -> Option<AppMessage> {
     match screen.window {
         Window::AddConnection { origin: _ } => handle_keypress_add_connection(key),
