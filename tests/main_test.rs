@@ -5,19 +5,30 @@ const WAITING_TIME: u64 = 300;
 #[cfg(feature = "integration_tests")]
 use common::start_dummy_sc_from_cfg;
 
+#[cfg(feature = "integration_tests")]
 use common::expect_command_hmap;
+#[cfg(feature = "integration_tests")]
 use common::expect_just_command_hmap;
+#[cfg(feature = "integration_tests")]
 use common::expect_just_packet_hmap;
+#[cfg(feature = "integration_tests")]
 use common::{all_the_message_types, all_the_packet_types};
+#[cfg(feature = "integration_tests")]
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+#[cfg(feature = "integration_tests")]
 use messages::{
     node_event::{EventNetworkGraph, EventNetworkNode, NodeEvent},
     Message,
 };
+#[cfg(feature = "integration_tests")]
 use messages::{MessageType, RequestType, TextRequest};
+#[cfg(feature = "integration_tests")]
 use std::{thread, time::Duration};
+#[cfg(feature = "integration_tests")]
 use wg_2024::controller::DroneCommand;
+#[cfg(feature = "integration_tests")]
 use wg_2024::packet::{Fragment, NodeType, PacketType};
+#[cfg(feature = "integration_tests")]
 use wg_2024::{controller::DroneEvent, packet::Packet};
 
 #[test]

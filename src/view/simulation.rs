@@ -13,7 +13,7 @@ use crate::utilities::theme::BG_COLOR;
 
 use super::draw_options::DrawGraphOptions;
 
-pub fn render_simulation(opt: DrawGraphOptions, area: Rect, buf: &mut Buffer) {
+pub fn render_simulation(opt: &DrawGraphOptions, area: Rect, buf: &mut Buffer) {
     if opt.nodes.is_empty() {
         Text::from("No nodes in graph").render(area, buf);
         return;
@@ -27,8 +27,8 @@ pub fn render_simulation(opt: DrawGraphOptions, area: Rect, buf: &mut Buffer) {
     let canvas = Canvas::default()
         .marker(Marker::Braille)
         .paint(|ctx| {
-            paint_edges(ctx, &opt);
-            print_labels(ctx, &opt);
+            paint_edges(ctx, opt);
+            print_labels(ctx, opt);
         })
         .background_color(BG_COLOR)
         .x_bounds([min_x - opt.padding, max_x + (0.01) * max_x + opt.padding])

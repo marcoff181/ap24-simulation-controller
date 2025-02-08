@@ -6,10 +6,16 @@ use ratatui::{
     Frame,
 };
 
-use crate::{network::node_kind::NodeKind, screen::Screen, utilities::theme::{BG_COLOR, TEXT_COLOR}, Network};
+use crate::{
+    network::node_kind::NodeKind,
+    screen::Screen,
+    utilities::theme::{BG_COLOR, TEXT_COLOR},
+    Network,
+};
 
 use super::packet_formatter::{message_table_row, packet_table_row};
 
+#[allow(clippy::too_many_lines)]
 pub fn render_stats(network: &Network, screen: &Screen, area: Rect, frame: &mut Frame) {
     let [r2, r3, r4] = Layout::horizontal([
         Constraint::Fill(3),

@@ -99,12 +99,11 @@ impl Network {
             // Build adjacency graph, excluding crashed drones
             graph.insert(
                 node.id,
-                HashSet::<u8>::from_iter(
-                    node.adj
-                        .iter()
-                        .filter(|x| !crashed_drones.contains(x))
-                        .copied(),
-                ),
+                node.adj
+                    .iter()
+                    .filter(|x| !crashed_drones.contains(x))
+                    .copied()
+                    .collect::<HashSet<u8>>(),
             );
         }
 

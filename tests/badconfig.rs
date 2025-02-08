@@ -1,8 +1,10 @@
+#[cfg(feature = "integration_tests")]
 pub mod common;
+#[cfg(feature = "integration_tests")]
 const WAITING_TIME: u64 = 300;
-
 #[cfg(feature = "integration_tests")]
 use common::start_dummy_sc_from_cfg;
+#[cfg(feature = "integration_tests")]
 use std::{thread, time::Duration};
 
 #[cfg(feature = "integration_tests")]

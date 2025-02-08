@@ -7,7 +7,11 @@ use wg_2024::{network::NodeId, packet::PacketType};
 use crate::{
     network::node_representation::NodeRepresentation,
     screen::{Screen, Window},
-    utilities::theme::{ADD_EDGE_COLOR, BG_COLOR, CLIENT_COLOR, DRONE_COLOR, HIGHLIGHT_COLOR, PACKET_ACK_COLOR, PACKET_FLOOD_REQUEST_COLOR, PACKET_FLOOD_RESPONSE_COLOR, PACKET_FRAGMENT_COLOR, PACKET_NACK_COLOR, SERVER_COLOR, TEXT_COLOR},
+    utilities::theme::{
+        ADD_EDGE_COLOR, BG_COLOR, CLIENT_COLOR, DRONE_COLOR, HIGHLIGHT_COLOR, PACKET_ACK_COLOR,
+        PACKET_FLOOD_REQUEST_COLOR, PACKET_FLOOD_RESPONSE_COLOR, PACKET_FRAGMENT_COLOR,
+        PACKET_NACK_COLOR, SERVER_COLOR, TEXT_COLOR,
+    },
     Network,
 };
 
@@ -138,9 +142,8 @@ impl DrawGraphOptions {
         let id = screen.focus;
 
         let front_color = match screen.window {
-            Window::AddConnection { .. } => ADD_EDGE_COLOR,
+            Window::AddConnection { .. } | Window::Move => ADD_EDGE_COLOR,
             Window::Main => TEXT_COLOR,
-            Window::Move => ADD_EDGE_COLOR,
             _ => unreachable!(),
         };
 

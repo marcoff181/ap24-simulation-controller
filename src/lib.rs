@@ -64,7 +64,12 @@ pub struct MySimulationController {
 }
 
 impl MySimulationController {
-    #[must_use] pub fn new(opt: SimControllerOptions) -> Self {
+    #[must_use]
+    /// initializes the SC using the given options, by initializing the network and checking that
+    /// it is valid
+    /// # Panics
+    /// Panics if the given configuration is invalid
+    pub fn new(opt: SimControllerOptions) -> Self {
         info!("creating SC...");
         let mut network = match Network::new(&opt.config) {
             Ok(n) => n,
@@ -193,9 +198,7 @@ impl MySimulationController {
                         },
                     ) => info!("Crashed drone #{id} exited successfully"),
                     (res, _) => {
-                        panic!(
-                            "Node #{id} unexpectedly exited thread, with result: {res:?}"
-                        )
+                        panic!("Node #{id} unexpectedly exited thread, with result: {res:?}")
                     }
                 }
             }
@@ -262,7 +265,7 @@ impl MySimulationController {
     }
 
     fn save_nodeevent(&mut self, event: NodeEvent) {
-        let id = if let Some(id) = event.source() { id } else {
+        let Some(id) = event.source() else {
             error!("event has no source, caused by {:?}", event);
             return;
         };
@@ -359,9 +362,9 @@ impl MySimulationController {
     /// newly added packet
     fn save_droneevent(&mut self, event: DroneEvent) {
         let packet = match event {
-            DroneEvent::PacketSent(ref packet) => packet,
-            DroneEvent::PacketDropped(ref packet) => packet,
-            DroneEvent::ControllerShortcut(ref packet) => packet,
+            DroneEvent::PacketSent(ref packet)
+            | DroneEvent::PacketDropped(ref packet)
+            | DroneEvent::ControllerShortcut(ref packet) => packet,
         };
         let id: u8 = match (&packet.pack_type, &event) {
             (PacketType::FloodRequest(flood_request), _) => {
@@ -373,16 +376,12 @@ impl MySimulationController {
             }
             (_, DroneEvent::PacketDropped(_)) => {
                 packet.routing_header.current_hop().unwrap_or_else(|| {
-                    panic!(
-                        "could not find previous hop in packet {packet} for event {event:?}"
-                    )
+                    panic!("could not find previous hop in packet {packet} for event {event:?}")
                 })
             }
 
             _ => packet.routing_header.previous_hop().unwrap_or_else(|| {
-                panic!(
-                    "could not find previous hop in packet {packet} for event {event:?}"
-                )
+                panic!("could not find previous hop in packet {packet} for event {event:?}")
             }),
         };
 
@@ -412,39 +411,31 @@ impl MySimulationController {
 
         if let Some(node) = self.network.get_mut_node_from_id(id) {
             match event {
-                DroneEvent::PacketSent(ref packet) => {
+                DroneEvent::PacketSent(packet) => {
                     trace!("Drone {id} sent event PacketSent with packet {packet}");
                     if let PacketType::MsgFragment(_) = packet.pack_type {
                         node.n_frags_sent = node.n_frags_sent.saturating_add(1);
                     }
-                    node.sent.push_front(packet.clone());
+                    node.sent.push_front(packet);
+                    if let Window::Detail { tab: 0 } = self.screen.window {
+                        self.packet_table_state.scroll_down_by(1);
+                    };
                 }
-                DroneEvent::PacketDropped(ref packet) => {
+                DroneEvent::PacketDropped(packet) => {
                     trace!("Drone {id} sent event PacketDropped with packet {packet}");
                     node.n_frags_dropped = node.n_frags_dropped.saturating_add(1);
                     node.n_frags_sent = node.n_frags_sent.saturating_add(1);
-                    node.dropped.push_front(packet.clone());
+                    node.dropped.push_front(packet);
+                    if let Window::Detail { tab: 1 } = self.screen.window {
+                        self.packet_table_state.scroll_down_by(1);
+                    };
                 }
-                DroneEvent::ControllerShortcut(ref packet) => {
+                DroneEvent::ControllerShortcut(packet) => {
                     debug!("Drone {id} sent event ControllerShortcut with packet {packet}");
-                    node.shortcutted.push_front(packet.clone());
-                }
-            }
-
-            if id == self.screen.focus {
-                if let Window::Detail { tab } = self.screen.window {
-                    match event {
-                        DroneEvent::PacketSent(_) if tab == 0 => {
-                            self.packet_table_state.scroll_down_by(1);
-                        }
-                        DroneEvent::PacketDropped(_) if tab == 1 => {
-                            self.packet_table_state.scroll_down_by(1);
-                        }
-                        DroneEvent::ControllerShortcut(_) if tab == 2 => {
-                            self.packet_table_state.scroll_down_by(1);
-                        }
-                        _ => {}
-                    }
+                    node.shortcutted.push_front(packet);
+                    if let Window::Detail { tab: 2 } = self.screen.window {
+                        self.packet_table_state.scroll_down_by(1);
+                    };
                 }
             }
         }
@@ -560,7 +551,7 @@ impl MySimulationController {
         let id = self.random_unique_id();
         let name = format!("NullPointer#{id}");
         let mut n = NodeRepresentation::new(id, 0, 0, kind, HashSet::new());
-        n.thread_name = name.clone();
+        n.thread_name.clone_from(&name);
 
         let event_send = self.droneevent_send.clone();
         let (command_send, command_recv) = unbounded::<DroneCommand>();
@@ -651,6 +642,7 @@ impl MySimulationController {
 }
 
 impl MySimulationController {
+    #[allow(clippy::too_many_lines)]
     fn transition(&mut self, message: &AppMessage) {
         let kind = self.screen.kind;
         let id = self.screen.focus;

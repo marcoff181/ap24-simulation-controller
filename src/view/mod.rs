@@ -59,9 +59,8 @@ fn render_changepdr(pdr: f32, area: Rect, frame: &mut Frame) {
 
     let mut block = Block::bordered();
     let inner = block.inner(area);
-    //format!("PDR: {:.2}", pdr)
     let mut gauge = Gauge::default();
-    if pdr == 1.0 {
+    if pdr >= 0.999999 {
         gauge = gauge.label(Span::from("🦆🦆🦆🦆🦆🦆🦆🦆🦆".to_string()));
         gauge = gauge.gauge_style(CRASH_COLOR).ratio(f64::from(pdr));
         block = block.border_style(Style::default().fg(CRASH_COLOR));
@@ -154,7 +153,7 @@ fn render_detail(
     topborder.render(top, frame.buffer_mut());
     bottomborder.render(bottom, frame.buffer_mut());
 
-    tabs::render_tabs(tab, &screen.kind, tabs, frame.buffer_mut());
+    tabs::render_tabs(tab, screen.kind, tabs, frame.buffer_mut());
     tabs::render_tab_content(tab, screen, network, table_state, left_inner, frame);
 
     let node = network.get_node_from_id(screen.focus).unwrap();
@@ -236,7 +235,7 @@ fn render_standard(
 
     block.render(right, frame.buffer_mut());
     render_simulation(
-        crate::view::draw_options::DrawGraphOptions::from_network(network, screen),
+        &crate::view::draw_options::DrawGraphOptions::from_network(network, screen),
         inner_right,
         frame.buffer_mut(),
     );

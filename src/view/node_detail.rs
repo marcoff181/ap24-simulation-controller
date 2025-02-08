@@ -49,14 +49,14 @@ pub fn node_detail(node: &NodeRepresentation, area: Rect, frame: &mut Frame) {
     match node.kind {
         NodeKind::Drone { .. } => {
             render_simulation(
-                DrawGraphOptions::from_noderepr(node),
+                &DrawGraphOptions::from_noderepr(node),
                 right,
                 frame.buffer_mut(),
             );
         }
         NodeKind::Client | NodeKind::Server => {
             render_simulation(
-                DrawGraphOptions::from_topology(&node.knowntopology),
+                &DrawGraphOptions::from_topology(&node.knowntopology),
                 right,
                 frame.buffer_mut(),
             );

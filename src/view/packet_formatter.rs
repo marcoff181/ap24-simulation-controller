@@ -11,7 +11,12 @@ use wg_2024::packet::NackType;
 use wg_2024::packet::Packet;
 use wg_2024::packet::PacketType;
 
-use crate::utilities::theme::{BG_COLOR, CHAT_MSG, DISCOVERY_MSG, MEDIA_MSG, MESSAGE_ERROR_COLOR, MESSAGE_REQUEST_COLOR, MESSAGE_RESPONSE_COLOR, PACKET_ACK_COLOR, PACKET_FLOOD_REQUEST_COLOR, PACKET_FLOOD_RESPONSE_COLOR, PACKET_FRAGMENT_COLOR, PACKET_NACK_COLOR, TEXT_MSG, UNEXPECTED_MSG, UNREGISTERED_MSG, UNSUPPORTED_MSG};
+use crate::utilities::theme::{
+    BG_COLOR, CHAT_MSG, DISCOVERY_MSG, MEDIA_MSG, MESSAGE_ERROR_COLOR, MESSAGE_REQUEST_COLOR,
+    MESSAGE_RESPONSE_COLOR, PACKET_ACK_COLOR, PACKET_FLOOD_REQUEST_COLOR,
+    PACKET_FLOOD_RESPONSE_COLOR, PACKET_FRAGMENT_COLOR, PACKET_NACK_COLOR, TEXT_MSG,
+    UNEXPECTED_MSG, UNREGISTERED_MSG, UNSUPPORTED_MSG,
+};
 
 pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
     let source: Span = Span::styled(format!("{}", message.source), Style::new());
@@ -84,6 +89,7 @@ pub fn message_table_row(message: &Message, finished_sending: bool) -> Row {
     Row::new(vec![rtype, mtype, source, destination, sess_id, debug])
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn message_detail(message: &Message) -> Paragraph {
     let routing = Line::from(format!(
         "SID: {} source: {}",

@@ -1,17 +1,29 @@
+#[cfg(feature = "integration_tests")]
 use crossbeam_channel::unbounded;
+#[cfg(feature = "integration_tests")]
 use crossbeam_channel::Sender;
+#[cfg(feature = "integration_tests")]
 use crossbeam_channel::{self, Receiver};
+#[cfg(feature = "integration_tests")]
 use messages::node_event::NodeEvent;
+#[cfg(feature = "integration_tests")]
 use messages::{
     ChatRequest, ChatResponse, ErrorType, MediaRequest, MediaResponse, MessageType, RequestType,
     ResponseType, ServerType, TextRequest, TextResponse,
 };
+#[cfg(feature = "integration_tests")]
 use ratatui::{backend::TestBackend, Terminal};
+#[cfg(feature = "integration_tests")]
 use std::collections::HashMap;
+#[cfg(feature = "integration_tests")]
 use std::thread;
+#[cfg(feature = "integration_tests")]
 use std::thread::JoinHandle;
+#[cfg(feature = "integration_tests")]
 use wg_2024::config::Config;
+#[cfg(feature = "integration_tests")]
 use wg_2024::controller::DroneEvent;
+#[cfg(feature = "integration_tests")]
 use wg_2024::{
     controller::DroneCommand,
     network::NodeId,
@@ -20,11 +32,15 @@ use wg_2024::{
     },
 };
 
+#[cfg(feature = "integration_tests")]
 use ap24_simulation_controller::{MySimulationController, SimControllerOptions};
+#[cfg(feature = "integration_tests")]
 use crossterm::event::KeyEvent;
+#[cfg(feature = "integration_tests")]
 use std::time::Duration;
 
 #[cfg(feature = "integration_tests")]
+#[allow(clippy::type_complexity)]
 pub fn start_dummy_sc_from_cfg(
     config: &str,
 ) -> (
@@ -39,6 +55,7 @@ pub fn start_dummy_sc_from_cfg(
 }
 
 #[cfg(feature = "integration_tests")]
+#[allow(clippy::type_complexity)]
 pub fn start_dummy_sc_from_cfg_with_handles(
     config: &str,
     mut node_handles: HashMap<u8, JoinHandle<()>>,

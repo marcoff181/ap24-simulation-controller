@@ -14,7 +14,7 @@ use crate::{
 
 use super::packet_formatter::{message_table_row, packet_table_row};
 
-pub fn render_tabs(tab: usize, kind: &NodeKind, area: Rect, buf: &mut Buffer) {
+pub fn render_tabs(tab: usize, kind: NodeKind, area: Rect, buf: &mut Buffer) {
     let titles = match kind {
         NodeKind::Drone { .. } => {
             vec!["Sent", "Dropped", "Shortcutted"]
