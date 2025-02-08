@@ -1,7 +1,6 @@
 use core::panic;
 use std::{
     borrow::BorrowMut,
-    cell::RefCell,
     collections::{HashMap, HashSet},
     time::Instant,
 };
@@ -18,7 +17,10 @@ pub struct Network {
     pub nodes: Vec<NodeRepresentation>,
     pub edges: HashMap<(NodeId, NodeId), Option<(PacketType, Instant)>>,
 }
+
 impl Network {
+    /// creates a network from the given config, populating nodes and edges accordingly, and then
+    /// checking if the resulting network is valid
     pub fn new(cfg: &Config) -> Result<Self, &'static str> {
         let nodes: Vec<NodeRepresentation> = Vec::new();
         let edges = HashMap::new();
@@ -55,7 +57,10 @@ impl Network {
             Err(s) => Err(s),
         }
     }
-    pub fn is_valid(&mut self) -> Result<(), &'static str> {
+
+    /// check that the current state of the network respects WG rules, if not, returns a
+    /// descriptive error
+    fn is_valid(&mut self) -> Result<(), &'static str> {
         use NodeKind::*;
 
         let mut node_ids = HashSet::new();
@@ -166,6 +171,7 @@ impl Network {
         Ok(())
     }
 
+    /// private helper function to check if a given graph is connected
     fn is_connected(graph: &HashMap<NodeId, HashSet<u8>>) -> bool {
         if graph.is_empty() {
             return false;
