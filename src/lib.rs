@@ -26,15 +26,11 @@ use ratatui::{
     Terminal,
 };
 use screen::Window;
-use std::{
-    collections::HashMap,
-    thread::JoinHandle,
-};
+use std::{collections::HashMap, thread::JoinHandle};
 
 use wg_2024::{
     config::Config,
     controller::{DroneCommand, DroneEvent},
-    drone::Drone,
     network::NodeId,
     packet::Packet,
 };

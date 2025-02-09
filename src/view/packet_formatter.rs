@@ -339,8 +339,11 @@ pub fn packet_detail(packet: &Packet) -> Paragraph {
         PacketType::MsgFragment(fragment) => {
             theader = Line::styled("Fragment", Style::new().bg(PACKET_FRAGMENT_COLOR));
             depends_on_type = Line::from(format!(
-                "Index:{}/{} Size:{}",
-                fragment.fragment_index, fragment.total_n_fragments, fragment.length
+                "Index:{} ({}/{}) Size:{}",
+                fragment.fragment_index,
+                fragment.fragment_index + 1,
+                fragment.total_n_fragments,
+                fragment.length
             ));
 
             res.push_line(theader);
