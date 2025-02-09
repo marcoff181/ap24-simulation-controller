@@ -265,7 +265,7 @@ impl MySimulationController {
     }
 
     fn save_nodeevent(&mut self, event: NodeEvent) {
-        let Some(id) = event.source() else {
+        let Some(src) = event.source() else {
             error!("event has no source, caused by {:?}", event);
             return;
         };
@@ -288,67 +288,79 @@ impl MySimulationController {
                 }
                 _ => packet.routing_header.current_hop(),
             } {
-                if self.network.edges.contains_key(&(id, dst))
-                    || self.network.edges.contains_key(&(dst, id))
+                if self.network.edges.contains_key(&(src, dst))
+                    || self.network.edges.contains_key(&(dst, src))
                 {
                     self.network
-                        .update_edge_activity(id, dst, packet.pack_type.clone());
+                        .update_edge_activity(src, dst, packet.pack_type.clone());
                 }
             };
         };
 
-        if let Some(node) = self.network.get_mut_node_from_id(id) {
-            // fix scrolling pushdown on certain tabs
-            if id == self.screen.focus {
-                if let Window::Detail { tab } = self.screen.window {
-                    match event {
-                        NodeEvent::PacketSent(_) if tab == 0 => {
-                            self.packet_table_state.scroll_down_by(1);
-                        }
-                        NodeEvent::StartingMessageTransmission(_) if tab == 1 => {
-                            self.packet_table_state.scroll_down_by(1);
-                        }
-                        NodeEvent::MessageReceived(_) if tab == 2 => {
-                            self.packet_table_state.scroll_down_by(1);
-                        }
-                        _ => {}
+        // fix scrolling pushdown on certain tabs
+        if let Window::Detail { tab } = self.screen.window {
+            match event {
+                NodeEvent::PacketSent(_) if tab == 0 && src == self.screen.focus => {
+                    self.packet_table_state.scroll_down_by(1);
+                }
+                NodeEvent::StartingMessageTransmission(_)
+                    if tab == 1 && src == self.screen.focus =>
+                {
+                    self.packet_table_state.scroll_down_by(1);
+                }
+                // message received behaves differently because we want to display on the
+                // destionation node, not src
+                NodeEvent::MessageReceived(ref message) if tab == 2 => {
+                    if message.destination == self.screen.focus {
+                        self.packet_table_state.scroll_down_by(1);
                     }
                 }
+                _ => {}
             }
+        }
+
+        let node_opt = match event {
+            NodeEvent::MessageReceived(ref m) => self.network.get_mut_node_from_id(m.destination),
+            _ => self.network.get_mut_node_from_id(src),
+        };
+        if let Some(node) = node_opt {
             // save the data received in the correct location
             match event {
                 NodeEvent::PacketSent(packet) => {
-                    trace!("Client/Server #{id} sent event PacketSent with packet {packet}");
+                    trace!("Client/Server #{src} sent event PacketSent with packet {packet}");
                     node.sent.push_front(packet.clone());
                 }
                 NodeEvent::MessageSentSuccessfully(message) => {
                     debug!(
-                        "Client/Server #{id} sent event MessageSentSuccessfully with Message {:?}",
+                        "Client/Server #{src} sent event MessageSentSuccessfully with Message {:?}",
                         message
                     );
                     if node.msent.contains_key(&message.session_id) {
                         node.msent.insert(message.session_id, (message, true));
                     } else {
-                        panic!("Got a MessageSentSuccessfully from #{id} with sid #{}, but didn't receive any StartingMessageTransmission for the same message yet",message.session_id)
+                        panic!("Got a MessageSentSuccessfully from #{src} with sid #{}, but didn't receive any StartingMessageTransmission for the same message yet",message.session_id)
                     }
                 }
                 NodeEvent::StartingMessageTransmission(message) => {
                     debug!(
-                        "Client/Server #{id} sent event StartingMessageTransmission with Message {:?}",
+                        "Client/Server #{src} sent event StartingMessageTransmission with Message {:?}",
                         message
                     );
                     node.msent.insert(message.session_id, (message, false));
                 }
+                // message received behaves differently because we want to display on the
+                // destionation node, not src
                 NodeEvent::MessageReceived(message) => {
+                    let dst = message.destination;
                     debug!(
-                        "Client/Server #{id} sent event MessageReceived with Message {:?}",
+                        "Client/Server #{dst} sent event MessageReceived with Message {:?}",
                         message
                     );
                     node.mreceived.push_front(message);
                 }
                 NodeEvent::KnownNetworkGraph { source: _, graph } => {
                     debug!(
-                        "Client/Server #{id} sent event KnownNetworkGraph with Network {:?}",
+                        "Client/Server #{src} sent event KnownNetworkGraph with Network {:?}",
                         graph
                     );
                     node.knowntopology = graph;
