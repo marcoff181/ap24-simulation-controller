@@ -15,20 +15,20 @@ use ratatui::backend::TestBackend;
 
 use crate::network::Network;
 use crate::screen::Screen;
-use crossbeam_channel::{select, unbounded, Receiver, Sender};
+use crossbeam_channel::{select, Receiver, Sender};
 #[cfg(feature = "appmessage_through_crossbeam")]
 use crossterm::event::KeyEvent;
-use log::{debug, error, info, trace};
+use log::{debug, info};
 use messages::node_event::NodeEvent;
-use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
+use network::node_kind::NodeKind;
 use ratatui::{
     widgets::{ListState, TableState},
     Terminal,
 };
 use screen::Window;
 use std::{
-    collections::{HashMap, HashSet},
-    thread::{Builder, JoinHandle},
+    collections::HashMap,
+    thread::JoinHandle,
 };
 
 use wg_2024::{
@@ -36,7 +36,7 @@ use wg_2024::{
     controller::{DroneCommand, DroneEvent},
     drone::Drone,
     network::NodeId,
-    packet::{Packet, PacketType},
+    packet::Packet,
 };
 
 pub struct SimControllerOptions {

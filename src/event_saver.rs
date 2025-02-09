@@ -1,27 +1,13 @@
-use crate::network::{self, Network};
-use crate::screen::{self, Screen};
-use crossbeam_channel::{select, unbounded, Receiver, Sender};
+use crate::screen::{self};
 #[cfg(feature = "appmessage_through_crossbeam")]
 use crossterm::event::KeyEvent;
-use log::{debug, error, info, trace};
+use log::{debug, error, trace};
 use messages::node_event::NodeEvent;
-use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
-use ratatui::{
-    widgets::{ListState, TableState},
-    Terminal,
-};
 use screen::Window;
-use std::{
-    collections::{HashMap, HashSet},
-    thread::{Builder, JoinHandle},
-};
 
 use wg_2024::{
-    config::Config,
-    controller::{DroneCommand, DroneEvent},
-    drone::Drone,
-    network::NodeId,
-    packet::{Packet, PacketType},
+    controller::DroneEvent,
+    packet::PacketType,
 };
 
 impl crate::MySimulationController {
