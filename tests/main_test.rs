@@ -738,6 +738,8 @@ fn pushdown_test_node() {
         }));
     }
 
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(WAITING_TIME));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(WAITING_TIME));

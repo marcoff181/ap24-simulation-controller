@@ -35,6 +35,8 @@ impl crate::MySimulationController {
     /// node,none of them crashed), then sends to the corresponding nodes in the simulation the command to add a
     /// neighbor, if unsuccessful returns an error with explanation, when the error is unexpected
     /// it panics
+    /// # Panics
+    /// when it cannot find the corresponding NodeRepresentations
     pub(crate) fn add_connection(&mut self, from: NodeId, to: NodeId) -> Result<(), &'static str> {
         debug!("checking if connection to be added is not between two client/server, not between same node, does not exist...");
 
@@ -124,7 +126,7 @@ impl crate::MySimulationController {
     }
 
     /// changes pdr of drone in representation and of actual drone
-    /// Panics
+    /// # Panics
     /// panics if it can't find drone in the network, if it's not a drone, if it's crashed, if
     /// there is no command sender for it
     pub(crate) fn change_pdr(&mut self, newpdr: f32) {

@@ -1,4 +1,3 @@
-use core::panic;
 use std::{
     borrow::BorrowMut,
     collections::{HashMap, HashSet},
@@ -223,6 +222,8 @@ impl Network {
 
     /// adds a new edge, updating both `self.edges` and `node.adj`, returns Ok(true) if it has been
     /// asked to add an already existing edge
+    /// # Panics
+    /// panics if it can't find the `NodeRepresentation` for the given `from` and `to` ids
     fn add_edge_unchecked(&mut self, from: NodeId, to: NodeId) -> Result<bool, &'static str> {
         if from == to {
             return Err("cannot connect node to itself");
@@ -240,7 +241,7 @@ impl Network {
             }
             nodefrom.adj.insert(to as NodeId);
         } else {
-            panic!("cannot find noderepr for `from` node: #{from}")
+            unreachable!("cannot find noderepr for `from` node: #{from}")
         }
 
         if let Some(nodeto) = self.get_mut_node_from_id(to) {
@@ -255,7 +256,7 @@ impl Network {
             }
             nodeto.adj.insert(from as NodeId);
         } else {
-            panic!("cannot find noderepr for `to` node: #{to}")
+            unreachable!("cannot find noderepr for `to` node: #{to}")
         }
 
         let mut existed_already = false;

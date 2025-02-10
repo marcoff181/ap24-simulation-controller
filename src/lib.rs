@@ -118,7 +118,8 @@ impl MySimulationController {
     /// - unreachable panics are meant to never be reached during runtime, and if they are, they
     ///     are most likely sign of a bug in the internal workings of the SC, like not finding packet
     ///     senders or command senders for a given drone
-    /// - normal panics are instead used when TODO
+    /// - normal panics are instead used when the sc receives a NodeEvent/DroneEvent that can be
+    /// considered 'broken', for example hop index out of bounds, a empty hops vector
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn run(&mut self) {
         let terminal = ratatui::init();
@@ -141,7 +142,8 @@ impl MySimulationController {
 impl MySimulationController {
     /// runs the main loop of the sc
     /// Panics
-    /// panics if a node thread exits and the node was not a crashing drone
+    /// - if a node thread exits and the node was not a crashing drone
+    /// - when a channel receiver returns an error
     fn start<B: ratatui::backend::Backend>(
         &mut self,
         mut terminal: Terminal<B>,
