@@ -8,8 +8,7 @@ use wg_2024::{controller::DroneEvent, packet::PacketType};
 impl crate::MySimulationController {
     pub(crate) fn save_nodeevent(&mut self, event: NodeEvent) {
         let Some(src) = event.source() else {
-            error!("event has no source, caused by {:?}", event);
-            return;
+            panic!("event has no source, caused by {:?}", event);
         };
 
         // -------------------------------------------------------------------------

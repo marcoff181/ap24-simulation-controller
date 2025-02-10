@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 use std::time::Duration;
 
 use crate::network::node_kind::NodeKind;
@@ -6,6 +8,7 @@ use crate::utilities::app_message::AppMessage;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use log::debug;
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 pub fn handle_crossterm_events(screen: &Screen) -> Option<AppMessage> {
     if let Ok(true) = event::poll(Duration::from_millis(100)) {
         match event::read().expect("error reading key event") {

@@ -55,7 +55,6 @@ pub fn start_dummy_sc_from_cfg(
 }
 
 #[cfg(feature = "integration_tests")]
-#[allow(clippy::type_complexity)]
 pub fn start_dummy_sc_from_cfg_with_handles(
     config: &str,
     mut node_handles: HashMap<u8, JoinHandle<()>>,
@@ -162,6 +161,7 @@ pub fn start_dummy_sc_from_cfg_with_handles(
     )
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_command(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {
     match rcv.try_recv() {
         Ok(c) => {
@@ -175,18 +175,21 @@ pub fn expect_command(rcv: &Receiver<DroneCommand>, command: &DroneCommand) {
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_no_command(rcv: &Receiver<DroneCommand>) {
     if let Ok(c) = rcv.try_recv() {
         panic!("received command: {:?} was expecting nothing", c)
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_no_commands(rcvs: &HashMap<u8, Receiver<DroneCommand>>) {
     for (_n, r) in rcvs.iter() {
         expect_no_command(r);
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_just_command_hmap(
     rcv: &HashMap<u8, Receiver<DroneCommand>>,
     id: u8,
@@ -201,6 +204,7 @@ pub fn expect_just_command_hmap(
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_command_hmap(
     rcv: &HashMap<u8, Receiver<DroneCommand>>,
     id: u8,
@@ -213,6 +217,7 @@ pub fn expect_command_hmap(
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_packet(rcv: &Receiver<Packet>, packet: &Packet) {
     match rcv.try_recv() {
         Ok(c) => {
@@ -226,12 +231,14 @@ pub fn expect_packet(rcv: &Receiver<Packet>, packet: &Packet) {
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_no_packet(rcv: &Receiver<Packet>) {
     if let Ok(c) = rcv.try_recv() {
         panic!("received packet: {:?} was expecting nothing", c)
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_just_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, packet: &Packet) {
     for (n, r) in rcv {
         if *n == id {
@@ -242,6 +249,7 @@ pub fn expect_just_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, pack
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn expect_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, packet: &Packet) {
     for (n, r) in rcv {
         if *n == id {
@@ -250,6 +258,7 @@ pub fn expect_packet_hmap(rcv: &HashMap<u8, Receiver<Packet>>, id: u8, packet: &
     }
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn all_the_message_types() -> Vec<MessageType> {
     vec![
         MessageType::Request(RequestType::TextRequest(TextRequest::TextList)),
@@ -308,6 +317,7 @@ pub fn all_the_message_types() -> Vec<MessageType> {
     ]
 }
 
+#[cfg(feature = "integration_tests")]
 pub fn all_the_packet_types(from: u8) -> Vec<PacketType> {
     let fragment_index = 0;
     let src = from;

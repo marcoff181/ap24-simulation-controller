@@ -1,6 +1,6 @@
 use crate::network::{self};
 use crossbeam_channel::unbounded;
-use log::{debug, error};
+use log::debug;
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
 use std::{
     collections::{HashMap, HashSet},

@@ -356,6 +356,207 @@ fn msent_before_startingtransmission() {
 
 #[test]
 #[cfg(feature = "integration_tests")]
+fn unsaveable_dronepacket() {
+    use wg_2024::packet::Ack;
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let ptype = PacketType::Ack(Ack { fragment_index: 0 });
+
+    let _ = droneevent_send.send(DroneEvent::PacketSent(Packet {
+        pack_type: ptype,
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 0,
+            hops: vec![1],
+        },
+        session_id: 0,
+    }));
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    thread::sleep(Duration::from_millis(1000));
+    if !sc_handle.is_finished() {
+        panic!("sc should've panicked 100ms after quit mesage");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
+fn unsaveable_packetdropped() {
+    use wg_2024::packet::Ack;
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let ptype = PacketType::Ack(Ack { fragment_index: 0 });
+
+    let _ = droneevent_send.send(DroneEvent::PacketDropped(Packet {
+        pack_type: ptype,
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 0,
+            hops: vec![],
+        },
+        session_id: 0,
+    }));
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    thread::sleep(Duration::from_millis(1000));
+    if !sc_handle.is_finished() {
+        panic!("sc should've panicked 100ms after quit mesage");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
+fn nodeevent_no_source() {
+    use messages::node_event::{self, NodeEvent};
+    use wg_2024::packet::FloodRequest;
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let ptype = PacketType::FloodRequest(FloodRequest {
+        flood_id: 0,
+        initiator_id: 0,
+        path_trace: vec![],
+    });
+
+    let _ = nodeevent_send.send(NodeEvent::PacketSent(Packet {
+        pack_type: ptype,
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 1,
+            hops: vec![],
+        },
+        session_id: 0,
+    }));
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    thread::sleep(Duration::from_millis(100));
+    if !sc_handle.is_finished() {
+        panic!("sc should have crashed");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
+fn unsaveable_droneevent() {
+    use wg_2024::packet::FloodRequest;
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let ptype = PacketType::FloodRequest(FloodRequest {
+        flood_id: 0,
+        initiator_id: 0,
+        path_trace: vec![],
+    });
+
+    let _ = droneevent_send.send(DroneEvent::PacketSent(Packet {
+        pack_type: ptype,
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 1,
+            hops: vec![],
+        },
+        session_id: 0,
+    }));
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(1000));
+    if !sc_handle.is_finished() {
+        panic!("sc is not finished 100ms after quit mesage");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
+fn shortcut_with_no_destination() {
+    use wg_2024::packet::FloodResponse;
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let ptype = PacketType::FloodResponse(FloodResponse {
+        flood_id: 0,
+        path_trace: vec![],
+    });
+
+    let _ = droneevent_send.send(DroneEvent::ControllerShortcut(Packet {
+        pack_type: ptype,
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 0,
+            hops: vec![],
+        },
+        session_id: 0,
+    }));
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    thread::sleep(Duration::from_millis(1000));
+    if !sc_handle.is_finished() {
+        panic!("sc should have panicked");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
+fn shortcut_with_destination_not_in_network() {
+    use wg_2024::packet::FloodResponse;
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let ptype = PacketType::FloodResponse(FloodResponse {
+        flood_id: 0,
+        path_trace: vec![],
+    });
+
+    let _ = droneevent_send.send(DroneEvent::ControllerShortcut(Packet {
+        pack_type: ptype,
+        routing_header: wg_2024::network::SourceRoutingHeader {
+            hop_index: 1,
+            hops: vec![1, 2, 3, 4, 100],
+        },
+        session_id: 0,
+    }));
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    if !sc_handle.is_finished() {
+        panic!("sc should have panicked");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
 fn view_packet_events() {
     let (
         keyevent_send,
