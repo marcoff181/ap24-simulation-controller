@@ -45,6 +45,7 @@ pub struct SimControllerOptions {
     pub nodeevent_recv: Receiver<NodeEvent>,
     pub node_handles: HashMap<NodeId, JoinHandle<()>>,
     pub config: Config,
+    pub max_eventbuffer_dim: usize,
 }
 
 pub struct MySimulationController {
@@ -63,6 +64,7 @@ pub struct MySimulationController {
     node_list_state: ListState,
     packet_table_state: TableState,
     screen: Screen,
+    max_eventbuffer_dim: usize,
 }
 
 impl MySimulationController {
@@ -108,6 +110,7 @@ impl MySimulationController {
                 window: Window::Main,
             },
             running: true,
+            max_eventbuffer_dim: opt.max_eventbuffer_dim,
         }
     }
 
@@ -119,7 +122,7 @@ impl MySimulationController {
     ///     are most likely sign of a bug in the internal workings of the SC, like not finding packet
     ///     senders or command senders for a given drone
     /// - normal panics are instead used when the sc receives a NodeEvent/DroneEvent that can be
-    /// considered 'broken', for example hop index out of bounds, a empty hops vector
+    ///     considered 'broken', for example hop index out of bounds, a empty hops vector
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn run(&mut self) {
         let terminal = ratatui::init();

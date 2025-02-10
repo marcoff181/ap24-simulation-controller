@@ -1,5 +1,5 @@
 use crate::screen::{self};
-use log::{debug, error, trace};
+use log::{debug, trace};
 use messages::node_event::NodeEvent;
 use screen::Window;
 
@@ -78,6 +78,9 @@ impl crate::MySimulationController {
                 NodeEvent::PacketSent(packet) => {
                     trace!("Client/Server #{src} sent event PacketSent with packet {packet}");
                     node.sent.push_front(packet.clone());
+                    if node.sent.len() > self.max_eventbuffer_dim {
+                        node.sent.pop_back();
+                    }
                 }
                 NodeEvent::MessageSentSuccessfully(message) => {
                     debug!(
@@ -96,6 +99,10 @@ impl crate::MySimulationController {
                         message
                     );
                     node.msent.insert(message.session_id, (message, false));
+
+                    if node.msent.len() > self.max_eventbuffer_dim {
+                        node.msent.pop();
+                    }
                 }
                 NodeEvent::MessageReceived(message) => {
                     // message received behaves differently because we want to display on the
@@ -106,6 +113,10 @@ impl crate::MySimulationController {
                         message
                     );
                     node.mreceived.push_front(message);
+
+                    if node.mreceived.len() > self.max_eventbuffer_dim {
+                        node.mreceived.pop_back();
+                    }
                 }
                 NodeEvent::KnownNetworkGraph { source: _, graph } => {
                     debug!(
@@ -181,6 +192,10 @@ impl crate::MySimulationController {
                     if let Window::Detail { tab: 0 } = self.screen.window {
                         self.packet_table_state.scroll_down_by(1);
                     };
+
+                    if node.sent.len() > self.max_eventbuffer_dim {
+                        node.sent.pop_back();
+                    }
                 }
                 DroneEvent::PacketDropped(packet) => {
                     trace!("Drone {id} sent event PacketDropped with packet {packet}");
@@ -190,6 +205,9 @@ impl crate::MySimulationController {
                     if let Window::Detail { tab: 1 } = self.screen.window {
                         self.packet_table_state.scroll_down_by(1);
                     };
+                    if node.dropped.len() > self.max_eventbuffer_dim {
+                        node.dropped.pop_back();
+                    }
                 }
                 DroneEvent::ControllerShortcut(packet) => {
                     debug!("Drone {id} sent event ControllerShortcut with packet {packet}");
@@ -197,6 +215,10 @@ impl crate::MySimulationController {
                     if let Window::Detail { tab: 2 } = self.screen.window {
                         self.packet_table_state.scroll_down_by(1);
                     };
+
+                    if node.shortcutted.len() > self.max_eventbuffer_dim {
+                        node.shortcutted.pop_back();
+                    }
                 }
             }
         }
