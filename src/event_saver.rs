@@ -13,9 +13,10 @@ fn valid_known_network_graph(g: &EventNetworkGraph) -> bool {
                 if !n2.neighbors.contains(&n.node_id) {
                     return false;
                 };
-            } else {
-                return false;
             }
+            //else {
+            //    return false;
+            //}
         }
     }
     true
