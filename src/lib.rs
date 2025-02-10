@@ -214,6 +214,7 @@ impl MySimulationController {
                         },
                     ) => info!("Crashed drone #{id} exited successfully"),
                     (res, _) => {
+                        ratatui::restore();
                         panic!("Node #{id} unexpectedly exited thread, with result: {res:?}")
                     }
                 }
@@ -234,19 +235,19 @@ impl MySimulationController {
                                             self.save_droneevent(event);
                     },
                     Err(err) => {
-
-                                            panic!("error for nodevent receiver: {err:?}");
-                    },
-                }
-                                    },
-                                    recv(self.nodeevent_recv)-> res =>{
+                                            ratatui::restore();
+                                           panic!("error for nodevent receiver: {err:?}");
+                        },
+                    }
+                                        },
+                                        recv(self.nodeevent_recv)-> res =>{
                                         match res{
                     Ok(event) => {
 
                                             self.save_nodeevent(event);
                     },
                     Err(err) => {
-
+                                            ratatui::restore();
                                             panic!("error for nodevent receiver: {err:?}");
                     },
                 }
