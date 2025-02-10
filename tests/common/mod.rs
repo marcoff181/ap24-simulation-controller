@@ -142,6 +142,7 @@ pub fn start_dummy_sc_from_cfg_with_handles(
         packet_send: packet_senders,
         config,
         node_handles,
+        max_eventbuffer_dim: 1000,
     };
 
     let terminal = Terminal::new(TestBackend::new(50, 50)).unwrap();
