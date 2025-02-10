@@ -9,11 +9,7 @@ use messages::node_event::EventNetworkGraph;
 fn valid_known_network_graph(g: &EventNetworkGraph) -> bool {
     for n in &g.nodes {
         for a in &n.neighbors {
-            if let Some(n2) = g.nodes.get(usize::from(*a)) {
-                //if !n2.neighbors.contains(&n.node_id) {
-                //    return false;
-                //};
-            } else {
+            if g.nodes.get(usize::from(*a)).is_none() {
                 return false;
             }
         }
