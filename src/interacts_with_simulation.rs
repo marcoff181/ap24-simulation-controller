@@ -50,8 +50,8 @@ impl crate::MySimulationController {
                 ) = (
                     self.command_send.get(&from),
                     self.command_send.get(&to),
-                    self.packet_send.get(&from),
                     self.packet_send.get(&to),
+                    self.packet_send.get(&from),
                 ) {
                     let _ = command_sender_from
                         .send(DroneCommand::AddSender(to, packet_sender_to.clone()));
