@@ -1,9 +1,25 @@
 use crate::screen::{self};
-use log::{debug, trace};
+use log::{debug, error, info, trace};
 use messages::node_event::NodeEvent;
 use screen::Window;
 
 use wg_2024::{controller::DroneEvent, packet::PacketType};
+
+use messages::node_event::EventNetworkGraph;
+fn valid_known_network_graph(g: &EventNetworkGraph) -> bool {
+    for n in &g.nodes {
+        for a in &n.neighbors {
+            if let Some(n2) = g.nodes.get(usize::from(*a)) {
+                if !n2.neighbors.contains(&n.node_id) {
+                    return false;
+                };
+            } else {
+                return false;
+            }
+        }
+    }
+    true
+}
 
 impl crate::MySimulationController {
     pub(crate) fn save_nodeevent(&mut self, event: NodeEvent) {
@@ -119,11 +135,18 @@ impl crate::MySimulationController {
                     }
                 }
                 NodeEvent::KnownNetworkGraph { source: _, graph } => {
-                    debug!(
+                    info!(
                         "Client/Server #{src} sent event KnownNetworkGraph with Network {:?}",
                         graph
                     );
-                    node.knowntopology = graph;
+                    if valid_known_network_graph(&graph) {
+                        node.knowntopology = graph;
+                    } else {
+                        error!(
+                            "Client/Server #{src} sent invalid KnownNetworkGraph, Network was: {:?}",
+                            graph
+                        )
+                    }
                 }
             };
         }
