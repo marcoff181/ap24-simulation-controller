@@ -66,6 +66,8 @@ pub struct MySimulationController {
     screen: Screen,
     max_eventbuffer_dim: usize,
 }
+
+#[cfg(not(feature = "appmessage_through_crossbeam"))]
 impl Drop for MySimulationController {
     fn drop(&mut self) {
         ratatui::restore();
