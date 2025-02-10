@@ -1,7 +1,5 @@
 use crate::network::{self};
 use crossbeam_channel::unbounded;
-#[cfg(feature = "appmessage_through_crossbeam")]
-use crossterm::event::KeyEvent;
 use log::{debug, error};
 use network::{node_kind::NodeKind, node_representation::NodeRepresentation};
 use std::{
@@ -9,12 +7,7 @@ use std::{
     thread::Builder,
 };
 
-use wg_2024::{
-    controller::DroneCommand,
-    drone::Drone,
-    network::NodeId,
-    packet::Packet,
-};
+use wg_2024::{controller::DroneCommand, drone::Drone, network::NodeId, packet::Packet};
 
 impl crate::MySimulationController {
     /// sends the given packet directly to its final destination
@@ -163,7 +156,7 @@ impl crate::MySimulationController {
             crashed: false,
         };
         let id = self.random_unique_id();
-        let name = format!("NullPointer#{id}");
+        let name = format!("SkyLink#{id}");
         let mut n = NodeRepresentation::new(id, 0, 0, kind, HashSet::new());
         n.thread_name.clone_from(&name);
 
@@ -177,7 +170,7 @@ impl crate::MySimulationController {
         let handle = Builder::new()
             .name(name)
             .spawn(move || {
-                null_pointer_drone::MyDrone::new(
+                skylink::SkyLinkDrone::new(
                     n.id,
                     event_send,
                     command_recv,

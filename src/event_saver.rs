@@ -1,14 +1,9 @@
 use crate::screen::{self};
-#[cfg(feature = "appmessage_through_crossbeam")]
-use crossterm::event::KeyEvent;
 use log::{debug, error, trace};
 use messages::node_event::NodeEvent;
 use screen::Window;
 
-use wg_2024::{
-    controller::DroneEvent,
-    packet::PacketType,
-};
+use wg_2024::{controller::DroneEvent, packet::PacketType};
 
 impl crate::MySimulationController {
     pub(crate) fn save_nodeevent(&mut self, event: NodeEvent) {
