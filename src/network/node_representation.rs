@@ -99,7 +99,7 @@ impl NodeRepresentation {
     pub fn new_from_cfgdrone(d: &Drone) -> Self {
         NodeRepresentation::new(
             d.id,
-            u32::from(d.id) / 3 * 5 + 5,
+            u32::from(d.id) * 5 + 5,
             u32::from(d.id) % 3 * 5 + 5,
             NodeKind::Drone {
                 pdr: d.pdr,
@@ -112,7 +112,7 @@ impl NodeRepresentation {
     pub fn new_from_cfgclient(d: &Client) -> Self {
         NodeRepresentation::new(
             d.id,
-            u32::from(d.id) / 3 * 5 + 5,
+            u32::from(d.id) * 5 + 5,
             u32::from(d.id) % 3 * 5 + 5,
             NodeKind::Client,
             d.connected_drone_ids.iter().copied().collect(),
@@ -122,7 +122,7 @@ impl NodeRepresentation {
     pub fn new_from_cfgserver(d: &Server) -> Self {
         NodeRepresentation::new(
             d.id,
-            u32::from(d.id) / 3 * 5 + 5,
+            u32::from(d.id) * 5 + 5,
             u32::from(d.id) % 3 * 5 + 5,
             NodeKind::Server,
             d.connected_drone_ids.iter().copied().collect(),

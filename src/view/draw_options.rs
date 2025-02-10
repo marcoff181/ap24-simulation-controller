@@ -114,7 +114,7 @@ impl DrawGraphOptions {
             nodes.insert(
                 id,
                 DrawNodeOptions {
-                    x: f64::from(id) / 3. * 5.,
+                    x: f64::from(id) * 5.,
                     y: f64::from(id) % 3. * 5.,
                     style,
                     label,
