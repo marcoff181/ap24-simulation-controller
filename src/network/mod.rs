@@ -354,20 +354,7 @@ impl Network {
         // network is not valid after changes
         // ---------------------------------------------------------------
         match res {
-            Ok(()) => {
-                // remove also from adj lists
-                for (from, to) in oldedges.keys() {
-                    if *from == id || *to == id {
-                        if let Some(node) = self.get_mut_node_from_id(*from) {
-                            node.adj.remove(to);
-                        }
-                        if let Some(node) = self.get_mut_node_from_id(*to) {
-                            node.adj.remove(from);
-                        }
-                    }
-                }
-                Ok(())
-            }
+            Ok(()) => Ok(()),
             Err(s) => {
                 let Some(drone) = self.nodes.iter_mut().find(|node| node.id == id) else {
                     unreachable!("node to crash: #{id} not present in network")

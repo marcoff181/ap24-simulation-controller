@@ -107,6 +107,13 @@ impl crate::MySimulationController {
 
                 // send command to neighbor drones to remove sender
                 let _ = sender.send(DroneCommand::RemoveSender(id));
+
+                if let Some(x) = self.network.get_mut_node_from_id(id) {
+                    x.adj.remove(&n);
+                }
+                if let Some(x) = self.network.get_mut_node_from_id(n) {
+                    x.adj.remove(&id);
+                }
             }
             // remove the sender kept by the sc
             self.packet_send
