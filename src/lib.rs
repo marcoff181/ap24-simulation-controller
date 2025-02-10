@@ -66,6 +66,11 @@ pub struct MySimulationController {
     screen: Screen,
     max_eventbuffer_dim: usize,
 }
+impl Drop for MySimulationController {
+    fn drop(&mut self) {
+        ratatui::restore();
+    }
+}
 
 impl MySimulationController {
     /// initializes the SC using the given options, by initializing the network and checking that
@@ -126,8 +131,8 @@ impl MySimulationController {
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn run(&mut self) {
         let terminal = ratatui::init();
-        let result = self.start(terminal);
-        info!("start function exited with result {:?}", result);
+        self.start(terminal);
+        info!("sc exiting normally...");
         ratatui::restore();
     }
 
@@ -147,25 +152,24 @@ impl MySimulationController {
     /// Panics
     /// - if a node thread exits and the node was not a crashing drone
     /// - when a channel receiver returns an error
-    fn start<B: ratatui::backend::Backend>(
-        &mut self,
-        mut terminal: Terminal<B>,
-    ) -> Result<(), std::io::Error> {
+    fn start<B: ratatui::backend::Backend>(&mut self, mut terminal: Terminal<B>) {
         info!("started SC");
         let mut finished: Vec<NodeId> = Vec::new();
         while self.running {
             // ---------------------------------------------------------------------------
             // draw interface
             // ---------------------------------------------------------------------------
-            terminal.draw(|frame| {
-                crate::view::render(
-                    &self.network,
-                    &self.screen,
-                    &mut self.node_list_state,
-                    &mut self.packet_table_state,
-                    frame,
-                );
-            })?;
+            terminal
+                .draw(|frame| {
+                    crate::view::render(
+                        &self.network,
+                        &self.screen,
+                        &mut self.node_list_state,
+                        &mut self.packet_table_state,
+                        frame,
+                    );
+                })
+                .expect("terminal.draw exited with error");
 
             // ---------------------------------------------------------------------------
             // listen for keypresses
@@ -214,7 +218,6 @@ impl MySimulationController {
                         },
                     ) => info!("Crashed drone #{id} exited successfully"),
                     (res, _) => {
-                        ratatui::restore();
                         panic!("Node #{id} unexpectedly exited thread, with result: {res:?}")
                     }
                 }
@@ -235,7 +238,6 @@ impl MySimulationController {
                                             self.save_droneevent(event);
                     },
                     Err(err) => {
-                                            ratatui::restore();
                                            panic!("error for nodevent receiver: {err:?}");
                         },
                     }
@@ -247,7 +249,6 @@ impl MySimulationController {
                                             self.save_nodeevent(event);
                     },
                     Err(err) => {
-                                            ratatui::restore();
                                             panic!("error for nodevent receiver: {err:?}");
                     },
                 }
@@ -257,8 +258,6 @@ impl MySimulationController {
                                 }
             }
         }
-
-        Ok(())
     }
 
     /// generates a random id for a node, different from any of the other nodes in the network
