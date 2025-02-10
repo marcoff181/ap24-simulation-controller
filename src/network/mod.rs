@@ -356,13 +356,13 @@ impl Network {
         match res {
             Ok(()) => {
                 // remove also from adj lists
-                for ((from, to), _) in oldedges {
-                    if from == id || to == id {
-                        if let Some(node) = self.get_mut_node_from_id(from) {
-                            node.adj.remove(&to);
+                for (from, to) in oldedges.keys() {
+                    if *from == id || *to == id {
+                        if let Some(node) = self.get_mut_node_from_id(*from) {
+                            node.adj.remove(to);
                         }
-                        if let Some(node) = self.get_mut_node_from_id(to) {
-                            node.adj.remove(&from);
+                        if let Some(node) = self.get_mut_node_from_id(*to) {
+                            node.adj.remove(from);
                         }
                     }
                 }
