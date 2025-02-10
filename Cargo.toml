@@ -21,3 +21,6 @@ skylink = { git = "https://github.com/Suge42/Skylink_drone.git" }
 messages = { git = "https://github.com/The-Null-Pointer-Patrol/messages.git"}
 indexmap = "2.7.1"
 test-log = "0.2.17"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }

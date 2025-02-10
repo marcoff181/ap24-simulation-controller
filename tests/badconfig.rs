@@ -6,6 +6,8 @@ const WAITING_TIME: u64 = 300;
 use common::start_dummy_sc_from_cfg;
 #[cfg(feature = "integration_tests")]
 use std::{thread, time::Duration};
+#[cfg(feature = "integration_tests")]
+use wg_2024::{controller::DroneEvent, packet::Packet};
 
 #[cfg(feature = "integration_tests")]
 #[test]

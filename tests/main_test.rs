@@ -25,6 +25,8 @@ use messages::{MessageType, RequestType, TextRequest};
 #[cfg(feature = "integration_tests")]
 use std::{thread, time::Duration};
 #[cfg(feature = "integration_tests")]
+use test_log::test;
+#[cfg(feature = "integration_tests")]
 use wg_2024::controller::DroneCommand;
 #[cfg(feature = "integration_tests")]
 use wg_2024::packet::{Fragment, NodeType, PacketType};
@@ -239,6 +241,35 @@ fn add_connection() {
     thread::sleep(Duration::from_millis(WAITING_TIME));
     //exit from error screen
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+
+    // try to connect client and server
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+
+    let rcv1 = command_receivers.get(&1).unwrap();
+    let rcv2 = command_receivers.get(&2).unwrap();
+    let rcv3 = command_receivers.get(&3).unwrap();
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    if let Ok(command) = rcv1.try_recv() {
+        panic!("unexpected command : {:?}", command);
+    };
+    if let Ok(command) = rcv2.try_recv() {
+        panic!("unexpected command : {:?}", command);
+    };
+    if let Ok(command) = rcv3.try_recv() {
+        panic!("unexpected command : {:?}", command);
+    };
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    //exit from error screen
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+
     // try to connect not already connected nodes
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::NONE));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
@@ -468,6 +499,151 @@ fn view_packet_events() {
     thread::sleep(Duration::from_millis(WAITING_TIME));
     let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
     thread::sleep(Duration::from_millis(1000));
+    if !sc_handle.is_finished() {
+        panic!("sc is not finished 100ms after quit mesage");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
+fn pushdown_test_node() {
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+
+    let x = 5;
+
+    for ptype in all_the_packet_types(x) {
+        let _ = nodeevent_send.send(NodeEvent::PacketSent(Packet {
+            pack_type: ptype,
+            routing_header: wg_2024::network::SourceRoutingHeader {
+                hop_index: 1,
+                hops: vec![x, 4],
+            },
+            session_id: 0,
+        }));
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+
+    for (session_id, mtype) in all_the_message_types().into_iter().enumerate() {
+        let _ = nodeevent_send.send(NodeEvent::StartingMessageTransmission(Message {
+            source: x,
+            destination: x + 1,
+            session_id: session_id as u64,
+            content: mtype.clone(),
+        }));
+
+        let _ = nodeevent_send.send(NodeEvent::MessageSentSuccessfully(Message {
+            source: x,
+            destination: x + 1,
+            session_id: session_id as u64,
+            content: mtype.clone(),
+        }));
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+
+    for (session_id, mtype) in all_the_message_types().into_iter().enumerate() {
+        let _ = nodeevent_send.send(NodeEvent::MessageReceived(Message {
+            source: x + 1,
+            destination: x,
+            session_id: session_id as u64,
+            content: mtype,
+        }));
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    if !sc_handle.is_finished() {
+        panic!("sc is not finished 100ms after quit mesage");
+    }
+}
+
+#[test]
+#[cfg(feature = "integration_tests")]
+fn pushdown_test_drone() {
+    let (
+        keyevent_send,
+        sc_handle,
+        droneevent_send,
+        nodeevent_send,
+        command_receivers,
+        _packet_receivers,
+    ) = start_dummy_sc_from_cfg("./tests/config_files/line.toml");
+
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('d'), KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+
+    let x = 1;
+
+    for ptype in all_the_packet_types(x) {
+        let _ = droneevent_send.send(DroneEvent::PacketSent(Packet {
+            pack_type: ptype.clone(),
+            routing_header: wg_2024::network::SourceRoutingHeader {
+                hop_index: 1,
+                hops: vec![x, x + 1],
+            },
+            session_id: 0,
+        }));
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+
+    for ptype in all_the_packet_types(x) {
+        let _ = droneevent_send.send(DroneEvent::PacketDropped(Packet {
+            pack_type: PacketType::MsgFragment(Fragment {
+                fragment_index: 0,
+                total_n_fragments: 1,
+                length: 128,
+                data: [35; 128],
+            }),
+            routing_header: wg_2024::network::SourceRoutingHeader {
+                hop_index: 1,
+                hops: vec![0, x],
+            },
+            session_id: 0,
+        }));
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+
+    for ptype in all_the_packet_types(x) {
+        let _ = droneevent_send.send(DroneEvent::ControllerShortcut(Packet {
+            pack_type: ptype.clone(),
+            routing_header: wg_2024::network::SourceRoutingHeader {
+                hop_index: 1,
+                hops: vec![x, x + 1],
+            },
+            session_id: 0,
+        }));
+    }
+
+    thread::sleep(Duration::from_millis(WAITING_TIME));
+    let _ = keyevent_send.send(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
+    thread::sleep(Duration::from_millis(WAITING_TIME));
     if !sc_handle.is_finished() {
         panic!("sc is not finished 100ms after quit mesage");
     }

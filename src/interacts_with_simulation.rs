@@ -61,13 +61,10 @@ impl crate::MySimulationController {
                     debug!("succesfully sent addSender commands to neighbors...");
                     Ok(())
                 } else {
-                    error!(
-                "could not find command senders or packet senders for nodes with id {} and {}",
-                from, to
-            );
-                    error!("packet senders: {:?}", self.packet_send);
-                    error!("command senders: {:?}", self.command_send);
-                    panic!("could not create connection")
+                    unreachable!(
+                        "could not find command senders or packet senders for nodes with id {} and {}\npacket senders: {:?}\ncommand senders: {:?}",
+                        from, to, self.packet_send,self.command_send
+                    );
                 }
             }
             Err(s) => {

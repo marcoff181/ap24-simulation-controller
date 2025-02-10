@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 // graphics, keypress handling and helpers
 mod keypress_handler;
 mod network;
@@ -64,11 +66,11 @@ pub struct MySimulationController {
 }
 
 impl MySimulationController {
-    #[must_use]
     /// initializes the SC using the given options, by initializing the network and checking that
     /// it is valid
     /// # Panics
     /// Panics if the given configuration is invalid
+    #[must_use]
     pub fn new(opt: SimControllerOptions) -> Self {
         info!("creating SC...");
         let mut network = match Network::new(&opt.config) {
@@ -109,7 +111,15 @@ impl MySimulationController {
         }
     }
 
-    // could return Result and then thread handler in network intializer handles the Error
+    /// initializes ratatui, then starts internal SC loop, that will exit only when key 'q' is
+    /// pressed or when a panic occurs
+    /// # Panics
+    /// there are two kinds of panics in the SC:
+    /// - unreachable panics are meant to never be reached during runtime, and if they are, they
+    ///     are most likely sign of a bug in the internal workings of the SC, like not finding packet
+    ///     senders or command senders for a given drone
+    /// - normal panics are instead used when TODO
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn run(&mut self) {
         let terminal = ratatui::init();
         let result = self.start(terminal);
@@ -169,6 +179,7 @@ impl MySimulationController {
             };
 
             #[cfg(not(feature = "appmessage_through_crossbeam"))]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             if let Some(message) = keypress_handler::handle_crossterm_events(&self.screen) {
                 debug!("received AppMessage: {:?}", message);
                 self.transition(&message);
