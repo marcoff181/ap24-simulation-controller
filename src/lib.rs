@@ -219,8 +219,16 @@ impl MySimulationController {
                             crashed: true,
                         },
                     ) => info!("Crashed drone #{id} exited successfully"),
-                    (res, _) => {
-                        panic!("Node #{id} unexpectedly exited thread, with result: {res:?}")
+                    (Ok(()), _) => {
+                        panic!("Node #{id} unexpectedly exited thread successfully")
+                    }
+                    (Err(e), _) => {
+                        panic!(
+                            "Node #{id} unexpectedly exited thread with an error: {:?}",
+                            e.downcast_ref::<&str>()
+                                .copied()
+                                .or_else(|| e.downcast_ref::<String>().map(|x| x.as_str()))
+                        )
                     }
                 }
             }
